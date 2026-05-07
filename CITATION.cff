@@ -1,0 +1,42 @@
+cff-version: 1.2.0
+message: "If you use pdactrace, please cite this software and the accompanying paper."
+title: "pdactrace: Queryable Stage-Aware PDAC Tissue-to-Serum Biomarker Reference Atlas"
+abstract: >
+  pdactrace is an R package and queryable lookup atlas for pancreatic
+  ductal adenocarcinoma (PDAC) biomarker discovery. It integrates public
+  PDAC multi-omics data — bulk RNA-seq, tissue proteomics, single-cell
+  RNA cell origin, serum proteomics, and pancreatitis context — under a
+  12-template trajectory framework (Early × 4 + Mid × 4 + Late × 2 +
+  Monotonic × 2; Early × 4 surfaced) and a transparent 3-axis + 2-gate
+  audit framework. The package does not train a supervised biomarker
+  classifier — the audit rule is frozen and external anchors are used
+  for post-freeze evaluation only.
+authors:
+  - family-names: "Ko"
+    given-names: "Jibeom"
+    email: "rhwlqja1779@gmail.com"
+    orcid: "https://orcid.org/0009-0002-8630-1973"
+version: "0.99.0"
+date-released: "2026-05-07"
+license: MIT
+type: software
+repository-code: "https://github.com/jibeomko/pdactrace"
+url: "https://github.com/jibeomko/pdactrace"
+keywords:
+  - pancreatic-cancer
+  - PDAC
+  - biomarker
+  - multi-omics
+  - bioinformatics
+  - r-package
+  - tissue-to-serum
+  - LTBP1
+preferred-citation:
+  type: article
+  authors:
+    - family-names: "Ko"
+      given-names: "Jibeom"
+  title: "pdactrace: a queryable stage-aware PDAC tissue-to-serum biomarker reference atlas"
+  year: 2026
+  journal: "Briefings in Bioinformatics"
+  status: in-preparation

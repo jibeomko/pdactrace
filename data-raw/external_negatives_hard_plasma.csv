@@ -1,0 +1,52 @@
+gene_symbol,category,source,notes
+ALB,plasma_top_abundance,Anderson2002 plasma proteome,Albumin — most abundant plasma protein (~50% by mass); abundance != marker
+TF,plasma_top_abundance,Anderson2002,Transferrin
+TTR,plasma_top_abundance,Anderson2002,Transthyretin — also in anchor positives (LRG1+TTR+CA19-9 panel) — DUAL-ROLE caveat
+HP,acute_phase,Anderson2002,Haptoglobin
+HPX,plasma_top_abundance,Anderson2002,Hemopexin
+CP,plasma_top_abundance,Anderson2002,Ceruloplasmin
+A2M,plasma_top_abundance,Anderson2002,Alpha-2-macroglobulin
+APOA1,plasma_top_abundance,Anderson2002,Apolipoprotein A1
+APOA2,plasma_top_abundance,Anderson2002,Apolipoprotein A2 — also in anchor positives (Honda) — DUAL-ROLE caveat
+APOB,plasma_top_abundance,Anderson2002,Apolipoprotein B
+APOE,plasma_top_abundance,Anderson2002,Apolipoprotein E
+APOH,plasma_top_abundance,Anderson2002,Apolipoprotein H (β2-glycoprotein 1)
+SERPINA3,acute_phase,Anderson2002,Alpha-1-antichymotrypsin
+ORM1,acute_phase,Anderson2002,Orosomucoid 1 (acute-phase α1-acid glycoprotein)
+ORM2,acute_phase,Anderson2002,Orosomucoid 2
+CRP,acute_phase,Anderson2002,C-reactive protein — inflammation marker (non-specific)
+SAA1,acute_phase,Anderson2002,Serum amyloid A1
+SAA2,acute_phase,Anderson2002,Serum amyloid A2
+SAA4,acute_phase,Anderson2002,Serum amyloid A4
+FGA,acute_phase,Anderson2002,Fibrinogen alpha
+FGB,acute_phase,Anderson2002,Fibrinogen beta
+FGG,acute_phase,Anderson2002,Fibrinogen gamma
+C3,complement,Anderson2002,Complement C3 (high abundance)
+C4A,complement,Anderson2002,Complement C4A
+C4B,complement,Anderson2002,Complement C4B
+C1QA,complement,Anderson2002,Complement C1q A chain
+C1QB,complement,Anderson2002,Complement C1q B chain
+C1QC,complement,Anderson2002,Complement C1q C chain
+C5,complement,Anderson2002,Complement C5
+C6,complement,Anderson2002,Complement C6
+C7,complement,Anderson2002,Complement C7
+C9,complement,Anderson2002,Complement C9
+CFB,complement,Anderson2002,Complement factor B
+CFH,complement,Anderson2002,Complement factor H
+CFI,complement,Anderson2002,Complement factor I
+IGHA1,immunoglobulin,Anderson2002,IgA heavy chain 1
+IGHA2,immunoglobulin,Anderson2002,IgA heavy chain 2
+IGHG1,immunoglobulin,Anderson2002,IgG heavy chain 1
+IGHG2,immunoglobulin,Anderson2002,IgG heavy chain 2
+IGHG3,immunoglobulin,Anderson2002,IgG heavy chain 3
+IGHG4,immunoglobulin,Anderson2002,IgG heavy chain 4
+IGHM,immunoglobulin,Anderson2002,IgM heavy chain
+IGKC,immunoglobulin,Anderson2002,Ig kappa constant
+IGLC1,immunoglobulin,Anderson2002,Ig lambda constant 1
+IGLC2,immunoglobulin,Anderson2002,Ig lambda constant 2
+AGT,plasma_top_abundance,Anderson2002,Angiotensinogen
+AHSG,plasma_top_abundance,Anderson2002,Alpha-2-HS-glycoprotein (fetuin-A)
+F2,plasma_coag,Anderson2002,Prothrombin (high abundance)
+KNG1,plasma_top_abundance,Anderson2002,Kininogen 1 (high molecular weight)
+SERPINF1,plasma_serpin,Anderson2002,PEDF — abundant non-specific serpin
+GC,plasma_top_abundance,Anderson2002,Vitamin D-binding protein

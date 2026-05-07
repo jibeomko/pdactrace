@@ -1,0 +1,53 @@
+gene_symbol,category,source,notes
+GAPDH,glycolysis,Eisenberg2013/Hounkpe2021,Standard housekeeping; v0.2 atlas tier=SILVER (false positive risk)
+ACTB,cytoskeleton,Eisenberg2013/Hounkpe2021,Standard housekeeping; v0.2 atlas tier=OTHER
+B2M,MHC-I light chain,Eisenberg2013/Hounkpe2021,Standard housekeeping
+HPRT1,nucleotide metabolism,Eisenberg2013/Hounkpe2021,Standard housekeeping (qPCR ref)
+PPIA,protein folding,Eisenberg2013/Hounkpe2021,Cyclophilin A; standard housekeeping
+GUSB,lysosomal,Eisenberg2013/Hounkpe2021,Beta-glucuronidase
+TBP,transcription,Eisenberg2013/Hounkpe2021,TATA-binding protein
+YWHAZ,signaling adaptor,Eisenberg2013/Hounkpe2021,14-3-3 zeta
+HMBS,heme biosynthesis,Eisenberg2013/Hounkpe2021,Hydroxymethylbilane synthase
+SDHA,TCA cycle,Eisenberg2013/Hounkpe2021,Succinate dehydrogenase A
+TFRC,iron transport,Eisenberg2013/Hounkpe2021,Transferrin receptor
+UBC,ubiquitin,Eisenberg2013/Hounkpe2021,Polyubiquitin C
+UBB,ubiquitin,Eisenberg2013/Hounkpe2021,Polyubiquitin B
+PGK1,glycolysis,Eisenberg2013/Hounkpe2021,Phosphoglycerate kinase 1
+ALAS1,heme biosynthesis,Eisenberg2013/Hounkpe2021,5-aminolevulinate synthase 1
+HSP90AB1,chaperone,Eisenberg2013/Hounkpe2021,Heat shock protein
+ENO1,glycolysis,Eisenberg2013/Hounkpe2021,Enolase 1
+LDHA,glycolysis,Eisenberg2013/Hounkpe2021,Lactate dehydrogenase A
+MDH1,TCA cycle,Eisenberg2013/Hounkpe2021,Malate dehydrogenase 1
+RPL13,ribosomal,Eisenberg2013/Hounkpe2021,Ribosomal large
+RPL13A,ribosomal,Eisenberg2013/Hounkpe2021,Ribosomal large
+RPL19,ribosomal,Eisenberg2013/Hounkpe2021,Ribosomal large
+RPL27,ribosomal,Eisenberg2013/Hounkpe2021,Ribosomal large
+RPL3,ribosomal,Eisenberg2013/Hounkpe2021,Ribosomal large
+RPL30,ribosomal,Eisenberg2013/Hounkpe2021,Ribosomal large
+RPL32,ribosomal,Eisenberg2013/Hounkpe2021,Ribosomal large
+RPL5,ribosomal,Eisenberg2013/Hounkpe2021,Ribosomal large
+RPL7,ribosomal,Eisenberg2013/Hounkpe2021,Ribosomal large
+RPL8,ribosomal,Eisenberg2013/Hounkpe2021,Ribosomal large
+RPL10,ribosomal,Eisenberg2013/Hounkpe2021,Ribosomal large
+RPS18,ribosomal,Eisenberg2013/Hounkpe2021,Ribosomal small
+RPS27,ribosomal,Eisenberg2013/Hounkpe2021,Ribosomal small
+RPS3,ribosomal,Eisenberg2013/Hounkpe2021,Ribosomal small
+RPS9,ribosomal,Eisenberg2013/Hounkpe2021,Ribosomal small
+RPS5,ribosomal,Eisenberg2013/Hounkpe2021,Ribosomal small
+RPS6,ribosomal,Eisenberg2013/Hounkpe2021,Ribosomal small
+RPS11,ribosomal,Eisenberg2013/Hounkpe2021,Ribosomal small
+RPS14,ribosomal,Eisenberg2013/Hounkpe2021,Ribosomal small
+RPS24,ribosomal,Eisenberg2013/Hounkpe2021,Ribosomal small
+RPLP0,ribosomal,Eisenberg2013/Hounkpe2021,Ribosomal acidic
+RPLP1,ribosomal,Eisenberg2013/Hounkpe2021,Ribosomal acidic
+RPLP2,ribosomal,Eisenberg2013/Hounkpe2021,Ribosomal acidic
+PSMA1,proteasome,Eisenberg2013/Hounkpe2021,26S proteasome alpha
+PSMB1,proteasome,Eisenberg2013/Hounkpe2021,26S proteasome beta
+PSMC1,proteasome,Eisenberg2013/Hounkpe2021,26S proteasome regulatory
+EEF1A1,translation,Eisenberg2013/Hounkpe2021,Translation elongation factor
+EEF2,translation,Eisenberg2013/Hounkpe2021,Translation elongation factor
+EIF3A,translation,Eisenberg2013/Hounkpe2021,Translation initiation
+TUBA1A,cytoskeleton,Eisenberg2013/Hounkpe2021,Alpha tubulin
+TUBB,cytoskeleton,Eisenberg2013/Hounkpe2021,Beta tubulin
+ACTG1,cytoskeleton,Eisenberg2013/Hounkpe2021,Gamma actin (ACTB family)
+HSPA8,chaperone,Eisenberg2013/Hounkpe2021,Heat shock protein 70 cognate

@@ -1,0 +1,183 @@
+---
+title: "4. Apply pdactrace to your own multi-omics cohort"
+author: "pdactrace v0.4.0"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{4. Apply pdactrace to your own multi-omics cohort}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+suppressPackageStartupMessages({
+  library(pdactrace)
+  library(data.table)
+})
+set.seed(42)
+```
+
+# Goal
+
+The bundled v0.3.0 reference atlas covers four PDAC RNA cohorts, two
+PDAC tissue-protein cohorts, ten scRNA cohorts, and three serum-DIA
+cohorts. v0.4.0 adds an additive, backwards-compatible API so a new
+user can run the same frozen 3-axis + 2-gate audit framework on
+their own multi-omics cohort, without retraining and without
+modifying the bundled atlas. This vignette walks through the full
+five-step workflow on a synthetic example so the framework's
+input/output schema is concrete.
+
+# Step 1 — Build a tiny synthetic counts matrix
+
+```{r synth-rna}
+n_genes <- 200
+n_samples <- 24
+sample_meta <- data.table(
+  sample = paste0("S", 1:n_samples),
+  cohort = rep(c("CohortA", "CohortB", "CohortC"), times = 8),
+  stage  = rep(c("Normal", "Early", "Mid", "Late"), each = 6))
+
+# Background expression
+counts <- matrix(rnbinom(n_genes * n_samples, mu = 50, size = 4),
+                  nrow = n_genes,
+                  dimnames = list(paste0("GENE", 1:n_genes),
+                                   sample_meta$sample))
+
+# Inject 20 stage-progressive genes (Early_Burst_Up signature)
+up_genes <- paste0("GENE", 1:20)
+stage_lift <- c(Normal = 0, Early = 50, Mid = 70, Late = 80)
+for (g in up_genes) {
+  counts[g, ] <- counts[g, ] + stage_lift[as.character(sample_meta$stage)]
+}
+```
+
+# Step 2 — Fit the stage-aware RNA model
+
+```{r rna-fit, eval = requireNamespace("DESeq2", quietly = TRUE)}
+rna_fit <- fit_stage_de(counts,
+                          stage = sample_meta$stage,
+                          cohort = sample_meta$cohort)
+rna_pat <- classify_trajectory(rna_fit, rho_cutoff = 0.85)
+head(rna_pat[!is.na(rna_pattern), .(gene_symbol, rna_pattern,
+                                       rna_pattern_rho, lrt_padj)])
+```
+
+# Step 3 — Build a tiny synthetic protein matrix and fit limma
+
+```{r prot-fit, eval = requireNamespace("limma", quietly = TRUE)}
+prot_intensity <- matrix(
+  rnorm(n_genes * n_samples, mean = 8, sd = 1),
+  nrow = n_genes,
+  dimnames = list(paste0("GENE", 1:n_genes), sample_meta$sample))
+prot_lift <- c(Normal = 0, Early = 1.0, Mid = 1.5, Late = 1.8)
+for (g in up_genes) {
+  prot_intensity[g, ] <- prot_intensity[g, ] +
+    prot_lift[as.character(sample_meta$stage)]
+}
+
+prot_fit <- fit_stage_de_protein(prot_intensity,
+                                   stage = sample_meta$stage,
+                                   cohort = sample_meta$cohort)
+prot_pat <- classify_protein_trajectory(prot_fit, rho_cutoff = 0.85)
+head(prot_pat[!is.na(prot_pattern), .(gene_symbol, prot_pattern,
+                                         prot_pattern_rho)])
+```
+
+# Step 4 — Assemble the user evidence table
+
+```{r assemble, eval = exists("rna_pat") && exists("prot_pat")}
+user_ev <- assemble_user_evidence(
+  rna_fit = rna_pat,
+  prot_fit = prot_pat,
+  signal_peptide = up_genes)
+str(user_ev, max.level = 1)
+```
+
+# Step 5 — Run the audit framework on user evidence
+
+```{r audit, eval = exists("user_ev")}
+user_audit <- compute_audit_score(evidence = user_ev)
+table(user_audit$audit_class)
+head(user_audit[order(-audit_score)], 10)
+```
+
+The same `evaluate_anchor_enrichment()` interface accepts an
+optional `anchors` table so a user can evaluate their own anchor
+list:
+
+```{r enrich, eval = exists("user_ev")}
+user_anchors <- data.table(
+  gene = up_genes[1:5],
+  include_primary_eval = TRUE,
+  include_secondary_eval = TRUE)
+evaluate_anchor_enrichment(top_n = 20, tier = "secondary",
+                             evidence = user_ev,
+                             anchors = user_anchors)
+```
+
+# Step 6 — Single-patient trajectory alignment (v0.4.1)
+
+`align_patient_profile()` is the single-sample analog of
+`score_trajectory()`. It takes one patient's per-gene
+log2(tumor / matched-normal) vector and reports how that profile
+aligns with each of the atlas's frozen stage-effect axes
+(`rna_beta_E`, `rna_beta_M`, `rna_beta_L`).
+
+**This is an alignment readout, not a stage prediction.** No
+supervised model has been fit — the atlas is frozen and the function
+is deterministic given (input, atlas). Misalignment with all three
+stage axes is itself a finding (it does not imply Normal).
+
+```{r align_synthetic, eval = TRUE}
+ref <- pdactrace:::.get_reference()
+high_audit <- ref[!is.na(rna_beta_L) & audit_score >= 0.3][seq_len(300)]
+
+# Synthetic patient that resembles a Late-stage profile
+set.seed(7)
+patient_rna <- setNames(
+  high_audit$rna_beta_L + rnorm(nrow(high_audit), sd = 0.3),
+  high_audit$gene_symbol)
+
+aln <- align_patient_profile(patient_rna,
+                               weight_by       = "audit_score",
+                               min_audit_score = 0.3,
+                               top_n_genes     = 200)
+print(aln)
+aln$rna
+```
+
+The output reports two complementary signals: the primary
+audit-weighted Pearson rho between the patient and each stage axis
+(with Fisher-z 95% CI), and a secondary audit-weighted vote share
+showing what fraction of genes are closest to each stage's β. If
+the two signals disagree, both are surfaced — they are not collapsed
+into a single decision.
+
+# Scope boundary
+
+The PDAC reference atlas remains the default reference for
+`compute_audit_score(evidence = NULL)` and `align_patient_profile()`;
+the v0.4 release does not provide a `build_user_atlas()` function
+or a layer plugin architecture. The frozen v0.3.0 scoring rule, the
+audit labels, and the post-freeze evaluation discipline apply
+identically whether the input is the bundled atlas or a
+user-supplied evidence table — the framework is the same; only the
+data source changes.
+
+`align_patient_profile()` deliberately does **not** support
+supervised stage prediction. A Random-Forest / GLM patient-level
+classifier trained on TCGA / CPTAC stage labels is conceivable but
+would break the package's central "no supervised fitting under
+limited ground truth" discipline; it is therefore out of scope.
+Limitations: rho is unstable below ~50 overlapping genes; the
+protein layer reports only categorical concordance because the
+atlas does not carry per-stage numeric protein effect sizes; the
+audit-score floor restricts the gene dictionary to anchors with
+multi-layer evidence — varying it changes which dictionary you align
+against, not the patient. Disease-agnostic atlas building (Level 2)
+is planned for v0.5.
+
+```{r session_info}
+sessionInfo()
+```

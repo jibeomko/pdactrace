@@ -1,0 +1,26 @@
+# R package build artefacts
+pdactrace.Rcheck/
+pdactrace_*.tar.gz
+pdactrace.BiocCheck/
+..Rcheck/
+
+# RStudio
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# Vignette / pkgdown build outputs
+inst/doc/
+doc/
+Meta/
+docs/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*~
+*.swp
+.vscode/
+.idea/

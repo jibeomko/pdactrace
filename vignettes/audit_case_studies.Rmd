@@ -1,0 +1,186 @@
+---
+title: "2. Audit-class case studies — LGALS3BP / LTBP1 / ALB / GAPDH"
+author: "Jibeom Ko"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 2
+vignette: >
+  %\VignetteIndexEntry{2. Audit-class case studies (4 genes, one per audit class)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7.0,
+  fig.height = 3.5,
+  dpi = 110)
+```
+
+# Goal
+
+Walk through **one representative gene per audit_class** to show how
+the v0.3.0 audit framework handles different evidence patterns. None
+of these genes are presented as the paper's flagship candidate; each
+is an *illustrative case* of how the framework's three axes plus two
+gates resolve a specific evidence pattern into a transparent label.
+
+| Gene | audit_class | Why it ends here |
+|---|---|---|
+| **LGALS3BP** | `high_confidence` | Both gates clean; multi-layer + Early-onset evidence + serum bridge all strong; recovered as a secondary anchor |
+| **LTBP1** | `supported_uncertain` | Multi-layer concordant tissue evidence, but cohort I² = 75% triggers `heterogeneity_gate < 1`; Class B inverse-translation exemplar |
+| **ALB** | `penalized` | Plasma high-abundance flag triggers `leakage_gate = 0.5`; tissue Early signal is real but not specific enough on its own |
+| **GAPDH** | `excluded` | Housekeeping flag triggers `leakage_gate = 0`; hard-zeros the score regardless of trajectory shape |
+
+```{r setup}
+library(pdactrace)
+library(data.table)
+```
+
+# Side-by-side audit summary
+
+```{r side-by-side}
+case_genes <- c("LGALS3BP", "LTBP1", "ALB", "GAPDH")
+audit <- compute_audit_score(case_genes)
+audit
+```
+
+Two key observations:
+
+1. **`audit_class` is determined by gates first**, then by score. GAPDH
+   (housekeeping → `leakage_gate = 0`) is `excluded` regardless of how
+   strong its trajectory is. ALB (plasma high-abundance →
+   `leakage_gate = 0.5`) is `penalized` even though its tissue signal
+   is real.
+2. **LTBP1 is *supported_uncertain*, not `high_confidence`**, because
+   the heterogeneity gate (`audit_heterogeneity_gate = 0.7`) marks
+   cohort divergence; we frame it as an exemplar of Class B inverse
+   translation rather than a flagship candidate.
+
+# Detailed audit features per gene
+
+```{r features}
+detailed <- query_panel(case_genes)
+extra <- pdactrace_reference[
+  gene_symbol %in% case_genes,
+  .(gene_symbol, audit_class, audit_score, max_I2_meta)]
+detailed <- merge(detailed, extra, by = "gene_symbol", sort = FALSE)
+detailed[, .(gene_symbol, rna_pattern, prot_pattern, translation_class,
+              audit_class, audit_score, max_I2_meta,
+              cell_origin_top)]
+```
+
+# Case 1 — LGALS3BP (`high_confidence` anchor)
+
+LGALS3BP (Galectin-3 binding protein) sits at the top of the
+`audit_score` ranking and is one of the secondary anchors recovered
+by the framework. It illustrates the simplest case: every axis fires
+positively and neither gate triggers.
+
+```{r lgals3bp-detail}
+lg <- query_gene_detailed("LGALS3BP")
+lg$summary
+lg$per_stage
+```
+
+```{r lgals3bp-plot, fig.width = 4.5, fig.height = 3.5}
+plot_gene_hexagon("LGALS3BP",
+                    comparison = "high_confidence_mean")
+```
+
+# Case 2 — LTBP1 (`supported_uncertain`, Class B inverse exemplar)
+
+LTBP1 has tissue-level concordant evidence (RNA + protein both
+`Early_Burst_Up`, ρ ≈ 1.0, myCAF cell origin) but cohort-level
+heterogeneity is high: TCGA shows an increasing trajectory, CPTAC a
+decreasing trajectory, and two cohorts are non-monotonic. The
+random-effects meta-analysis records `max_I2_meta = 75 %` and the
+heterogeneity gate downweights the score by 0.70.
+
+```{r ltbp1-detail}
+ltbp1 <- query_gene_detailed("LTBP1")
+ltbp1$per_cohort
+```
+
+The framework correctly assigns LTBP1 to `supported_uncertain` rather
+than `high_confidence`, traceably attributing the uncertainty to
+cohort divergence:
+
+```{r ltbp1-plot, fig.width = 4.5, fig.height = 3.5}
+plot_gene_hexagon("LTBP1",
+                    comparison = "high_confidence_mean")
+```
+
+LTBP1 also has `translation_class = "B"` (inverse): tissue
+Burst-Up evidence does *not* translate to a serum-up biomarker.
+Its panel value emerges only when paired with a Class A
+(concordant-translation) marker — see *Class A × Class B panel
+diversity* in the BiB Discussion (LTBP1 + SERPINA1 LOOCV AUC 0.97
+vs LTBP1 alone 0.83 vs SERPINA1 alone 0.89).
+
+# Case 3 — ALB (`penalized`, plasma high-abundance gate)
+
+Albumin (ALB) has a real Early-onset signal at the tissue level
+(`Early_Trough` — falling at PDAC onset) but is also one of the most
+abundant plasma proteins. The leakage gate downweights ALB's score
+by 0.50 to reflect that abundance-driven false positives are a known
+failure mode in serum biomarker discovery.
+
+```{r alb-detail}
+alb <- compute_audit_score("ALB")
+alb[, .(gene_symbol, evidence_strength, biological_coherence,
+         translational_relevance, leakage_gate,
+         heterogeneity_gate, audit_score, audit_class)]
+```
+
+```{r alb-plot, fig.width = 4.5, fig.height = 3.5}
+plot_gene_hexagon("ALB", comparison = "penalized_mean")
+```
+
+ALB is admitted to the ranking (its real Early signal counts) but
+with a transparent abundance-driven discount, rather than being
+silently dropped. This is the difference between a "leakage gate"
+(graded 0 / 0.5 / 1) and a hard exclusion list.
+
+# Case 4 — GAPDH (`excluded`, housekeeping gate)
+
+GAPDH is a canonical housekeeping gene. Its `audit_is_housekeeping`
+flag triggers `leakage_gate = 0`, which hard-zeros the audit score
+regardless of how strong its per-stage trajectory looks. This is the
+"non-nominatable" failure mode of the framework: even a perfect
+trajectory shape cannot rescue a housekeeping artifact.
+
+```{r gapdh-detail}
+gapdh <- compute_audit_score("GAPDH")
+hk <- pdactrace_reference[gene_symbol == "GAPDH",
+                            .(gene_symbol, audit_is_housekeeping)]
+gapdh <- merge(gapdh, hk, by = "gene_symbol", sort = FALSE)
+gapdh[, .(gene_symbol, audit_is_housekeeping, leakage_gate,
+           audit_score, audit_class)]
+```
+
+```{r gapdh-plot, fig.width = 4.5, fig.height = 3.5}
+plot_gene_hexagon("GAPDH", comparison = "excluded_mean")
+```
+
+GAPDH is also reclassified under v0.4.0's 12-template catalog as
+`Monotonic_Up` (linear pan-stage progression) rather than
+`Early_Burst_Up`, which removes it from the Early × 4 atlas surface
+entirely — the leakage gate and the 12-template catalog discipline
+defend against housekeeping contamination through two independent
+mechanisms.
+
+# Take-away
+
+The four cases illustrate the **explicit decomposition** that the
+audit framework provides: each gene's `audit_class` is traceable to
+specific axes and gates, and the same framework discipline applies
+uniformly across genes regardless of biological role. When you query
+your own candidate, the same decomposition is available via
+`compute_audit_score(c("YOUR_GENE"))` and `query_gene_detailed(...)` —
+see vignette `user_cohort_extension` for applying this discipline
+to your own multi-omics cohort.

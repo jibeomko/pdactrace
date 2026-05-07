@@ -1,0 +1,22 @@
+#' External PDAC biomarker anchor provenance table
+#'
+#' Literature and database anchors used only for enrichment evaluation of the
+#' frozen pdactrace audit ranking. These anchors are not used to fit or
+#' tune the audit score.
+#'
+#' @format A data.frame with provenance columns:
+#' \describe{
+#'   \item{gene}{HGNC gene symbol.}
+#'   \item{source}{Short source description.}
+#'   \item{source_type}{Primary study, database, review, or related source.}
+#'   \item{evidence_tier}{T1 validated, T2 literature/database, or exploratory.}
+#'   \item{assay_context}{Serum, plasma, tissue, cyst fluid, or mixed context.}
+#'   \item{early_detection}{Whether the source supports early-detection use.}
+#'   \item{gene_level_mapping}{Direct, indirect, or excluded mapping status.}
+#'   \item{include_primary_eval}{Primary-enrichment inclusion flag.}
+#'   \item{include_secondary_eval}{Secondary-enrichment inclusion flag.}
+#'   \item{pmid_or_url}{PMID or URL provenance.}
+#'   \item{note}{Curation note.}
+#' }
+#' @keywords datasets
+"pdactrace_external_anchors"

@@ -1,0 +1,47 @@
+Package: pdactrace
+Type: Package
+Title: Queryable Stage-Aware PDAC Tissue-to-Serum Biomarker Reference Atlas
+Version: 0.99.0
+Authors@R: c(
+    person(given = "Jibeom", family = "Ko",
+           email = "rhwlqja1779@gmail.com",
+           role = c("aut", "cre"),
+           comment = c(ORCID = "0009-0002-8630-1973")))
+Description: pdactrace exposes a stage-aware pancreatic ductal adenocarcinoma
+    (PDAC) tissue-to-serum biomarker reference atlas across bulk RNA-seq,
+    tissue proteomics, single-cell origin, and serum proteomics. The current
+    release supports deterministic lookup, transparent GraphAudit evidence
+    aggregation, external-anchor enrichment evaluation, and Monte Carlo
+    uncertainty propagation. The package does not train a supervised biomarker
+    predictor because validated non-circular PDAC early-detection ground truth
+    is not available.
+License: MIT + file LICENSE
+URL: https://github.com/jibeomko/pdactrace
+BugReports: https://github.com/jibeomko/pdactrace/issues
+biocViews: Software, BiomedicalInformatics, Transcriptomics,
+    Proteomics, GeneExpression, DifferentialExpression,
+    SingleCell, Visualization, Annotation
+Encoding: UTF-8
+LazyData: true
+LazyDataCompression: xz
+Depends:
+    R (>= 4.5.0)
+Imports:
+    data.table,
+    ggplot2,
+    patchwork,
+    glue,
+    stats,
+    utils,
+    withr
+Suggests:
+    DESeq2,
+    limma,
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown,
+    pkgdown
+VignetteBuilder: knitr
+RoxygenNote: 7.3.3
+Roxygen: list(markdown = TRUE)
+Config/testthat/edition: 3

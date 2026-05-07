@@ -1,0 +1,120 @@
+---
+title: "1. Lookup basics: querying the pdactrace atlas"
+author: "Jibeom Ko"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 2
+vignette: >
+  %\VignetteIndexEntry{1. Lookup basics: querying the pdactrace atlas}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6.5,
+  fig.height = 3.0,
+  dpi = 110)
+```
+
+# Goal
+
+`pdactrace` is a queryable PDAC multi-omics gene-level lookup atlas.
+This vignette walks through the **5 core lookup functions** in the
+order most users will need them.
+
+```{r setup}
+library(pdactrace)
+```
+
+# 1. Single-gene query — `query_gene()`
+
+```{r}
+q <- query_gene("LTBP1")
+print(q)
+```
+
+Each layer is accessible as a named slot:
+
+```{r}
+q$rna
+q$serum
+q$filter_status
+```
+
+# 2. Multi-gene comparison — `query_panel()`
+
+```{r}
+qp <- query_panel(c("LTBP1", "SERPINA1", "CDH13", "SPARC", "CP", "FGB"))
+qp[, .(gene_symbol, rna_pattern, translation_class,
+        flt_signal_peptide, flt_final, panel_member)]
+```
+
+Genes not in the LRT-significant atlas universe are reported and
+skipped:
+
+```{r}
+qp_miss <- query_panel(c("LTBP1", "FOOBAR_NOT_A_GENE"))
+```
+
+# 3. Multi-parameter candidate listing — `list_candidates()`
+
+The new v0.1.0 signature accepts biology-level filters. Pass `NULL`
+(default) for any parameter to leave it unconstrained.
+
+```{r}
+# Class B (inverse stromal) candidates
+list_candidates(translation_class = "inverse")[
+  , .(gene_symbol, rna_pattern, translation_class, panel_member)]
+
+# Compound filter: signal-peptide-positive panel members
+list_candidates(signal_peptide = TRUE, panel_member = TRUE)[
+  , .(gene_symbol, rna_pattern, translation_class, panel_member)]
+
+# Direction-aware: tissue-Up + serum-detected
+nrow(list_candidates(tissue_direction = "Up", serum_detected = TRUE))
+```
+
+# 4. Filter audit trail — `trace_filters()`
+
+Shows which `phase60` 7-step filters each gene passed plus auxiliary
+route flags (`phase77_strict`, `panel_member`, `resectable_marker`).
+Most genes pass *one* of the two narrowing funnels but not both —
+this is the audit message of pdactrace.
+
+```{r}
+trace_filters(c("SERPINA1", "LTBP1", "SPARC", "CDH13"))[
+  , .(gene_symbol, n_phase60_pass, class_route)]
+```
+
+`SERPINA1` passes all 7 (`phase60_final`); `LTBP1`, `SPARC`, `CDH13`
+each pass only `SignalP` but are surfaced via `phase77_classB`. Both
+routes are valid — the tool shows them honestly.
+
+# 5. Plain-text summary — `summarize_gene_evidence()`
+
+```{r}
+cat(summarize_gene_evidence("LTBP1"))
+```
+
+# Atlas metadata
+
+```{r}
+str(list_atlas_metadata(), max.level = 1)
+```
+
+# Next
+
+See vignette `02_ltbp1_case_study` for the full LTBP1 narrative
+including visualizations (`plot_gene_evidence`, `plot_filter_trace`,
+`plot_panel_heatmap`, `plot_candidate_landscape`).
+
+# Session
+
+```{r}
+sessionInfo()
+```

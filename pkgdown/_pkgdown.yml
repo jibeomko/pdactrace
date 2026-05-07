@@ -1,0 +1,70 @@
+url: https://jibeomko.github.io/pdactrace
+
+template:
+  bootstrap: 5
+  bslib:
+    primary: "#0D47A1"
+    secondary: "#37474F"
+    code-color: "#C62828"
+
+home:
+  title: pdactrace — queryable PDAC multi-omics atlas
+  description: >
+    R package exposing a stage-aware PDAC tissue-to-serum biomarker
+    reference atlas across bulk RNA-seq, tissue proteomics, scRNA cell
+    origin, and serum proteomics.
+
+navbar:
+  left:
+    - text: Get started
+      href: articles/lookup_basics.html
+    - text: Audit case studies
+      href: articles/audit_case_studies.html
+    - text: Reference
+      href: reference/index.html
+    - text: News
+      href: news/index.html
+
+reference:
+  - title: Lookup
+    desc: Query the atlas for gene-level evidence.
+    contents:
+      - query_gene
+      - query_panel
+      - list_candidates
+      - trace_filters
+      - summarize_gene_evidence
+      - list_atlas_metadata
+
+  - title: Trajectory scoring (user RNA-seq input)
+    desc: Apply the 4 Early-onset templates to your own data.
+    contents:
+      - fit_stage_de
+      - classify_trajectory
+      - score_trajectory
+
+  - title: Visualization
+    desc: Publication-grade NCS-themed figures.
+    contents:
+      - plot_gene_evidence
+      - plot_filter_trace
+      - plot_panel_heatmap
+      - plot_candidate_landscape
+
+  - title: Schema + theme
+    desc: Reference DB schema and ggplot2 theme bundles.
+    contents:
+      - schema_spec
+      - early_pattern_names
+      - mid_pattern_names_excluded
+      - pdactrace-theme
+      - pdactrace-palettes
+      - pdactrace_save
+
+articles:
+  - title: Get started
+    contents:
+      - lookup_basics
+      - audit_case_studies
+      - audit_framework
+      - user_cohort_extension

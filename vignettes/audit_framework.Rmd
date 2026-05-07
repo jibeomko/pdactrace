@@ -1,0 +1,193 @@
+---
+title: "3. Audit framework: 3 axes + 2 gates + 4 classes (v0.3.0)"
+author: "Jibeom Ko"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 2
+vignette: >
+  %\VignetteIndexEntry{3. Audit framework: 3 axes + 2 gates + 4 classes (v0.3.0)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7.0,
+  fig.height = 4.0,
+  dpi = 110)
+```
+
+# Goal
+
+This vignette walks through the v0.3.0 audit framework — a transparent
+evidence aggregation layer for PDAC early-marker hypothesis
+prioritization. The framework summarises each gene along **three
+evidence axes** (`evidence_strength`, `biological_coherence`,
+`translational_relevance`), applies **two reliability gates**
+(`leakage_gate`, `heterogeneity_gate`), and assigns it to one of
+**four audit classes** (`high_confidence`, `supported_uncertain`,
+`penalized`, `excluded`). Unlike a supervised biomarker predictor,
+the rule combines pre-specified weights with deterministic gating
+and Monte Carlo uncertainty propagation, exposing cohort
+heterogeneity, layer agreement, and artifact risk.
+
+```{r, message = FALSE, warning = FALSE}
+library(pdactrace)
+library(data.table)
+```
+
+# 1. Why a hand-engineered rule (and not a supervised model)
+
+PDAC early-stage diagnosis lacks a validated ground-truth biomarker
+beyond CA19-9 (Mehta *et al.*, BJS Open 2024 prediagnostic
+meta-analysis). Training a supervised classifier on community-curated
+markers risks two well-known failure modes:
+
+1. **Internal circularity** — using `pdactrace`'s own pipeline outputs
+   (e.g., the phase29 resectable list) as labels would teach the model
+   to reproduce its own heuristic.
+2. **Anchor circularity** — using literature-curated anchors as
+   training labels collapses the tool into a "literature mimic": it
+   learns to prioritize what other papers already prioritized, with no
+   genuine discovery capability.
+
+The audit framework therefore declines to predict and instead
+**aggregates, ranks, and reports uncertainty**. External anchors are
+reserved for post-freeze enrichment evaluation only.
+
+# 2. The 6-function API at a glance
+
+```{r}
+# 1. Build a per-gene evidence graph (nodes = layers / multipliers / readouts)
+g <- build_evidence_graph("LTBP1")
+g$nodes
+
+# 2. Extract the deterministic feature components (used internally to
+#    compose the three axes; mapping table is in supplement S1)
+extract_graph_features("LTBP1")
+
+# 3. Compute the 3-axis + 2-gate audit score and 4-class label
+compute_audit_score("LTBP1")
+
+# 4. Propagate uncertainty by Monte Carlo (N=200 here for speed)
+propagate_uncertainty("LTBP1", n_mc = 200, seed = 42)
+
+# 5. Evaluate anchor enrichment in the top-N audit-ranked genes
+evaluate_anchor_enrichment(top_n = c(50, 100, 500), tier = "secondary")
+
+# 6. Curate a transparent case-study label table
+case_study(c("LTBP1", "GAPDH", "THBS2", "ALB", "AMBP", "SERPINA1"))
+```
+
+# 3. LTBP1 — the `supported_uncertain` exemplar
+
+LTBP1 illustrates the framework's most distinctive behaviour: a gene
+whose pooled-RNA signal is `Early_Burst_Up` (rho ≈ 1.0) but whose
+per-cohort meta-analysis exposes severe heterogeneity (max I² ≈ 75 %,
+TCGA up vs CPTAC down). The frozen rule down-weights LTBP1 via the
+heterogeneity gate (0.70 in the 70-90 band), and assigns it to the
+`supported_uncertain` audit class — protein, scRNA, and serum layers
+all raise the `evidence_strength` axis, but the heterogeneity gate
+prevents a high-confidence call.
+
+```{r}
+ltbp1_score <- compute_audit_score("LTBP1")
+ltbp1_score
+ltbp1_unc <- propagate_uncertainty("LTBP1", n_mc = 200, seed = 42)
+ltbp1_unc
+```
+
+The wide 95% CI (roughly `[0.26, 0.88]` at N=500 MC iterations) is the
+honest readout: LTBP1 is a credible candidate but its uncertainty is
+real and traceable to cohort divergence, not buried under a single
+point estimate.
+
+# 4. GAPDH — the housekeeping negative control
+
+GAPDH carries the strict housekeeping flag and therefore receives a
+zero leakage multiplier. The score is exactly 0 in every Monte Carlo
+iteration, and the gene is classified as `excluded`.
+
+```{r}
+compute_audit_score("GAPDH")
+propagate_uncertainty("GAPDH", n_mc = 200, seed = 42)
+```
+
+This is the deliberate behaviour: a transparent audit framework should
+refuse to nominate housekeeping genes regardless of how well their
+trajectory shape fits an early-onset template.
+
+# 5. Anchor enrichment evaluation (post-freeze)
+
+External literature anchors are organised into three provenance tiers
+(`primary`, `secondary`, `exploratory`). Enrichment is computed with
+the audit_score frozen — anchors never participate in scoring.
+
+```{r}
+evaluate_anchor_enrichment(top_n = c(50, 100, 200, 500),
+                           tier = c("primary", "secondary"))
+```
+
+A statistically significant enrichment (p ≪ 0.001) of T1+T2 anchors in
+the top 100 indicates that the deterministic rule recovers
+community-prioritized hypotheses without ever having seen them.
+
+# 6. Reading the `case_study()` output
+
+```{r}
+case_study(c("LTBP1", "GAPDH", "THBS2", "ALB", "AMBP",
+             "SERPINA1", "ANPEP"))
+```
+
+Each gene receives an `audit_class` (4-class output of the frozen
+rule) and a `pdactrace_call` (provenance-aware label that combines
+class with anchor / tier / artifact context):
+
+- **audit_class**
+  - `high_confidence` — gates clean and audit_score ≥ 0.5
+    (e.g., LGALS3BP, LCN2, GGH, THBS2).
+  - `supported_uncertain` — heterogeneity-gated or score in the
+    0.3-0.5 band (e.g., LTBP1, FN1, TGFBI, SLC16A3).
+  - `penalized` — plasma high-abundance (leakage_gate = 0.5;
+    e.g., ALB, FGB, C6).
+  - `excluded` — housekeeping (leakage_gate = 0; e.g., GAPDH).
+- **pdactrace_call**
+  - `confirmed_anchor` — externally validated marker that ranks high
+    (e.g., THBS2, TIMP1, MUC16, CEACAM1).
+  - `rescued_candidate` — RNA-tier ARTIFACT/OTHER but multi-layer
+    supported (e.g., LTBP1, VCAN, SPARC).
+  - `novel_nomination` — non-anchor candidate with strong multi-layer
+    signal and a clean leakage gate (e.g., LGALS3BP, KLK7/10, CD55).
+  - `rejected_artifact` — housekeeping or plasma high-abundance
+    (e.g., GAPDH, ALB, C6) — surfaced only for negative-control display.
+
+Together with the Monte Carlo `confidence_class` (`stable_high`,
+`high_uncertain`, `medium`, `low`, `excluded`) this gives a
+transparent two-axis call: *which class does the deterministic rule
+assign* and *how stable is the score under realistic perturbation*.
+
+# 7. What the audit framework does not claim
+
+To stay defensible, the framework explicitly does not:
+
+- predict a probability of being a "true PDAC early marker"
+  (no ground truth exists);
+- learn weights from anchors or from `pdactrace`'s own internal
+  pipeline outputs;
+- collapse high-heterogeneity signals into a single point estimate
+  without a confidence interval;
+- treat housekeeping or plasma high-abundance proteins as candidates,
+  even when their trajectory shape is suggestive.
+
+These are deliberate design choices recorded in the supplement and the
+`NEWS.md` v0.3.0 entry.
+
+# Session info
+
+```{r}
+sessionInfo()
+```

@@ -1,0 +1,31 @@
+gene,source,source_type,evidence_tier,assay_context,early_detection,gene_level_mapping,include_primary_eval,include_secondary_eval,audit_score,rank,in_atlas
+TIMP1,Capello 2017 JNCI + Cohen 2018 + meta-analyses,primary_study,T1_validated,plasma,yes,direct,TRUE,TRUE,0.688947542793347,64,TRUE
+THBS2,Kim 2017 Sci Transl Med,primary_study,T1_validated,plasma,yes,direct,TRUE,TRUE,0.706647911106164,37,TRUE
+ANPEP,Liu 2026 Clin Cancer Res,primary_study,T1_validated,plasma,yes,direct,TRUE,TRUE,0.600595308991513,274,TRUE
+PIGR,Liu 2026 Clin Cancer Res,primary_study,T1_validated,plasma,yes,direct,TRUE,TRUE,0.186644087119146,4349,TRUE
+CEACAM5,Cohen 2018 Science CancerSEEK,primary_study,T1_validated,plasma,yes,direct,TRUE,TRUE,0.498564323847423,532,TRUE
+MUC16,Cohen 2018 Science CancerSEEK,primary_study,T1_validated,plasma,yes,indirect,FALSE,TRUE,0.704603264738981,45,TRUE
+TNC,Balasenthil 2017 JNCI,primary_study,T1_validated,plasma,yes,direct,TRUE,TRUE,0.117589484937578,5615,TRUE
+SERPINA1,BJS Open 2024 meta + multiple studies,review,T1_validated,plasma,yes,direct,TRUE,TRUE,0.519102300032207,470,TRUE
+REG3A,O'Brien 2015 Cancer Prev Res,primary_study,T2_literature_db,serum,yes,direct,FALSE,TRUE,0.341567361753001,2081,TRUE
+CEACAM1,O'Brien 2015 Cancer Prev Res,primary_study,T2_literature_db,serum,yes,direct,FALSE,TRUE,0.692297977957591,62,TRUE
+TTR,LRG1+TTR+CA19-9 panel + plasma high-abundance,primary_study,T2_literature_db,plasma,unclear,direct,FALSE,TRUE,0.0201581974178705,9537,TRUE
+VWF,5-marker panel + BJS Open 2024,primary_study,T2_literature_db,plasma,yes,direct,FALSE,TRUE,0.383159747950704,1727,TRUE
+IL6ST,5-marker panel + BJS Open 2024,primary_study,T2_literature_db,plasma,yes,direct,FALSE,TRUE,0.100790987089352,5961,TRUE
+TNFRSF11B,BJS Open 2024 meta,review,T2_literature_db,plasma,unclear,direct,FALSE,TRUE,0.0940715879500622,6425,TRUE
+POSTN,2025 Frontiers PDAC review,review,T2_literature_db,serum,yes,direct,FALSE,TRUE,0.253898284692842,3475,TRUE
+IGFBP2,Park 2017 PLOS One + 2024 prognostic + Sun 2021,primary_study,T2_literature_db,plasma,yes,direct,FALSE,TRUE,0.269596119277136,3262,TRUE
+PLAUR,Sci Rep 2025 ML panel SHAP,primary_study,T2_literature_db,plasma,yes,direct,FALSE,TRUE,0.590261386354874,310,TRUE
+MSLN,IGFBP2+MSLN paper,primary_study,T2_literature_db,plasma,yes,direct,FALSE,TRUE,0.711563199444791,32,TRUE
+LGALS3,2024 cyst fluid multi-omics,primary_study,exploratory,cyst_fluid,unclear,direct,FALSE,FALSE,0.117589484937578,5549,TRUE
+LRG1,Capello 2017 JNCI,primary_study,T1_validated,plasma,yes,direct,TRUE,TRUE,,,FALSE
+SPP1,Cohen 2018 + multiple PDAC plasma studies,primary_study,T1_validated,plasma,yes,direct,TRUE,TRUE,,,FALSE
+TFPI,Balasenthil 2017 JNCI,primary_study,T1_validated,plasma,yes,direct,TRUE,TRUE,,,FALSE
+APOA2,Honda 2015 Sci Rep + Honda 2019,primary_study,T1_validated,plasma,yes,direct,TRUE,TRUE,,,FALSE
+GDF15,EDRN + multi-marker reviews,primary_study,T1_validated,plasma,yes,direct,TRUE,TRUE,,,FALSE
+PRL,Cohen 2018 CancerSEEK,primary_study,T2_literature_db,plasma,unclear,direct,FALSE,TRUE,,,FALSE
+HGF,Cohen 2018 CancerSEEK,primary_study,T2_literature_db,plasma,unclear,direct,FALSE,TRUE,,,FALSE
+MPO,Cohen 2018 CancerSEEK,primary_study,T2_literature_db,plasma,unclear,direct,FALSE,TRUE,,,FALSE
+THBS1,BJS Open 2024 meta,review,T2_literature_db,plasma,unclear,direct,FALSE,TRUE,,,FALSE
+COL18A1,BJS Open 2024 meta,review,T2_literature_db,plasma,unclear,direct,FALSE,TRUE,,,FALSE
+ANGPTL2,Multi-omic cyst+serum 2024,primary_study,exploratory,multi,unclear,direct,FALSE,FALSE,,,FALSE

@@ -1,0 +1,31 @@
+gene,source,source_type,evidence_tier,assay_context,early_detection,gene_level_mapping,include_primary_eval,include_secondary_eval,pmid_or_url,note
+TIMP1,Capello 2017 JNCI + Cohen 2018 + meta-analyses,primary_study,T1_validated,plasma,yes,direct,TRUE,TRUE,28376157,Capello 3-marker panel AUC 0.949 + Cohen CancerSEEK + multiple meta replication
+LRG1,Capello 2017 JNCI,primary_study,T1_validated,plasma,yes,direct,TRUE,TRUE,28376157,Capello 3-marker panel; also LRG1+TTR+CA19-9 panel
+THBS2,Kim 2017 Sci Transl Med,primary_study,T1_validated,plasma,yes,direct,TRUE,TRUE,29046464,Kim Phase 2b N=537; 2026 4-biomarker panel; pre-diagnostic underperformed (Hsu 2021 Cancer Prev Res)
+ANPEP,Liu 2026 Clin Cancer Res,primary_study,T1_validated,plasma,yes,direct,TRUE,TRUE,,2026 4-biomarker panel AUC 0.97 Mayo / 0.96 Penn
+PIGR,Liu 2026 Clin Cancer Res,primary_study,T1_validated,plasma,yes,direct,TRUE,TRUE,,2026 4-biomarker panel
+CEACAM5,Cohen 2018 Science CancerSEEK,primary_study,T1_validated,plasma,yes,direct,TRUE,TRUE,29348365,CEA carrier; CancerSEEK multi-cancer panel
+MUC16,Cohen 2018 Science CancerSEEK,primary_study,T1_validated,plasma,yes,indirect,FALSE,TRUE,29348365,CA125 carrier — gene-level mapping caveat (epitope vs gene). Excluded from PRIMARY eval (indirect mapping)
+SPP1,Cohen 2018 + multiple PDAC plasma studies,primary_study,T1_validated,plasma,yes,direct,TRUE,TRUE,29348365,Osteopontin (OPN); Cohen panel + replication
+TFPI,Balasenthil 2017 JNCI,primary_study,T1_validated,plasma,yes,direct,TRUE,TRUE,,TFPI/TNC/CA19-9 plasma panel
+TNC,Balasenthil 2017 JNCI,primary_study,T1_validated,plasma,yes,direct,TRUE,TRUE,,Tenascin C (FN III-C); Balasenthil panel
+APOA2,Honda 2015 Sci Rep + Honda 2019,primary_study,T1_validated,plasma,yes,direct,TRUE,TRUE,26456460,Apolipoprotein A2 isoforms; pre-diagnostic 18m ahead
+GDF15,EDRN + multi-marker reviews,primary_study,T1_validated,plasma,yes,direct,TRUE,TRUE,,MIC-1; EDRN panel partner CA19-9+MIC-1
+SERPINA1,BJS Open 2024 meta + multiple studies,review,T1_validated,plasma,yes,direct,TRUE,TRUE,,Alpha-1-antitrypsin; OUR LTBP1+SERPINA1 PANEL의 SERPINA1 — external + our framework cross-validation
+PRL,Cohen 2018 CancerSEEK,primary_study,T2_literature_db,plasma,unclear,direct,FALSE,TRUE,29348365,Pan-cancer panel member; PDAC-specific evidence weak
+HGF,Cohen 2018 CancerSEEK,primary_study,T2_literature_db,plasma,unclear,direct,FALSE,TRUE,29348365,Pan-cancer panel member; less PDAC-specific
+MPO,Cohen 2018 CancerSEEK,primary_study,T2_literature_db,plasma,unclear,direct,FALSE,TRUE,29348365,Pan-cancer panel member; not PDAC-specific
+REG3A,O'Brien 2015 Cancer Prev Res,primary_study,T2_literature_db,serum,yes,direct,FALSE,TRUE,,Pre-diagnostic 12-24m UKCTOCS; small n
+CEACAM1,O'Brien 2015 Cancer Prev Res,primary_study,T2_literature_db,serum,yes,direct,FALSE,TRUE,,Pre-diagnostic; same cohort as REG3A; small n
+TTR,LRG1+TTR+CA19-9 panel + plasma high-abundance,primary_study,T2_literature_db,plasma,unclear,direct,FALSE,TRUE,,Transthyretin; panel partner + DUAL-ROLE (plasma high-abundance) — excluded from negatives but T2 evidence
+THBS1,BJS Open 2024 meta,review,T2_literature_db,plasma,unclear,direct,FALSE,TRUE,,Thrombospondin 1; meta evaluated but limited discriminatory power
+VWF,5-marker panel + BJS Open 2024,primary_study,T2_literature_db,plasma,yes,direct,FALSE,TRUE,,5-marker panel up to 4yr pre-dx (AUC 0.78)
+IL6ST,5-marker panel + BJS Open 2024,primary_study,T2_literature_db,plasma,yes,direct,FALSE,TRUE,,gp130; 5-marker panel
+COL18A1,BJS Open 2024 meta,review,T2_literature_db,plasma,unclear,direct,FALSE,TRUE,,Endostatin precursor; meta limited
+TNFRSF11B,BJS Open 2024 meta,review,T2_literature_db,plasma,unclear,direct,FALSE,TRUE,,Osteoprotegerin; meta limited
+POSTN,2025 Frontiers PDAC review,review,T2_literature_db,serum,yes,direct,FALSE,TRUE,,Periostin; CA19-9+CA242+POSTN panel AUC 0.98 vs healthy
+IGFBP2,Park 2017 PLOS One + 2024 prognostic + Sun 2021,primary_study,T2_literature_db,plasma,yes,direct,FALSE,TRUE,27434445,IGFBP2+CA19-9 outperforms CA19-9 alone; chronic pancreatitis discrimination
+PLAUR,Sci Rep 2025 ML panel SHAP,primary_study,T2_literature_db,plasma,yes,direct,FALSE,TRUE,,suPAR (urokinase plasminogen activator receptor); ML panel top feature with CA19-9+GDF15
+MSLN,IGFBP2+MSLN paper,primary_study,T2_literature_db,plasma,yes,direct,FALSE,TRUE,,Mesothelin; IGFBP2+MSLN PDAC diagnostic+prognostic
+LGALS3,2024 cyst fluid multi-omics,primary_study,exploratory,cyst_fluid,unclear,direct,FALSE,FALSE,,Galectin-3; cyst fluid assay only (not blood) — assay context mismatch
+ANGPTL2,Multi-omic cyst+serum 2024,primary_study,exploratory,multi,unclear,direct,FALSE,FALSE,,Angiopoietin-like 2; single recent multi-omic paper; weak evidence
