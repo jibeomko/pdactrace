@@ -5,14 +5,39 @@
 #' model, return per-gene coefficients (beta_E, beta_M, beta_L vs Normal) +
 #' BH-adjusted LRT padj.
 #'
-#' @param counts Integer matrix or data.frame: genes (rows) x samples
-#'   (cols). Row names are gene symbols.
-#' @param stage Character/factor vector of stage labels per sample.
-#'   Required levels: at minimum `"Normal"`, `"Early"`, `"Mid"`,
-#'   `"Late"`. Other levels are dropped.
-#' @param cohort Character/factor vector of dataset/cohort labels
-#'   per sample. Used as a fixed effect to absorb cohort-level
-#'   technical variance. If only one cohort, omit (default `NULL`).
+#' Two interfaces are supported via S4 method dispatch on `object`:
+#'
+#' * **Matrix interface** (the default): `fit_stage_de(counts, stage,
+#'   cohort)`. `counts` is a numeric matrix or data.frame with genes on
+#'   rows and samples on columns; `stage` and `cohort` are vectors of
+#'   length `ncol(counts)`. This is the original v0.99.1 signature and
+#'   is preserved unchanged for backwards compatibility.
+#' * **SummarizedExperiment interface** (new in v0.99.2):
+#'   `fit_stage_de(se, stage_col = "stage", cohort_col = "cohort")`.
+#'   The count matrix is pulled from `assay(se, assay_name)` and the
+#'   stage / cohort vectors are pulled from `colData(se)`. This is the
+#'   Bioconductor-native entry point.
+#'
+#' @param object Either a count matrix/data.frame (genes by samples,
+#'   rownames = gene symbols) or a `SummarizedExperiment` whose
+#'   `assay()` is the count matrix and whose `colData()` carries the
+#'   stage / cohort columns.
+#' @param ... Method-specific arguments — see Details for the matrix
+#'   and SummarizedExperiment interfaces.
+#' @param stage *(matrix/data.frame interface)* Character or factor
+#'   vector of stage labels per sample. Required levels: at minimum
+#'   `"Normal"`, `"Early"`, `"Mid"`, `"Late"`. Other levels are dropped.
+#' @param cohort *(matrix/data.frame interface)* Optional character /
+#'   factor vector of dataset/cohort labels per sample. Used as a fixed
+#'   effect to absorb cohort-level technical variance. If only one
+#'   cohort, omit (default `NULL`).
+#' @param stage_col *(SummarizedExperiment interface)* Name of the
+#'   column in `colData(object)` that carries the stage labels.
+#' @param cohort_col *(SummarizedExperiment interface)* Optional name
+#'   of the column in `colData(object)` that carries the cohort labels.
+#'   Default `NULL` (single-cohort).
+#' @param assay_name *(SummarizedExperiment interface)* Name of the
+#'   assay slot to pull as the count matrix. Default `"counts"`.
 #' @param min_count Numeric. Pre-filter: genes with row sum below
 #'   `min_count` are dropped before LRT. Default 10.
 #' @param padj_cutoff Numeric. BH-adjusted LRT padj cutoff for
@@ -22,17 +47,32 @@
 #'   `lrt_significant` (logical, padj < cutoff), and lfcSE_*.
 #' @examples
 #' \dontrun{
+#'   # Matrix interface (original signature):
 #'   fit <- fit_stage_de(my_counts, my_stage, my_cohort)
+#'
+#'   # SummarizedExperiment interface (Bioconductor-native):
+#'   library(SummarizedExperiment)
+#'   se <- SummarizedExperiment(
+#'     assays = list(counts = my_counts),
+#'     colData = DataFrame(stage = my_stage, cohort = my_cohort))
+#'   fit <- fit_stage_de(se, stage_col = "stage", cohort_col = "cohort")
 #'   pat <- classify_trajectory(fit)
 #' }
+#' @importClassesFrom SummarizedExperiment SummarizedExperiment
 #' @export
-fit_stage_de <- function(counts, stage, cohort = NULL,
-                          min_count = 10,
-                          padj_cutoff = 0.05) {
+setGeneric("fit_stage_de",
+           function(object, ...) standardGeneric("fit_stage_de"))
+
+#' @rdname fit_stage_de
+#' @export
+setMethod("fit_stage_de", "ANY",
+          function(object, stage, cohort = NULL,
+                   min_count = 10, padj_cutoff = 0.05) {
   if (!requireNamespace("DESeq2", quietly = TRUE)) {
     stop("DESeq2 is required for fit_stage_de(). ",
          "Install via BiocManager::install('DESeq2').")
   }
+  counts <- object
   stage <- factor(stage, levels = c("Normal", "Early", "Mid", "Late"))
   if (any(is.na(stage))) {
     keep <- !is.na(stage)
@@ -85,4 +125,39 @@ fit_stage_de <- function(counts, stage, cohort = NULL,
   attr(out, "n_cohorts")   <- if (is.null(cohort)) 1L else
                                 length(unique(cohort))
   out
-}
+})
+
+#' @rdname fit_stage_de
+#' @export
+setMethod("fit_stage_de", "SummarizedExperiment",
+          function(object, stage_col, cohort_col = NULL,
+                   assay_name = "counts",
+                   min_count = 10, padj_cutoff = 0.05) {
+  cd <- SummarizedExperiment::colData(object)
+  if (!stage_col %in% colnames(cd)) {
+    stop(sprintf(
+      "colData(object) does not have a column named '%s'. ",
+      stage_col),
+      "Available columns: ",
+      paste(colnames(cd), collapse = ", "), call. = FALSE)
+  }
+  if (!is.null(cohort_col) && !cohort_col %in% colnames(cd)) {
+    stop(sprintf(
+      "colData(object) does not have a column named '%s'. ",
+      cohort_col),
+      "Set cohort_col = NULL for single-cohort input.", call. = FALSE)
+  }
+  assay_names <- SummarizedExperiment::assayNames(object)
+  if (!assay_name %in% assay_names) {
+    stop(sprintf(
+      "Assay '%s' not found in SummarizedExperiment. ", assay_name),
+      "Available assays: ",
+      paste(assay_names, collapse = ", "), call. = FALSE)
+  }
+  counts  <- SummarizedExperiment::assay(object, assay_name)
+  stage   <- as.character(cd[[stage_col]])
+  cohort  <- if (!is.null(cohort_col)) as.character(cd[[cohort_col]])
+             else NULL
+  fit_stage_de(counts, stage = stage, cohort = cohort,
+                min_count = min_count, padj_cutoff = padj_cutoff)
+})

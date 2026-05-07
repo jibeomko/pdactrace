@@ -7,41 +7,66 @@
 #'
 #' Designed to be the protein-side parallel of [fit_stage_de()], so
 #' downstream `classify_trajectory()` / `assemble_user_evidence()` can
-#' consume both layers symmetrically.
+#' consume both layers symmetrically. Two interfaces are supported via
+#' S4 dispatch: a numeric matrix / data.frame (the original v0.99.1
+#' signature) or a `SummarizedExperiment` (new in v0.99.2; the
+#' Bioconductor-native entry point).
 #'
-#' @param intensity Numeric matrix or data.frame: genes (rows) x
-#'   samples (cols). Row names are gene symbols. Values are assumed
-#'   log2-transformed and median-normalised; if your input is raw
-#'   intensities, log-transform first.
-#' @param stage Character/factor vector of stage labels per sample.
-#'   Required levels: at minimum `"Normal"`, `"Early"`, `"Mid"`,
-#'   `"Late"`. Other levels are dropped.
-#' @param cohort Character/factor vector of dataset/cohort labels per
-#'   sample. Used as a fixed effect to absorb cohort-level technical
-#'   variance. If only one cohort, omit (default `NULL`).
-#' @param min_nonNA Numeric. Pre-filter: rows with fewer than this
-#'   many non-NA samples are dropped. Default 10.
+#' @param object Either a numeric intensity matrix/data.frame
+#'   (genes by samples; rownames = gene symbols; values are log2
+#'   intensities) or a `SummarizedExperiment` whose `assay()` is the
+#'   intensity matrix and whose `colData()` carries stage / cohort.
+#' @param ... Method-specific arguments — see the matrix and
+#'   SummarizedExperiment interfaces below.
+#' @param stage *(matrix/data.frame interface)* Character or factor
+#'   vector of stage labels per sample. Required levels: at minimum
+#'   `"Normal"`, `"Early"`, `"Mid"`, `"Late"`. Other levels are dropped.
+#' @param cohort *(matrix/data.frame interface)* Optional character /
+#'   factor vector of dataset/cohort labels per sample. `NULL` for
+#'   single-cohort.
+#' @param stage_col *(SummarizedExperiment interface)* Name of the
+#'   column in `colData(object)` that carries the stage labels.
+#' @param cohort_col *(SummarizedExperiment interface)* Optional name
+#'   of the column in `colData(object)` that carries cohort labels.
+#'   Default `NULL`.
+#' @param assay_name *(SummarizedExperiment interface)* Name of the
+#'   assay slot to pull as the intensity matrix. Default `"intensity"`.
+#' @param min_nonNA Numeric. Pre-filter: rows with fewer than this many
+#'   non-NA samples are dropped. Default 10.
 #' @param padj_cutoff Numeric. BH-adjusted F-test padj cutoff for
 #'   "stage-progressive" gene set. Default 0.05.
 #' @return A `data.table` with the same column schema as
 #'   [fit_stage_de()]: `gene_symbol, beta_N, beta_E, beta_M, beta_L,
-#'   lfcSE_E, lfcSE_M, lfcSE_L, lrt_padj, lrt_significant`. The
-#'   `lrt_padj` column reports the BH-adjusted F-test p-value on the
-#'   stage_group main effect (`limma::topTable(..., coef =
-#'   c("Early", "Mid", "Late"))`).
+#'   lfcSE_E, lfcSE_M, lfcSE_L, lrt_padj, lrt_significant`.
 #' @examples
 #' \dontrun{
-#'   # User log2-intensity matrix and matched stage labels
+#'   # Matrix interface:
 #'   prot_fit <- fit_stage_de_protein(my_intensity, my_stage, my_cohort)
+#'
+#'   # SummarizedExperiment interface:
+#'   library(SummarizedExperiment)
+#'   se <- SummarizedExperiment(
+#'     assays = list(intensity = my_intensity),
+#'     colData = DataFrame(stage = my_stage, cohort = my_cohort))
+#'   prot_fit <- fit_stage_de_protein(
+#'     se, stage_col = "stage", cohort_col = "cohort",
+#'     assay_name = "intensity")
 #' }
+#' @importClassesFrom SummarizedExperiment SummarizedExperiment
 #' @export
-fit_stage_de_protein <- function(intensity, stage, cohort = NULL,
-                                  min_nonNA = 10,
-                                  padj_cutoff = 0.05) {
+setGeneric("fit_stage_de_protein",
+           function(object, ...) standardGeneric("fit_stage_de_protein"))
+
+#' @rdname fit_stage_de_protein
+#' @export
+setMethod("fit_stage_de_protein", "ANY",
+          function(object, stage, cohort = NULL,
+                   min_nonNA = 10, padj_cutoff = 0.05) {
   if (!requireNamespace("limma", quietly = TRUE)) {
     stop("limma is required for fit_stage_de_protein(). ",
          "Install via BiocManager::install('limma').")
   }
+  intensity <- object
   stage <- factor(stage, levels = c("Normal", "Early", "Mid", "Late"))
   if (any(is.na(stage))) {
     keep <- !is.na(stage)
@@ -104,4 +129,40 @@ fit_stage_de_protein <- function(intensity, stage, cohort = NULL,
   attr(out, "n_cohorts") <- if (is.null(cohort)) 1L else
                              length(unique(cohort))
   out
-}
+})
+
+#' @rdname fit_stage_de_protein
+#' @export
+setMethod("fit_stage_de_protein", "SummarizedExperiment",
+          function(object, stage_col, cohort_col = NULL,
+                   assay_name = "intensity",
+                   min_nonNA = 10, padj_cutoff = 0.05) {
+  cd <- SummarizedExperiment::colData(object)
+  if (!stage_col %in% colnames(cd)) {
+    stop(sprintf(
+      "colData(object) does not have a column named '%s'. ",
+      stage_col),
+      "Available columns: ",
+      paste(colnames(cd), collapse = ", "), call. = FALSE)
+  }
+  if (!is.null(cohort_col) && !cohort_col %in% colnames(cd)) {
+    stop(sprintf(
+      "colData(object) does not have a column named '%s'. ",
+      cohort_col),
+      "Set cohort_col = NULL for single-cohort input.", call. = FALSE)
+  }
+  assay_names <- SummarizedExperiment::assayNames(object)
+  if (!assay_name %in% assay_names) {
+    stop(sprintf(
+      "Assay '%s' not found in SummarizedExperiment. ", assay_name),
+      "Available assays: ",
+      paste(assay_names, collapse = ", "), call. = FALSE)
+  }
+  intensity <- SummarizedExperiment::assay(object, assay_name)
+  stage  <- as.character(cd[[stage_col]])
+  cohort <- if (!is.null(cohort_col)) as.character(cd[[cohort_col]])
+            else NULL
+  fit_stage_de_protein(intensity, stage = stage, cohort = cohort,
+                        min_nonNA = min_nonNA,
+                        padj_cutoff = padj_cutoff)
+})

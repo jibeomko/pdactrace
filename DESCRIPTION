@@ -1,7 +1,7 @@
 Package: pdactrace
 Type: Package
 Title: Queryable Stage-Aware PDAC Tissue-to-Serum Biomarker Reference Atlas
-Version: 0.99.1
+Version: 0.99.2
 Authors@R: c(
     person(given = "Jibeom", family = "Ko",
            email = "rhwlqja1779@gmail.com",
@@ -31,12 +31,15 @@ Imports:
     ggplot2,
     patchwork,
     glue,
+    methods,
     stats,
     utils,
-    withr
+    withr,
+    SummarizedExperiment
 Suggests:
     DESeq2,
     limma,
+    S4Vectors,
     testthat (>= 3.0.0),
     knitr,
     rmarkdown,

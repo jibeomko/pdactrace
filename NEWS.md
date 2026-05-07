@@ -1,3 +1,45 @@
+# pdactrace 0.99.2
+
+**Bioconductor-native input.** `fit_stage_de()` and
+`fit_stage_de_protein()` are now S4 generics that dispatch on the type
+of the first argument: a count / intensity matrix (the v0.99.1
+signature, preserved unchanged for backwards compatibility) or a
+`SummarizedExperiment` (new, Bioconductor-native entry point). This
+removes the only substantive `BiocCheck` warning ("No Bioconductor
+dependencies detected") and makes the user-cohort workflow composable
+with the wider Bioc ecosystem (e.g., output of `tximeta::tximeta()`,
+`scuttle::aggregateAcrossCells()`, etc.).
+
+## Changed
+
+- `fit_stage_de(object, ...)` is now an S4 generic with two methods:
+  the `ANY` method preserves the v0.99.1 matrix/data.frame signature
+  (`fit_stage_de(counts, stage, cohort)`), and a new
+  `SummarizedExperiment` method accepts
+  `fit_stage_de(se, stage_col, cohort_col, assay_name = "counts")`.
+  Both paths share the same DESeq2 LRT kernel and produce identical
+  output (verified by `tests/testthat/test-se-input.R`).
+- `fit_stage_de_protein(object, ...)` follows the same pattern with
+  `assay_name = "intensity"` as the SE-method default.
+- `DESCRIPTION` adds `SummarizedExperiment` and `methods` to
+  `Imports:`. `data.table`, `ggplot2`, `patchwork`, `glue`, `withr`,
+  `stats`, `utils` remain the sole CRAN dependencies.
+
+## New
+
+- `tests/testthat/test-se-input.R` — confirms that the matrix
+  interface and the `SummarizedExperiment` interface produce
+  numerically identical `beta_E` and `lrt_padj` for both
+  `fit_stage_de` (DESeq2) and `fit_stage_de_protein` (limma), and
+  that informative errors are raised when `stage_col` / `cohort_col`
+  / `assay_name` are missing from the SE.
+
+## Documentation
+
+- `vignettes/user_cohort_extension.Rmd` — added a new "Step 6 —
+  Bioconductor-native input via `SummarizedExperiment`" section with
+  a concrete `SummarizedExperiment::SummarizedExperiment()` example.
+
 # pdactrace 0.99.1
 
 **Single-gene evidence report + plot polish.** Adds a one-page

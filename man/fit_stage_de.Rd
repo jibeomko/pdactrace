@@ -2,27 +2,56 @@
 % Please edit documentation in R/fit_stage_de.R
 \name{fit_stage_de}
 \alias{fit_stage_de}
+\alias{fit_stage_de,ANY-method}
+\alias{fit_stage_de,SummarizedExperiment-method}
 \title{Fit a stage-aware DESeq2 LRT model on user RNA-seq data}
 \usage{
-fit_stage_de(counts, stage, cohort = NULL, min_count = 10, padj_cutoff = 0.05)
+fit_stage_de(object, ...)
+
+\S4method{fit_stage_de}{ANY}(object, stage, cohort = NULL, min_count = 10, padj_cutoff = 0.05)
+
+\S4method{fit_stage_de}{SummarizedExperiment}(
+  object,
+  stage_col,
+  cohort_col = NULL,
+  assay_name = "counts",
+  min_count = 10,
+  padj_cutoff = 0.05
+)
 }
 \arguments{
-\item{counts}{Integer matrix or data.frame: genes (rows) x samples
-(cols). Row names are gene symbols.}
+\item{object}{Either a count matrix/data.frame (genes by samples,
+rownames = gene symbols) or a \code{SummarizedExperiment} whose
+\code{assay()} is the count matrix and whose \code{colData()} carries the
+stage / cohort columns.}
 
-\item{stage}{Character/factor vector of stage labels per sample.
-Required levels: at minimum \code{"Normal"}, \code{"Early"}, \code{"Mid"},
-\code{"Late"}. Other levels are dropped.}
+\item{...}{Method-specific arguments — see Details for the matrix
+and SummarizedExperiment interfaces.}
 
-\item{cohort}{Character/factor vector of dataset/cohort labels
-per sample. Used as a fixed effect to absorb cohort-level
-technical variance. If only one cohort, omit (default \code{NULL}).}
+\item{stage}{\emph{(matrix/data.frame interface)} Character or factor
+vector of stage labels per sample. Required levels: at minimum
+\code{"Normal"}, \code{"Early"}, \code{"Mid"}, \code{"Late"}. Other levels are dropped.}
+
+\item{cohort}{\emph{(matrix/data.frame interface)} Optional character /
+factor vector of dataset/cohort labels per sample. Used as a fixed
+effect to absorb cohort-level technical variance. If only one
+cohort, omit (default \code{NULL}).}
 
 \item{min_count}{Numeric. Pre-filter: genes with row sum below
 \code{min_count} are dropped before LRT. Default 10.}
 
 \item{padj_cutoff}{Numeric. BH-adjusted LRT padj cutoff for
 "stage-progressive" gene set. Default 0.05.}
+
+\item{stage_col}{\emph{(SummarizedExperiment interface)} Name of the
+column in \code{colData(object)} that carries the stage labels.}
+
+\item{cohort_col}{\emph{(SummarizedExperiment interface)} Optional name
+of the column in \code{colData(object)} that carries the cohort labels.
+Default \code{NULL} (single-cohort).}
+
+\item{assay_name}{\emph{(SummarizedExperiment interface)} Name of the
+assay slot to pull as the count matrix. Default \code{"counts"}.}
 }
 \value{
 A \code{data.table} with one row per gene and columns:
@@ -35,9 +64,31 @@ fixed-effect model on raw counts, LRT against \code{~ dataset} reduced
 model, return per-gene coefficients (beta_E, beta_M, beta_L vs Normal) +
 BH-adjusted LRT padj.
 }
+\details{
+Two interfaces are supported via S4 method dispatch on \code{object}:
+\itemize{
+\item \strong{Matrix interface} (the default): \code{fit_stage_de(counts, stage, cohort)}. \code{counts} is a numeric matrix or data.frame with genes on
+rows and samples on columns; \code{stage} and \code{cohort} are vectors of
+length \code{ncol(counts)}. This is the original v0.99.1 signature and
+is preserved unchanged for backwards compatibility.
+\item \strong{SummarizedExperiment interface} (new in v0.99.2):
+\code{fit_stage_de(se, stage_col = "stage", cohort_col = "cohort")}.
+The count matrix is pulled from \code{assay(se, assay_name)} and the
+stage / cohort vectors are pulled from \code{colData(se)}. This is the
+Bioconductor-native entry point.
+}
+}
 \examples{
 \dontrun{
+  # Matrix interface (original signature):
   fit <- fit_stage_de(my_counts, my_stage, my_cohort)
+
+  # SummarizedExperiment interface (Bioconductor-native):
+  library(SummarizedExperiment)
+  se <- SummarizedExperiment(
+    assays = list(counts = my_counts),
+    colData = DataFrame(stage = my_stage, cohort = my_cohort))
+  fit <- fit_stage_de(se, stage_col = "stage", cohort_col = "cohort")
   pat <- classify_trajectory(fit)
 }
 }

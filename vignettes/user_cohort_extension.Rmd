@@ -116,7 +116,33 @@ evaluate_anchor_enrichment(top_n = 20, tier = "secondary",
                              anchors = user_anchors)
 ```
 
-# Step 6 — Single-patient trajectory alignment (v0.4.1)
+# Step 6 — Bioconductor-native input via `SummarizedExperiment` (v0.99.2)
+
+Steps 2 and 3 above show the matrix interface. `fit_stage_de()` and
+`fit_stage_de_protein()` are also S4 generics with a
+`SummarizedExperiment` method, so the same workflow can be driven
+from a Bioconductor container without rebuilding intermediate vectors:
+
+```{r se-input, eval = requireNamespace("SummarizedExperiment", quietly = TRUE)}
+suppressPackageStartupMessages(library(SummarizedExperiment))
+
+rna_se <- SummarizedExperiment(
+  assays  = list(counts = counts),
+  colData = DataFrame(stage = sample_meta$stage,
+                       cohort = sample_meta$cohort),
+  rowData = DataFrame(gene_symbol = rownames(counts)))
+
+rna_fit_se <- fit_stage_de(rna_se, stage_col = "stage",
+                            cohort_col = "cohort")
+identical(dim(rna_fit_se), dim(rna_fit))
+```
+
+The matrix and SE entry points are functionally equivalent — the
+S4 method extracts `assay(se, assay_name)` and `colData(se)` and
+calls the same fitting kernel. The same is true of
+`fit_stage_de_protein(se, stage_col, cohort_col, assay_name = "intensity")`.
+
+# Step 7 — Single-patient trajectory alignment (v0.4.1)
 
 `align_patient_profile()` is the single-sample analog of
 `score_trajectory()`. It takes one patient's per-gene

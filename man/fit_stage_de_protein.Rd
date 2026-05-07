@@ -2,41 +2,65 @@
 % Please edit documentation in R/fit_stage_de_protein.R
 \name{fit_stage_de_protein}
 \alias{fit_stage_de_protein}
+\alias{fit_stage_de_protein,ANY-method}
+\alias{fit_stage_de_protein,SummarizedExperiment-method}
 \title{Fit a stage-aware limma model on user tissue-protein intensity data}
 \usage{
-fit_stage_de_protein(
-  intensity,
+fit_stage_de_protein(object, ...)
+
+\S4method{fit_stage_de_protein}{ANY}(
+  object,
   stage,
   cohort = NULL,
   min_nonNA = 10,
   padj_cutoff = 0.05
 )
+
+\S4method{fit_stage_de_protein}{SummarizedExperiment}(
+  object,
+  stage_col,
+  cohort_col = NULL,
+  assay_name = "intensity",
+  min_nonNA = 10,
+  padj_cutoff = 0.05
+)
 }
 \arguments{
-\item{intensity}{Numeric matrix or data.frame: genes (rows) x
-samples (cols). Row names are gene symbols. Values are assumed
-log2-transformed and median-normalised; if your input is raw
-intensities, log-transform first.}
+\item{object}{Either a numeric intensity matrix/data.frame
+(genes by samples; rownames = gene symbols; values are log2
+intensities) or a \code{SummarizedExperiment} whose \code{assay()} is the
+intensity matrix and whose \code{colData()} carries stage / cohort.}
 
-\item{stage}{Character/factor vector of stage labels per sample.
-Required levels: at minimum \code{"Normal"}, \code{"Early"}, \code{"Mid"},
-\code{"Late"}. Other levels are dropped.}
+\item{...}{Method-specific arguments — see the matrix and
+SummarizedExperiment interfaces below.}
 
-\item{cohort}{Character/factor vector of dataset/cohort labels per
-sample. Used as a fixed effect to absorb cohort-level technical
-variance. If only one cohort, omit (default \code{NULL}).}
+\item{stage}{\emph{(matrix/data.frame interface)} Character or factor
+vector of stage labels per sample. Required levels: at minimum
+\code{"Normal"}, \code{"Early"}, \code{"Mid"}, \code{"Late"}. Other levels are dropped.}
 
-\item{min_nonNA}{Numeric. Pre-filter: rows with fewer than this
-many non-NA samples are dropped. Default 10.}
+\item{cohort}{\emph{(matrix/data.frame interface)} Optional character /
+factor vector of dataset/cohort labels per sample. \code{NULL} for
+single-cohort.}
+
+\item{min_nonNA}{Numeric. Pre-filter: rows with fewer than this many
+non-NA samples are dropped. Default 10.}
 
 \item{padj_cutoff}{Numeric. BH-adjusted F-test padj cutoff for
 "stage-progressive" gene set. Default 0.05.}
+
+\item{stage_col}{\emph{(SummarizedExperiment interface)} Name of the
+column in \code{colData(object)} that carries the stage labels.}
+
+\item{cohort_col}{\emph{(SummarizedExperiment interface)} Optional name
+of the column in \code{colData(object)} that carries cohort labels.
+Default \code{NULL}.}
+
+\item{assay_name}{\emph{(SummarizedExperiment interface)} Name of the
+assay slot to pull as the intensity matrix. Default \code{"intensity"}.}
 }
 \value{
 A \code{data.table} with the same column schema as
-\code{\link[=fit_stage_de]{fit_stage_de()}}: \verb{gene_symbol, beta_N, beta_E, beta_M, beta_L, lfcSE_E, lfcSE_M, lfcSE_L, lrt_padj, lrt_significant}. The
-\code{lrt_padj} column reports the BH-adjusted F-test p-value on the
-stage_group main effect (\code{limma::topTable(..., coef = c("Early", "Mid", "Late"))}).
+\code{\link[=fit_stage_de]{fit_stage_de()}}: \verb{gene_symbol, beta_N, beta_E, beta_M, beta_L, lfcSE_E, lfcSE_M, lfcSE_L, lrt_padj, lrt_significant}.
 }
 \description{
 Wraps the \code{phase34} canonical pipeline: \code{cohort + stage_group}
@@ -47,11 +71,23 @@ BH-adjusted F-test padj on the stage_group main effect.
 \details{
 Designed to be the protein-side parallel of \code{\link[=fit_stage_de]{fit_stage_de()}}, so
 downstream \code{classify_trajectory()} / \code{assemble_user_evidence()} can
-consume both layers symmetrically.
+consume both layers symmetrically. Two interfaces are supported via
+S4 dispatch: a numeric matrix / data.frame (the original v0.99.1
+signature) or a \code{SummarizedExperiment} (new in v0.99.2; the
+Bioconductor-native entry point).
 }
 \examples{
 \dontrun{
-  # User log2-intensity matrix and matched stage labels
+  # Matrix interface:
   prot_fit <- fit_stage_de_protein(my_intensity, my_stage, my_cohort)
+
+  # SummarizedExperiment interface:
+  library(SummarizedExperiment)
+  se <- SummarizedExperiment(
+    assays = list(intensity = my_intensity),
+    colData = DataFrame(stage = my_stage, cohort = my_cohort))
+  prot_fit <- fit_stage_de_protein(
+    se, stage_col = "stage", cohort_col = "cohort",
+    assay_name = "intensity")
 }
 }
