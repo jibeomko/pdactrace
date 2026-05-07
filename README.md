@@ -10,8 +10,8 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20069896.svg)](https://doi.org/10.5281/zenodo.20069896)
 
 <p align="center">
-  <img src="man/figures/pdactrace_overview.svg" width="900"
-       alt="pdactrace workflow overview: from user staged omics + bundled atlas through 12-template trajectory matching, Early × 4 atlas surface, multi-layer evidence, 3-axis + 2-gate audit score, to query / compare / explain / report functions">
+  <img src="man/figures/pdactrace_overview.jpg" width="900"
+       alt="pdactrace workflow: staged omics evidence (RNA, protein, scRNA, serum, user cohort) → 12-template trajectory matching → Early-onset atlas surface → multi-layer evidence integration → 3-axis + 2-gate audit scoring → user outputs (query_gene, explain_score, compare_candidates, trace_filters, project_user_cohort). Transparent prioritization, not a supervised diagnostic classifier.">
 </p>
 
 `pdactrace` is an R package for querying and prioritizing pancreatic

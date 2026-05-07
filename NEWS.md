@@ -55,6 +55,18 @@ Bioconductor and consolidates everything below in a single release.
   I², plus a `redundancy_with` column flagging genes that share both
   `rna_pattern` and `cell_origin_top` in the input set. Sorted by
   `audit_score` descending; missing genes returned as NA rows.
+- `project_user_cohort(rna, coldata, stage_col, cohort_col, ...)` —
+  end-to-end wrapper around `fit_stage_de()` →
+  `classify_trajectory()` → `assemble_user_evidence()` →
+  `compute_audit_score()`. Accepts either a count matrix +
+  `coldata`, or a `SummarizedExperiment` whose `colData()` carries
+  the stage / cohort columns. Optional `protein` argument (matrix or
+  SE) layers in tissue-protein evidence on the same design.
+  Returns a `pdactrace_user_projection` list with each intermediate
+  object (`rna_fit`, `rna_pattern`, `prot_fit`, `prot_pattern`,
+  `evidence`, `audit`) plus a one-row `summary` of audit-class
+  counts. Designed to make "apply pdactrace to my own staged
+  cohort" a single line.
 
 ## New — single-patient trajectory alignment
 
@@ -145,6 +157,15 @@ to work unchanged.
   single `withr::local_seed(seed)` call. The seed parameter is
   scoped to the helper and the global RNG state is restored on
   function exit — same behaviour, BiocCheck-compliant.
+- README adds a horizontal 6-panel workflow figure at the top
+  (`man/figures/pdactrace_overview.jpg`, 1800 × 1344, 280 KB,
+  hand-drawn, license-clean): staged omics evidence → 12-template
+  trajectory matching → Early-onset atlas surface → multi-layer
+  evidence integration → 3-axis + 2-gate audit scoring → user
+  outputs (`query_gene` · `explain_score` · `compare_candidates` ·
+  `trace_filters` · `project_user_cohort`). Closing tagline:
+  "Transparent prioritization, not a supervised diagnostic
+  classifier."
 
 ## DESCRIPTION
 
