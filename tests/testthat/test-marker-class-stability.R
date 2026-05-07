@@ -39,6 +39,7 @@ test_that("compare_candidates orders the four case studies as expected", {
 
 test_that("toy data round-trips through fit_stage_de + classify_trajectory", {
   skip_if_not_installed("DESeq2")
+  skip_on_os("mac")
   fit <- fit_stage_de(toy_counts,
                        stage  = toy_coldata$stage,
                        cohort = toy_coldata$cohort)

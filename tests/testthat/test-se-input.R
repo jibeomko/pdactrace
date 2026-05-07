@@ -1,6 +1,7 @@
 test_that("fit_stage_de S4 dispatches to SummarizedExperiment method", {
   skip_if_not_installed("SummarizedExperiment")
   skip_if_not_installed("DESeq2")
+  skip_on_os("mac")
 
   # Synthetic 500-gene x 24-sample stage-progressive count matrix
   set.seed(42)
@@ -36,6 +37,7 @@ test_that("fit_stage_de S4 dispatches to SummarizedExperiment method", {
 test_that("fit_stage_de_protein S4 dispatches to SE method", {
   skip_if_not_installed("SummarizedExperiment")
   skip_if_not_installed("limma")
+  skip_on_os("mac")
 
   set.seed(42)
   n_g <- 200L

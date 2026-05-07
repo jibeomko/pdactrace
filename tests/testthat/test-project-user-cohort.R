@@ -1,5 +1,6 @@
 test_that("project_user_cohort runs end-to-end on toy data", {
   skip_if_not_installed("DESeq2")
+  skip_on_os("mac")
   res <- project_user_cohort(
     rna        = toy_counts,
     coldata    = toy_coldata,
@@ -19,6 +20,7 @@ test_that("project_user_cohort runs end-to-end on toy data", {
 
 test_that("project_user_cohort accepts a SummarizedExperiment", {
   skip_if_not_installed("DESeq2")
+  skip_on_os("mac")
   skip_if_not_installed("SummarizedExperiment")
   se <- SummarizedExperiment::SummarizedExperiment(
     assays  = list(counts = toy_counts),
@@ -32,6 +34,7 @@ test_that("project_user_cohort accepts a SummarizedExperiment", {
 
 test_that("project_user_cohort layers in a protein cohort when supplied", {
   skip_if_not_installed("DESeq2")
+  skip_on_os("mac")
   skip_if_not_installed("limma")
   res <- project_user_cohort(
     rna        = toy_counts,

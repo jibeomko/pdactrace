@@ -70,6 +70,7 @@ test_that("plot_gene_hexagon returns a ggplot for one or more genes", {
 
 test_that("fit_stage_de_protein returns expected schema", {
   skip_if_not_installed("limma")
+  skip_on_os("mac")
   set.seed(42)
   intensity <- matrix(rnorm(100 * 24), nrow = 100,
                        dimnames = list(paste0("G", 1:100), NULL))

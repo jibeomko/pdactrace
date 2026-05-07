@@ -67,6 +67,7 @@
 #' @name pdactrace-package
 #' @aliases pdactrace
 #' @importFrom utils data
+#' @importFrom methods setGeneric setMethod is
 "_PACKAGE"
 
 # Required by data.table when := and .SD are used inside package code.
@@ -90,5 +91,3 @@ utils::globalVariables(c(
   # data.table column-list NSE
   "..beta_cols", "..keep_cols", "..cols", ".N"
 ))
-
-#' @importFrom methods setGeneric setMethod is
