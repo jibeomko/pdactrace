@@ -103,6 +103,49 @@ anchor_enrichment(top_n = 100, tier = "secondary")  # alias of evaluate_anchor_e
 The frozen audit rule recovers **7 secondary-tier external anchors in
 the top 100** (`39.3x`, hypergeometric `p = 2.18e-10`).
 
+## Stage Harmonization
+
+Every cohort is collapsed onto a single **4-level scale**
+(`Normal / Early / Mid / Late`) before any per-gene trajectory or
+audit step. The collapse is deterministic and applied identically
+across bulk RNA-seq, tissue proteomics, and serum proteomics.
+
+| Source label | Standardized | 4-level group |
+|---|---|---|
+| Histologically normal / matched-normal tissue | — | `Normal` |
+| AJCC Stage I (IA, IB) | `Stage_I` | **Early** |
+| AJCC Stage II (IIA, IIB) | `Stage_II` | **Mid** |
+| AJCC Stage III | `Stage_III` | **Late** |
+| AJCC Stage IV (M1) | `Stage_IV` | **Late** |
+| TNM with M1 | → `Stage_IV` | **Late** |
+| TNM with N1+ (no M1) | → `Stage_III` | **Late** |
+| TNM T3 / T4 (M0, N0) | → `Stage_II` | **Mid** |
+| TNM T1-T2 (M0, N0) | → `Stage_I` | **Early** |
+| Cohort-specific category "resectable" | → `Stage_II` | **Mid** |
+| Cohort-specific category "borderline" / "locAdvanced" | → `Stage_III` | **Late** |
+| Cohort-specific category "metastatic" | → `Stage_IV` | **Late** |
+
+Reference: AJCC Cancer Staging Manual (8th edition) for PDAC.
+Source-of-truth code: [analysis/transcriptomics/scripts/figure1_wald_lrt_pipeline.R](analysis/transcriptomics/scripts/figure1_wald_lrt_pipeline.R)
+in the [companion manuscript repo](https://github.com/jibeomko/PDAC_biomarker)
+(lines 93–96 for the AJCC → 3-level mapping; the matching
+`extract_all_clinical.R` carries the per-cohort TNM and free-text
+normalisation).
+
+**Why 3-level (Early / Mid / Late) instead of 4-level (I / II / III / IV)?**
+Per-cohort AJCC IV cell counts are too small for stable per-stage
+contrasts; collapsing III + IV into a single `Late` group preserves
+statistical power without erasing the resectable (Early) vs
+locally-advanced-or-metastatic (Late) distinction that drives the
+clinical question. A 4-level **AJCC sensitivity analysis** is
+preserved in parallel (`stage_ajcc4`, `stage_numeric` columns) so
+reviewers can re-run the same per-stage tests at full granularity.
+
+For applying the same harmonization to your own cohort, see
+`vignette("user_cohort_extension")` — `fit_stage_de(stage = ...)`
+expects the 4-level factor with `levels = c("Normal", "Early", "Mid",
+"Late")`.
+
 ## Trajectory Framework
 
 Each gene's Normal/Early/Mid/Late trajectory is matched against 12
