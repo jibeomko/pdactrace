@@ -81,9 +81,14 @@ utils::globalVariables(c(
   "heterogeneity_gate", "leakage_gate",
   "positive_score_v3", "translational_relevance",
   "max_abs_beta_meta",
-  # plot_gene_hexagon polygon-ring helpers
+  # plot_gene_hexagon polygon-ring + spoke helpers
   "ring", "x", "y", "x_end", "y_end",
+  "label_x", "label_y", "color",
   # compare_candidates / explain_score NSE
   "rna_pattern", "cell_origin_top", "audit_score",
-  "redundancy_with"
+  "redundancy_with",
+  # data.table column-list NSE
+  "..beta_cols", "..keep_cols", "..cols", ".N"
 ))
+
+#' @importFrom methods setGeneric setMethod is

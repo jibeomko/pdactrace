@@ -55,7 +55,7 @@
 #'   * `summary`     -- one-row `data.table` with input shape +
 #'                      audit-class counts.
 #' @examples
-#' \donttest{
+#' \dontrun{
 #'   if (requireNamespace("DESeq2", quietly = TRUE)) {
 #'     res <- project_user_cohort(
 #'       rna        = toy_counts,

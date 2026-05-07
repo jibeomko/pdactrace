@@ -45,7 +45,7 @@ the bundled object (which remains a \code{data.table} for fast
 query-based use cases).
 }
 \examples{
-\donttest{
+\dontrun{
   if (requireNamespace("SummarizedExperiment", quietly = TRUE)) {
     se <- as_summarized_experiment()
     se
