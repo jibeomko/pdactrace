@@ -82,5 +82,8 @@ utils::globalVariables(c(
   "positive_score_v3", "translational_relevance",
   "max_abs_beta_meta",
   # plot_gene_hexagon polygon-ring helpers
-  "ring", "x", "y", "x_end", "y_end"
+  "ring", "x", "y", "x_end", "y_end",
+  # compare_candidates / explain_score NSE
+  "rna_pattern", "cell_origin_top", "audit_score",
+  "redundancy_with"
 ))

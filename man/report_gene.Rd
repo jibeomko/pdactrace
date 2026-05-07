@@ -2,7 +2,7 @@
 % Please edit documentation in R/report_gene.R
 \name{report_gene}
 \alias{report_gene}
-\title{Render a one-gene pdactrace evidence report}
+\title{Render a pdactrace evidence report for one gene or a panel}
 \usage{
 report_gene(
   gene_symbol,
@@ -12,10 +12,14 @@ report_gene(
 )
 }
 \arguments{
-\item{gene_symbol}{HGNC gene symbol (length-1 character).}
+\item{gene_symbol}{HGNC gene symbol — character vector of length
+1 or more. Length 1 produces the single-gene template; length
+2+ produces the panel template.}
 
 \item{output_file}{Optional output filename (without directory).
-Defaults to \code{paste0(gene_symbol, "_pdactrace_report.html")}.}
+Defaults to \verb{paste0(<stem>, "_pdactrace_report.html")} where
+\verb{<stem>} is the gene name for length-1 input or
+\code{paste0("panel_", length(gene_symbol), "gene")} otherwise.}
 
 \item{output_dir}{Output directory. Defaults to \code{tempdir()}.}
 
@@ -28,24 +32,32 @@ file.
 }
 \description{
 Renders a self-contained HTML report summarising the bundled
-atlas's evidence for a single gene: the audit class + score, key
-panel fields, the six-axis evidence radar, the cohort-adjusted
-stage trajectory, the per-cohort breakdown, and the
-tissue-to-serum filter trace. The report uses the package's
-NCS-grade ggplot theme throughout and is intended for sharing a
-one-page evidence dossier with a collaborator.
+atlas's evidence for a single gene OR for a multi-gene panel. The
+single-gene layout (length-1 input) carries the audit class + score,
+the audit-component table, the six-axis evidence radar, the
+cohort-adjusted stage trajectory, the per-cohort breakdown, and the
+tissue-to-serum filter trace. The panel layout (length >= 2)
+starts with a side-by-side comparison table from
+\code{\link[=compare_candidates]{compare_candidates()}} (audit class, RNA pattern, translation
+class, cell origin, serum detectability, redundancy hint) and
+follows with one condensed section per gene: explain_score()
+rationale plus the evidence radar.
 }
 \details{
-This is a thin wrapper around \code{\link[rmarkdown:render]{rmarkdown::render()}} on the bundled
-template \code{inst/rmd/gene_report.Rmd}. The render is deterministic
-given (gene_symbol, atlas) because the audit rule is frozen.
+The render is deterministic given (gene_symbol, atlas) because the
+audit rule is frozen.
 }
 \examples{
 \donttest{
   if (requireNamespace("rmarkdown", quietly = TRUE) &&
       requireNamespace("knitr",     quietly = TRUE)) {
-    fp <- report_gene("LTBP1", output_dir = tempdir())
-    file.exists(fp)
+    # Single-gene report:
+    fp1 <- report_gene("LTBP1", output_dir = tempdir())
+
+    # Panel report (3 genes):
+    fp2 <- report_gene(c("LGALS3BP", "LTBP1", "GAPDH"),
+                         output_dir = tempdir())
+    file.exists(c(fp1, fp2))
   }
 }
 }

@@ -1,3 +1,60 @@
+# pdactrace 0.99.3
+
+**Audit framework explainability + multi-gene panel reports + atlas
+as a SummarizedExperiment.** Adds three user-facing helpers
+(`explain_score()`, `compare_candidates()`, panel-mode `report_gene()`)
+that make the audit framework auditable in plain English, and one
+Bioconductor-native helper (`as_summarized_experiment()`) that
+exposes the bundled atlas as an SE container.
+
+## New
+
+- `explain_score(gene_symbol, verbose = TRUE)` — decomposes one
+  gene's `audit_score` into the three weighted axes (40% / 35% /
+  25%) and the two gates (leakage, heterogeneity). Returns a list
+  with the structured breakdown and a one-paragraph plain-English
+  rationale (e.g., *"LTBP1 lands in `supported_uncertain` because
+  the heterogeneity_gate = 0.7 — max meta I² = 75% in [70%, 90%)"*).
+  Verbose dispatch prints to console for interactive use; the
+  structured `data.table`s are returned invisibly for programmatic
+  consumption.
+- `compare_candidates(gene_symbols)` — returns a single
+  `data.table` row-per-gene with the columns most useful for
+  panel-design discussion (audit class + score, RNA / protein
+  trajectory pattern, translation class, dominant scRNA cell origin,
+  serum detectability, max meta I², plus a `redundancy_with` column
+  flagging genes that share both `rna_pattern` and `cell_origin_top`
+  in the input set). Sorted by `audit_score` descending; input genes
+  outside the atlas are returned with `audit_class = NA` rather than
+  silently dropped.
+- `as_summarized_experiment(reference = NULL)` — converts the
+  bundled atlas into a `SummarizedExperiment` with two assays
+  (`rna_beta`, `rna_lfcSE`; both 10,113 genes × 4 stages), a 4-row
+  `colData` (`stage`, `reference_level`), a ~109-column `rowData`
+  (audit components, RNA / protein trajectory pattern, translation
+  class, scRNA cell origin, serum direction, meta-analysis I², ...),
+  and atlas-provenance `metadata`. The bundled object remains a
+  `data.table` for fast query-based use cases; this constructor is
+  the Bioc-native view on demand.
+
+## Changed
+
+- `report_gene()` now accepts a multi-gene character vector. Length
+  1 still produces the v0.99.1 single-gene HTML template; length 2+
+  produces a new panel-template (`inst/rmd/panel_report.Rmd`) that
+  starts with a `compare_candidates()` table, follows with a
+  multi-gene evidence radar via `plot_gene_hexagon()`, and shows one
+  `explain_score()`-derived rationale card per gene. Existing
+  length-1 calls are unchanged.
+
+## Tests
+
+- `tests/testthat/test-explain-compare-se.R` — 5 new test blocks
+  covering `explain_score()` structure + missing-gene error,
+  `compare_candidates()` row count + sort order + missing-gene
+  padding, and `as_summarized_experiment()` shape + reference-column
+  invariant. Total testthat coverage: 209 → 230 PASS.
+
 # pdactrace 0.99.2
 
 **Bioconductor-native input.** `fit_stage_de()` and
