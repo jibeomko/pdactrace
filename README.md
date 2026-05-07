@@ -7,7 +7,7 @@
 [![Version](https://img.shields.io/github/v/release/jibeomko/pdactrace?include_prereleases&sort=semver&label=version&color=blue)](https://github.com/jibeomko/pdactrace/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Bioconductor](https://img.shields.io/badge/Bioconductor-submission%20in%20preparation-lightgrey.svg)](https://www.bioconductor.org/)
-[![DOI](https://img.shields.io/badge/DOI-pending-lightgrey.svg)](#citation)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20068235.svg)](https://doi.org/10.5281/zenodo.20068235)
 
 `pdactrace` is an R package for querying and prioritizing pancreatic
 ductal adenocarcinoma (PDAC) biomarker candidates across bulk RNA-seq,
@@ -218,9 +218,27 @@ Key bundled data:
 
 ## Citation
 
-*Preprint and release DOI in preparation.* The full citation, BiB
-manuscript reference, and Zenodo release DOI will appear here once
-available.
+If you use `pdactrace`, please cite the software via its Zenodo DOI:
+
+> Ko, J. (2026). *pdactrace: Queryable Stage-Aware PDAC Tissue-to-Serum
+> Biomarker Reference Atlas* (v0.99.0) [Software]. Zenodo.
+> [10.5281/zenodo.20068235](https://doi.org/10.5281/zenodo.20068235)
+
+```bibtex
+@software{pdactrace2026,
+  author       = {Ko, Jibeom},
+  title        = {{pdactrace: Queryable Stage-Aware PDAC
+                   Tissue-to-Serum Biomarker Reference Atlas}},
+  year         = 2026,
+  version      = {v0.99.0},
+  publisher    = {Zenodo},
+  doi          = {10.5281/zenodo.20068235},
+  url          = {https://doi.org/10.5281/zenodo.20068235}
+}
+```
+
+The accompanying *Briefings in Bioinformatics* manuscript reference
+will be added once the preprint or journal DOI is available.
 
 ## License
 

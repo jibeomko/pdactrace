@@ -1,0 +1,13 @@
+citHeader("To cite pdactrace in publications, use:")
+
+bibentry(
+  bibtype  = "Manual",
+  title    = "pdactrace: Queryable Stage-Aware PDAC Tissue-to-Serum Biomarker Reference Atlas",
+  author   = person(given = "Jibeom", family = "Ko",
+                    email = "rhwlqja1779@gmail.com",
+                    comment = c(ORCID = "0009-0002-8630-1973")),
+  year     = "2026",
+  note     = "R package version 0.99.0",
+  doi      = "10.5281/zenodo.20068235",
+  url      = "https://doi.org/10.5281/zenodo.20068235"
+)

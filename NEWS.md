@@ -6,6 +6,12 @@ review queue go 0.99.1, 0.99.2, ... and on acceptance into the release
 branch the version becomes 1.0.0. Functionality is unchanged from 0.4.1
 beyond the Bioconductor pre-submission cleanup listed below.
 
+**Software DOI:** [10.5281/zenodo.20068235](https://doi.org/10.5281/zenodo.20068235)
+(package-only Zenodo archive of this v0.99.0 tag in
+`jibeomko/pdactrace`). The companion manuscript-monorepo archive lives
+at [10.5281/zenodo.20067849](https://doi.org/10.5281/zenodo.20067849)
+in `jibeomko/PDAC_biomarker`.
+
 ## Bioconductor pre-submission cleanup
 
 - `DESCRIPTION` — `Version: 0.99.0`, dropped redundant `Author:` /
