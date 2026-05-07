@@ -1,0 +1,203 @@
+---
+title: "`r params$gene` &mdash; pdactrace evidence report"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+output:
+  html_document:
+    self_contained: true
+    theme: null
+    highlight: null
+    toc: true
+    toc_depth: 2
+    df_print: kable
+params:
+  gene: "LTBP1"
+---
+
+```{css, echo=FALSE}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
+               "Liberation Sans", sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #1a1a1a;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 28px 36px;
+  background: #ffffff;
+}
+h1 { font-size: 22px; font-weight: 600; border-bottom: 1px solid #e2e2e2;
+     padding-bottom: 8px; margin-top: 32px; }
+h2 { font-size: 17px; font-weight: 600; margin-top: 26px; color: #2c2c2c; }
+h3 { font-size: 14px; font-weight: 600; color: #4a4a4a; }
+table { border-collapse: collapse; font-size: 12.5px; margin: 8px 0 14px; }
+table th, table td { padding: 5px 10px; border-bottom: 1px solid #ececec;
+                     text-align: left; }
+table th { font-weight: 600; background: #fafafa; color: #333; }
+code { background: #f5f5f5; padding: 1px 4px; border-radius: 2px;
+       font-size: 12px; color: #c7254e; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 3px;
+       font-size: 12px; font-weight: 600; margin-right: 6px; }
+.tag-high  { background: #1B5E20; color: white; }
+.tag-supp  { background: #F57C00; color: white; }
+.tag-pen   { background: #9E9E9E; color: white; }
+.tag-excl  { background: #424242; color: white; }
+.tag-low   { background: #BDBDBD; color: white; }
+.summary-box { background: #fafbfc; border-left: 3px solid #0d47a1;
+               padding: 10px 14px; margin: 12px 0; font-size: 13px; }
+.muted { color: #6a6a6a; font-size: 12px; }
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  fig.align = "center",
+  dev = "png",
+  dpi = 150
+)
+suppressMessages({
+  library(pdactrace)
+  library(data.table)
+})
+gene <- params$gene
+```
+
+```{r resolve, include=FALSE}
+ref <- pdactrace::pdactrace_reference
+in_atlas <- gene %in% ref$gene_symbol
+audit <- if (in_atlas) pdactrace::compute_audit_score(gene) else NULL
+detailed <- if (in_atlas) tryCatch(pdactrace::query_gene_detailed(gene),
+                                     error = function(e) NULL) else NULL
+panel_row <- if (in_atlas) pdactrace::query_panel(gene) else NULL
+```
+
+`r if (!in_atlas) sprintf("> **%s** is not in the bundled pdactrace atlas (10,113 genes). Report cannot be generated.", gene)`
+
+```{r assert-found, include=FALSE}
+if (!in_atlas) knitr::knit_exit()
+```
+
+# Summary
+
+```{r tag-html, results="asis"}
+ac <- audit$audit_class[1]
+tag_class <- switch(ac,
+  high_confidence     = "tag-high",
+  supported_uncertain = "tag-supp",
+  penalized           = "tag-pen",
+  excluded            = "tag-excl",
+  "tag-low")
+cat(sprintf(
+  '<span class="tag %s">%s</span> <span class="muted">audit_score = %.3f</span>\n\n',
+  tag_class, ac, audit$audit_score[1]))
+```
+
+<div class="summary-box">
+**Atlas position:** `r gene` is one of `r format(nrow(ref), big.mark = ",")`
+genes in the bundled atlas. The audit framework places it in the
+*`r ac`* class with score
+`r sprintf("%.3f", audit$audit_score[1])`
+based on three evidence axes (multi-layer presence, biological
+coherence, translational relevance) and two reliability gates
+(housekeeping/leakage + cohort heterogeneity).
+</div>
+
+```{r summary-table}
+key_cols <- c("rna_pattern", "prot_pattern", "translation_class",
+              "cell_origin_top", "serum_detected", "rnaprot_concordant")
+present <- intersect(key_cols, names(panel_row))
+if (length(present) > 0) {
+  out <- data.table::transpose(panel_row[, ..present], keep.names = "field")
+  setnames(out, c("field", "value"))
+  knitr::kable(out, format = "html", escape = TRUE,
+               table.attr = 'style="width:auto;"')
+}
+```
+
+# Audit components
+
+```{r audit-table}
+audit_cols <- c("evidence_strength", "biological_coherence",
+                "translational_relevance", "leakage_gate",
+                "heterogeneity_gate", "audit_score")
+keep <- intersect(audit_cols, names(audit))
+if (length(keep) > 0) {
+  vals <- as.numeric(audit[1, ..keep])
+  knitr::kable(
+    data.frame(component = keep, value = sprintf("%.3f", vals)),
+    format = "html", escape = TRUE,
+    table.attr = 'style="width:auto;"')
+}
+```
+
+# Evidence radar
+
+```{r radar, fig.width=4.6, fig.height=3.6}
+hex <- tryCatch(
+  pdactrace::plot_gene_hexagon(gene, comparison = "high_confidence_mean"),
+  error = function(e) NULL)
+if (!is.null(hex)) print(hex) else cat("Hexagon not available for this gene.\n")
+```
+
+# Stage trajectory
+
+```{r stage, fig.width=5.4, fig.height=3.0}
+p_stage <- tryCatch(pdactrace::plot_stage_effect(gene),
+                    error = function(e) NULL)
+if (!is.null(p_stage)) print(p_stage) else cat("plot_stage_effect not available.\n")
+```
+
+# Per-cohort detail
+
+```{r per-cohort, fig.width=5.4, fig.height=3.0}
+p_cohort <- tryCatch(pdactrace::plot_per_cohort(gene),
+                     error = function(e) NULL)
+if (!is.null(p_cohort)) print(p_cohort) else cat("plot_per_cohort not available.\n")
+```
+
+# Per-stage detail
+
+```{r per-stage, results="asis"}
+if (!is.null(detailed) && !is.null(detailed$per_stage)) {
+  cat('<div class="muted">RNA effect sizes per Normal / Early / Mid / Late stage.</div>\n\n')
+  print(knitr::kable(detailed$per_stage, format = "html",
+                     table.attr = 'style="width:auto;"'))
+}
+```
+
+```{r per-cohort-table, results="asis"}
+if (!is.null(detailed) && !is.null(detailed$per_cohort)) {
+  cat("\n## Per-cohort breakdown\n\n")
+  cat('<div class="muted">Cohort-level RNA / protein effect estimates.</div>\n\n')
+  print(knitr::kable(detailed$per_cohort, format = "html",
+                     table.attr = 'style="width:auto;"'))
+}
+```
+
+# Filter trace
+
+```{r filter-trace, fig.width=5.6, fig.height=3.0}
+p_trace <- tryCatch(pdactrace::plot_filter_trace(gene),
+                    error = function(e) NULL)
+if (!is.null(p_trace)) print(p_trace) else cat("plot_filter_trace not available.\n")
+```
+
+# Provenance
+
+```{r provenance, results="asis"}
+meta <- tryCatch(pdactrace::list_atlas_metadata(),
+                 error = function(e) NULL)
+if (!is.null(meta)) {
+  cat(sprintf("Atlas version `%s`, built on %s.\n\n",
+              meta$version, meta$build_date))
+}
+```
+
+<div class="muted">
+Generated by pdactrace::report_gene(). The audit rule is frozen
+(deterministic given input + atlas) and external anchors are used
+for post-freeze evaluation only &mdash; this report does not represent
+a supervised prediction. Misalignment with the high-confidence mean is
+itself a useful diagnostic, not necessarily a failure mode.
+</div>

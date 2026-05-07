@@ -1,3 +1,38 @@
+# pdactrace 0.99.1
+
+**Single-gene evidence report + plot polish.** Adds a one-page
+self-contained HTML report for a single gene, and migrates
+`plot_gene_hexagon()` onto the NCS-grade theme so all 10 plot
+functions now share the same publication-grade typography.
+
+## New
+
+- `report_gene(gene_symbol, output_dir = tempdir())` — renders
+  `inst/rmd/gene_report.Rmd` for one gene. Output is a
+  self-contained HTML file with: audit-class tag, audit-component
+  table, six-axis evidence hexagon (versus the
+  `high_confidence_mean` reference), stage-trajectory plot,
+  per-cohort breakdown, per-stage detail table, and the
+  tissue-to-serum filter trace. `rmarkdown` and `knitr` are picked
+  up at runtime from `Suggests` via `requireNamespace()` — no
+  hard dependency added.
+
+## Changed
+
+- `plot_gene_hexagon()` now uses `pdactrace_panel_theme()` instead
+  of bare `theme_void()`, and the four `geom_text` size settings
+  (axis labels / score lines / comparison label / ring scale) are
+  reduced to the NCS-grade range (1.7–2.2 mm ≈ 5–6.5 pt) so the
+  hexagon embeds cleanly at single-column width (88 mm) without
+  visible label clipping.
+
+## Documentation
+
+- `inst/rmd/gene_report.Rmd` — bundled report template, covered by
+  R CMD check via `requireNamespace()` guards in `report_gene()`
+  rather than as a vignette (it is parameterised on `gene` and
+  intended for end-user invocation, not pre-render).
+
 # pdactrace 0.99.0
 
 **First Bioconductor submission version.** Per Bioconductor convention,
@@ -5,12 +40,6 @@ new packages submit at 0.99.0; subsequent versions in the submission
 review queue go 0.99.1, 0.99.2, ... and on acceptance into the release
 branch the version becomes 1.0.0. Functionality is unchanged from 0.4.1
 beyond the Bioconductor pre-submission cleanup listed below.
-
-**Software DOI:** [10.5281/zenodo.20068235](https://doi.org/10.5281/zenodo.20068235)
-(package-only Zenodo archive of this v0.99.0 tag in
-`jibeomko/pdactrace`). The companion manuscript-monorepo archive lives
-at [10.5281/zenodo.20067849](https://doi.org/10.5281/zenodo.20067849)
-in `jibeomko/PDAC_biomarker`.
 
 ## Bioconductor pre-submission cleanup
 

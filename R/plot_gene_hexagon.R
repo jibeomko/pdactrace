@@ -184,7 +184,7 @@ plot_gene_hexagon <- function(gene_symbol,
   p <- p + ggplot2::geom_text(
     data = axis_lines,
     ggplot2::aes(x = label_x, y = label_y, label = label),
-    size = 2.6, fontface = "bold", color = "#212121")
+    size = 2.2, fontface = "bold", color = "grey15")
   # Comparison polygon (translucent, behind gene polygons)
   if (!is.null(cmp_poly)) {
     p <- p + ggplot2::geom_polygon(
@@ -207,7 +207,7 @@ plot_gene_hexagon <- function(gene_symbol,
     if (!is.null(cmp_label)) {
       p <- p + ggplot2::annotate("text", x = 0, y = 1.42,
         label = sprintf("vs %s", cmp_label),
-        size = 2.3, color = cmp_color, fontface = "italic")
+        size = 1.9, color = cmp_color, fontface = "italic")
     }
     # One annotation line per gene (color-coded), centered below hexagon
     n_g <- nrow(feats)
@@ -231,7 +231,7 @@ plot_gene_hexagon <- function(gene_symbol,
     p <- p + ggplot2::geom_text(
       data = score_dt,
       ggplot2::aes(x = x, y = y, label = label, color = color),
-      size = 2.4, fontface = "bold")
+      size = 2.1, fontface = "bold")
   }
   # Ring scale labels (0.25 / 0.50 / 0.75 / 1.00) on top spoke
   p <- p + ggplot2::geom_text(
@@ -239,7 +239,7 @@ plot_gene_hexagon <- function(gene_symbol,
                                     x = 0.04, y = ring_levels - 0.03,
                                     label = sprintf("%.2f", ring_levels)),
     ggplot2::aes(x = x, y = y, label = label),
-    size = 2.0, color = "#9E9E9E", hjust = 0)
+    size = 1.7, color = "grey55", hjust = 0)
 
   # Pad ylim to fit multi-line annotation when many genes
   n_g_total <- nrow(feats)
@@ -249,6 +249,5 @@ plot_gene_hexagon <- function(gene_symbol,
     ggplot2::scale_fill_identity() +
     ggplot2::coord_fixed(xlim = c(-1.5, 1.5),
                           ylim = c(ymin, 1.5), expand = FALSE) +
-    ggplot2::theme_void() +
-    ggplot2::theme(plot.margin = ggplot2::margin(2, 2, 2, 2))
+    pdactrace_panel_theme()
 }
