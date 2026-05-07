@@ -9,6 +9,11 @@
 [![Bioconductor](https://img.shields.io/badge/Bioconductor-submission%20in%20preparation-lightgrey.svg)](https://www.bioconductor.org/)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20069896.svg)](https://doi.org/10.5281/zenodo.20069896)
 
+<p align="center">
+  <img src="man/figures/pdactrace_overview.svg" width="900"
+       alt="pdactrace workflow overview: from user staged omics + bundled atlas through 12-template trajectory matching, Early × 4 atlas surface, multi-layer evidence, 3-axis + 2-gate audit score, to query / compare / explain / report functions">
+</p>
+
 `pdactrace` is an R package for querying and prioritizing pancreatic
 ductal adenocarcinoma (PDAC) biomarker candidates across bulk RNA-seq,
 tissue proteomics, single-cell RNA-seq, serum proteomics, and
