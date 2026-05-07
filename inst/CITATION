@@ -8,6 +8,6 @@ bibentry(
                     comment = c(ORCID = "0009-0002-8630-1973")),
   year     = "2026",
   note     = "R package version 0.99.0",
-  doi      = "10.5281/zenodo.20068235",
-  url      = "https://doi.org/10.5281/zenodo.20068235"
+  doi      = "10.5281/zenodo.20069896",
+  url      = "https://doi.org/10.5281/zenodo.20069896"
 )

@@ -60,7 +60,7 @@ test_that("list_data_sources returns the bundled accession table", {
 
 test_that("atlas_provenance carries both Zenodo DOIs", {
   ap <- atlas_provenance()
-  expect_equal(ap$package_doi,    "10.5281/zenodo.20068235")
+  expect_equal(ap$package_doi,    "10.5281/zenodo.20069896")
   expect_equal(ap$manuscript_doi, "10.5281/zenodo.20067849")
   expect_match(ap$package_repo, "github.com/jibeomko/pdactrace$")
 })
