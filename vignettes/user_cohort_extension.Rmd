@@ -28,28 +28,24 @@ modifying the bundled atlas. This vignette walks through the full
 five-step workflow on a synthetic example so the framework's
 input/output schema is concrete.
 
-# Step 1 — Build a tiny synthetic counts matrix
+# Step 1 — Load the bundled toy cohort
 
-```{r synth-rna}
-n_genes <- 200
-n_samples <- 24
-sample_meta <- data.table(
-  sample = paste0("S", 1:n_samples),
-  cohort = rep(c("CohortA", "CohortB", "CohortC"), times = 8),
-  stage  = rep(c("Normal", "Early", "Mid", "Late"), each = 6))
+The package ships with a tiny synthetic cohort
+(`toy_counts` / `toy_protein` / `toy_coldata`) so the user-cohort
+workflow can be exercised end-to-end without an external download.
+50 genes / proteins x 24 samples balanced across the four canonical
+stages and two synthetic cohorts; the first 10 RNA rows and first 8
+protein rows carry an injected `Early_Burst_Up` signal.
 
-# Background expression
-counts <- matrix(rnbinom(n_genes * n_samples, mu = 50, size = 4),
-                  nrow = n_genes,
-                  dimnames = list(paste0("GENE", 1:n_genes),
-                                   sample_meta$sample))
-
-# Inject 20 stage-progressive genes (Early_Burst_Up signature)
-up_genes <- paste0("GENE", 1:20)
-stage_lift <- c(Normal = 0, Early = 50, Mid = 70, Late = 80)
-for (g in up_genes) {
-  counts[g, ] <- counts[g, ] + stage_lift[as.character(sample_meta$stage)]
-}
+```{r toy-rna}
+data(toy_counts)
+data(toy_coldata)
+data(toy_protein)
+sample_meta <- toy_coldata
+counts <- toy_counts
+prot_intensity <- toy_protein
+up_genes <- rownames(counts)[1:10]   # injected stage-progressive RNA
+dim(counts); table(sample_meta$stage, sample_meta$cohort)
 ```
 
 # Step 2 — Fit the stage-aware RNA model
@@ -63,25 +59,22 @@ head(rna_pat[!is.na(rna_pattern), .(gene_symbol, rna_pattern,
                                        rna_pattern_rho, lrt_padj)])
 ```
 
-# Step 3 — Build a tiny synthetic protein matrix and fit limma
+# Step 3 — Fit the protein limma model
 
 ```{r prot-fit, eval = requireNamespace("limma", quietly = TRUE)}
-prot_intensity <- matrix(
-  rnorm(n_genes * n_samples, mean = 8, sd = 1),
-  nrow = n_genes,
-  dimnames = list(paste0("GENE", 1:n_genes), sample_meta$sample))
-prot_lift <- c(Normal = 0, Early = 1.0, Mid = 1.5, Late = 1.8)
-for (g in up_genes) {
-  prot_intensity[g, ] <- prot_intensity[g, ] +
-    prot_lift[as.character(sample_meta$stage)]
-}
-
 prot_fit <- fit_stage_de_protein(prot_intensity,
                                    stage = sample_meta$stage,
                                    cohort = sample_meta$cohort)
-prot_pat <- classify_protein_trajectory(prot_fit, rho_cutoff = 0.85)
-head(prot_pat[!is.na(prot_pattern), .(gene_symbol, prot_pattern,
-                                         prot_pattern_rho)])
+# `sig_only = FALSE` so the toy cohort (where the protein signal is
+# small relative to noise) still surfaces best-template calls.
+prot_pat <- classify_protein_trajectory(prot_fit, rho_cutoff = 0.85,
+                                          sig_only = FALSE)
+if ("prot_pattern" %in% names(prot_pat)) {
+  head(prot_pat[!is.na(prot_pattern), .(gene_symbol, prot_pattern,
+                                           prot_pattern_rho)])
+} else {
+  message("No protein patterns surfaced on the toy cohort.")
+}
 ```
 
 # Step 4 — Assemble the user evidence table
