@@ -79,7 +79,7 @@ atlas_provenance <- function() {
                       else meta$n_cohorts,
     package_repo    = "https://github.com/jibeomko/pdactrace",
     manuscript_repo = "https://github.com/jibeomko/PDAC_biomarker",
-    package_doi     = "10.5281/zenodo.20069896",
+    package_doi     = "10.5281/zenodo.20070208",
     manuscript_doi  = "10.5281/zenodo.20067849",
     data_layers     = layer_summary)
 }

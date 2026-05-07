@@ -14,7 +14,7 @@ Bioconductor and consolidates everything below in a single release.
 * **Software (this package):**
   [github.com/jibeomko/pdactrace](https://github.com/jibeomko/pdactrace),
   Zenodo concept DOI
-  [10.5281/zenodo.20069896](https://doi.org/10.5281/zenodo.20069896).
+  [10.5281/zenodo.20070208](https://doi.org/10.5281/zenodo.20070208).
 * **Manuscript reproducibility monorepo:**
   [github.com/jibeomko/PDAC_biomarker](https://github.com/jibeomko/PDAC_biomarker),
   Zenodo
