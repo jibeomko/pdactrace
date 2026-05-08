@@ -232,6 +232,107 @@ originals; both forms refer to the same function.
 Use whichever you prefer — existing scripts using the long names continue
 to work unchanged.
 
+## Function reference
+
+All 59 exported functions and constants, grouped by role. Long-name
+aliases listed in the v0.4.1 alias table above are not repeated here.
+
+### Lookup + summary
+
+| Function | What it does |
+|---|---|
+| `query_gene(gene)` | Single-gene full evidence dump (RNA, protein, scRNA, serum, clinical, filter, annotation) |
+| `query_gene_detailed(gene)` | Per-stage / per-cohort / per-cell-type / per-step breakdown |
+| `query_panel(genes)` | Multi-gene join on the same atlas columns |
+| `summarize_gene_evidence(gene, detail)` | Human-readable text summary |
+| `list_candidates(...)` | Criterion-based candidate filter (onset, direction, translation_class, ...) |
+| `list_atlas_metadata()` | Bundled `atlas_metadata` (version, build date, cohort manifest) |
+| `case_study(name)` | Pre-configured case-study panel (e.g., LTBP1, LGALS3BP) |
+
+### Audit framework
+
+| Function | What it does |
+|---|---|
+| `compute_audit_score(genes, evidence)` | 3-axis × 2-gate audit score + class |
+| `propagate_uncertainty(genes, n_mc, seed)` | Monte-Carlo rank stability summary |
+| `evaluate_anchor_enrichment(top_n, tier, score_col)` | External-anchor enrichment (frozen post-freeze evaluation) |
+| `anchor_enrichment(...)` | Short alias of the above |
+| `explain_score(gene)` | Plain-English decomposition of the audit score (3 axes + 2 gates + reason) |
+| `compare_candidates(genes)` | Side-by-side comparison table (audit class, pattern, cell origin, redundancy hint) |
+| `format_provenance(provenance, style)` | Human-readable evidence labels for `phaseXX` tags |
+
+### Trajectory framework
+
+| Function | What it does |
+|---|---|
+| `fit_stage_de(object, ...)` | DESeq2 LRT wrapper for stage-aware DE (matrix or `SummarizedExperiment`) |
+| `fit_stage_de_protein(object, ...)` | limma parallel for tissue-protein intensity |
+| `classify_trajectory(fit)` | Best-match against the 12-template catalog |
+| `classify_protein_trajectory(fit)` | Protein-side wrapper (`classify_prot_trajectory` alias) |
+| `score_trajectory(pat, gene)` | 12-template Pearson rho vector per gene |
+| `assemble_user_evidence(...)` | Combine optional per-layer user inputs into a per-gene evidence table |
+| `align_patient_profile(rna_logfc, ...)` | Sample-level alignment of one patient's profile against atlas stage axes |
+| `align_patient(...)` | Short alias |
+| `project_user_cohort(rna, coldata, ...)` | End-to-end wrapper around `fit_stage_de → classify_trajectory → assemble_user_evidence → compute_audit_score` |
+| `early_pattern_names()` / `early_patterns()` | Names of the 4 surfaced Early-onset templates |
+| `mid_pattern_names_excluded()` / `mid_patterns()` | Names of the 4 Mid templates excluded from atlas surface |
+
+### Filter audit
+
+| Function | What it does |
+|---|---|
+| `trace_filters(genes)` | 7-step filter audit + class route per gene |
+
+### Visualization
+
+| Function | What it does |
+|---|---|
+| `plot_gene_evidence(gene)` | Multi-panel composite (trajectory + cell origin + serum + summary) |
+| `plot_gene_hexagon(gene, comparison)` | 6-axis evidence radar |
+| `plot_stage_effect(gene)` | Per-stage forest with log2FC ± 1.96·SE |
+| `plot_per_cohort(gene)` | Cohort-by-cohort trend bar plot |
+| `plot_meta_forest(gene, contrast)` | Random-effects meta-analysis forest |
+| `plot_filter_trace(genes)` | Pass/fail step bar across the 7-step filter |
+| `plot_filter_diagnostics(...)` | Per-step diagnostic counters across the atlas |
+| `plot_panel_heatmap(genes)` | Gene × evidence-axis comparison heatmap |
+| `plot_candidate_landscape(...)` | Tissue × serum scatter, Class A/B coloured |
+| `plot_celltype_full(...)` | Full cell-type-of-origin overview from the scRNA atlas |
+| `plot_template_atlas(layer, output_dir)` | 12 PDFs per layer (RNA + protein) showing each template's cohort |
+| `plot_gene_template(gene, layer)` | One PDF: gene's matched template + its trajectory overlaid |
+
+### Reporting
+
+| Function | What it does |
+|---|---|
+| `report_gene(genes, output_dir)` | Self-contained HTML evidence report (single gene or panel) |
+
+### Bioconductor-native helpers
+
+| Function | What it does |
+|---|---|
+| `as_summarized_experiment(reference)` | Convert the bundled atlas to a `SummarizedExperiment` (2 assays + `rowData` + `colData` + `metadata`) |
+| `atlas_provenance()` | One-call provenance dossier (version, repo URL, both Zenodo DOIs, cohort count, layers) |
+| `list_data_sources(layer)` | 26 contributing public datasets with accession + URL |
+| `schema_spec()` | Canonical column list for the atlas + T2.5/T3 status |
+| `build_evidence_graph(gene)` | Audit-score evidence as a small node/edge graph |
+| `extract_graph_features(genes)` | Per-gene 6-axis feature vector (used by `plot_gene_hexagon` and the audit rule) |
+
+### Theme + plotting infrastructure
+
+| Object / function | What it does |
+|---|---|
+| `pdactrace_axes_theme()` | NCS-grade `ggplot2` theme for plots with axes |
+| `pdactrace_panel_theme()` | NCS-grade `ggplot2` theme for schematic panels |
+| `pdactrace_save(p, dir, name, w, h)` | Cairo-PDF writer (BiocCheck-clean) |
+| `pdactrace_pal_class` | Palette for translation classes (A / B / C / Other) |
+| `pdactrace_pal_group` | Palette for HC / Pancreatitis / PDAC sample groups |
+| `pdactrace_pal_dir` | Palette for UP / DOWN / NS direction |
+| `pdactrace_pal_pattern` | Palette for the 4 Early-surfaced patterns |
+| `NCS_W_SINGLE` / `NCS_W_15COL` / `NCS_W_DOUBLE` / `NCS_W_TRIPLE` | Width constants in inches (3.46 / 4.72 / 7.08 / 10.50) |
+
+For every function, see `?function_name` for the full Rd page with
+arguments, return shape, and an example.
+
 ## Vignettes
 
 ```r
