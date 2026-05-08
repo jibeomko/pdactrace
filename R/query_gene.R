@@ -115,8 +115,12 @@ query_gene <- function(gene_symbol,
 #' @export
 print.pdactrace_gene_evidence <- function(x, ...) {
   cat(x$summary, "\n")
-  cat("Provenance:", x$provenance, "\n")
-  cat("\nLayers loaded:", paste(setdiff(names(x), c("summary", "provenance")),
+  cat("Evidence:  ", format_provenance(x$provenance, "compact"),
+      "\n", sep = "")
+  cat("Technical: ", format_provenance(x$provenance, "raw"),
+      "\n", sep = "")
+  cat("\nLayers loaded:", paste(setdiff(names(x),
+                                          c("summary", "provenance")),
                                   collapse = ", "), "\n")
   cat("Use $rna / $protein / $scrna / $serum / $clinical /\n")
   cat("$filter_status / $annotation for full evidence.\n")

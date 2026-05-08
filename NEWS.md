@@ -1,3 +1,53 @@
+# pdactrace 0.99.2
+
+**Human-readable provenance + larger Arial-bold typography on all
+plots.** Two reviewer-facing polish passes: the `phaseXX` tags that
+the bundled atlas carries in `provenance` are now relabelled to
+plain-English evidence sources on the user-facing print path
+(phase IDs are preserved verbatim as a `Technical:` footer for
+reproducibility), and the NCS-grade ggplot theme that backs every
+`plot_*()` function gains larger, sharper Arial-bold typography for
+clearer single-column embedding.
+
+## New
+
+- `format_provenance(provenance, style)` (exported) — maps the
+  internal phase tags onto plain-English evidence-source labels.
+  Three styles: `"compact"` (one-line plus-separated summary),
+  `"verbose"` (multi-line bulleted list with explanations),
+  `"raw"` (the original phase tags, for the technical footer).
+  Mapping: `phase33` → "RNA trajectory", `phase34` → "Tissue
+  protein trajectory", `stouffer_consistency` → "Multi-cohort RNA
+  consistency", `phase2c` → "scRNA cell origin", `phase42` →
+  "Serum / pancreatitis comparison", `phase60` → "7-step serum
+  filter audit", `phase77` → "Strict RNA-protein-serum bridge",
+  `phase29` → "Resectable-stage marker screen", `phase80` →
+  "Predeclared panel member". Unknown tags fall through unchanged
+  with an `(unmapped)` suffix in verbose mode.
+
+## Changed
+
+- `query_gene()` print method — replaces the `Provenance:` line
+  with two lines: `Evidence:` (plus-separated human labels) and
+  `Technical:` (the raw phase IDs).
+- `query_gene_detailed()` print method — surfaces the verbose
+  bulleted list so that for an interactive query, the reviewer
+  sees a per-source one-line explanation immediately, with the
+  raw IDs folded below.
+- `summarize_gene_evidence()` — same two-line restructuring of the
+  trailing provenance block; the rest of the summary text is
+  unchanged.
+- `R/theme.R` — `pdactrace_axes_theme()` and
+  `pdactrace_panel_theme()` switch font family to **Arial** with a
+  sans fallback, bump axis titles 6.5 → 8.5 pt (bold), axis text
+  5.8 → 7.5 pt (now also bold), plot title 8 → 10 pt, subtitle 5.5
+  → 7.5 pt, legend text 5.4 → 7.0 pt, strip text 5.6 → 7.5 pt,
+  tighten the axis line / tick contrast (grey15 instead of
+  grey30). Plots render the same shape as before but at clearly
+  legible sizes for both single-column and double-column embedding.
+  No API change — every existing `plot_*()` function picks up the
+  new typography automatically.
+
 # pdactrace 0.99.1
 
 **Per-template trajectory PDFs (RNA + protein).** Two new exported

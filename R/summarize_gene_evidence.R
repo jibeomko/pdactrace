@@ -116,7 +116,9 @@ summarize_gene_evidence <- function(gene_symbol, detail = FALSE) {
       "[{pass_str}].")
   }
 
-  prov_line <- glue::glue("Provenance: {q$provenance}")
+  prov_line <- paste0(
+    "Evidence:  ", format_provenance(q$provenance, "compact"), "\n",
+    "Technical: ", format_provenance(q$provenance, "raw"))
 
   # -- Detail block (optional) --------------------------------
   detail_lines <- character()

@@ -183,7 +183,10 @@ query_gene_detailed <- function(gene_symbol) {
 #' @export
 print.pdactrace_gene_detailed <- function(x, ...) {
   cat(x$summary, "\n")
-  cat("Provenance:", x$provenance, "\n\n")
+  cat("Evidence sources:\n")
+  cat(format_provenance(x$provenance, "verbose"), "\n", sep = "")
+  cat("\nTechnical: ", format_provenance(x$provenance, "raw"),
+      "\n\n", sep = "")
   cat("Slots: $per_stage / $per_cohort / $per_celltype /",
       "$filter_diag / $serum_per_cohort\n")
   cat("(Each slot is a data.table; see ?query_gene_detailed.)\n")

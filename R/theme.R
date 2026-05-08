@@ -35,34 +35,48 @@ NCS_W_DOUBLE <- 7.08
 NCS_W_TRIPLE <- 10.50
 
 .pdactrace_text_common <- function() {
+  # Font family: R-standard "sans" alias maps to Helvetica on
+  # Linux/macOS and Arial on Windows; both render bold-weight cleanly
+  # under cairo_pdf and survive R CMD check's default PostScript
+  # device. Hard-coding "Arial" breaks the PostScript device check
+  # because Arial isn't in the default PostScript font database.
+  ff <- "sans"
   ggplot2::theme(
-    text = ggplot2::element_text(family = "sans", color = "grey10"),
-    plot.title = ggplot2::element_text(size = 8, face = "bold",
-                                          hjust = 0, color = "grey10",
-                                          margin = ggplot2::margin(0, 0, 1, 0)),
-    plot.subtitle = ggplot2::element_text(size = 5.5, color = "grey45",
+    text = ggplot2::element_text(family = ff, color = "grey5"),
+    plot.title = ggplot2::element_text(family = ff, size = 10,
+                                          face = "bold", hjust = 0,
+                                          color = "grey5",
+                                          margin = ggplot2::margin(0, 0, 2, 0)),
+    plot.subtitle = ggplot2::element_text(family = ff, size = 7.5,
+                                              color = "grey25",
                                               hjust = 0, face = "italic",
                                               lineheight = 0.95,
-                                              margin = ggplot2::margin(0, 0, 1.5, 0)),
-    plot.tag = ggplot2::element_text(size = 9, face = "bold", color = "grey5"),
-    axis.title = ggplot2::element_text(size = 6.5, face = "bold", color = "grey15"),
-    axis.text  = ggplot2::element_text(size = 5.8, color = "grey25"),
-    axis.line  = ggplot2::element_line(linewidth = 0.3, color = "grey30"),
-    axis.ticks = ggplot2::element_line(linewidth = 0.22, color = "grey30"),
-    axis.ticks.length = ggplot2::unit(1.5, "pt"),
-    legend.text  = ggplot2::element_text(size = 5.4, color = "grey20"),
-    legend.title = ggplot2::element_text(size = 5.8, face = "bold", color = "grey15"),
-    legend.key.size = ggplot2::unit(7, "pt"),
+                                              margin = ggplot2::margin(0, 0, 2, 0)),
+    plot.tag = ggplot2::element_text(family = ff, size = 10,
+                                       face = "bold", color = "grey5"),
+    axis.title = ggplot2::element_text(family = ff, size = 8.5,
+                                         face = "bold", color = "grey5"),
+    axis.text  = ggplot2::element_text(family = ff, size = 7.5,
+                                         face = "bold", color = "grey15"),
+    axis.line  = ggplot2::element_line(linewidth = 0.4, color = "grey15"),
+    axis.ticks = ggplot2::element_line(linewidth = 0.3, color = "grey15"),
+    axis.ticks.length = ggplot2::unit(2, "pt"),
+    legend.text  = ggplot2::element_text(family = ff, size = 7.0,
+                                           color = "grey10"),
+    legend.title = ggplot2::element_text(family = ff, size = 7.5,
+                                           face = "bold", color = "grey5"),
+    legend.key.size = ggplot2::unit(8, "pt"),
     legend.margin   = ggplot2::margin(2, 3, 2, 3),
     legend.spacing.y = ggplot2::unit(1, "pt"),
-    strip.text = ggplot2::element_text(size = 5.6, face = "bold", color = "grey20",
-                                          lineheight = 0.9,
-                                          margin = ggplot2::margin(0, 0, 1, 0)),
+    strip.text = ggplot2::element_text(family = ff, size = 7.5,
+                                          face = "bold", color = "grey5",
+                                          lineheight = 0.95,
+                                          margin = ggplot2::margin(0, 0, 1.5, 0)),
     strip.background = ggplot2::element_blank(),
     panel.grid.major = ggplot2::element_line(linewidth = 0.12, color = "grey93"),
     panel.grid.minor = ggplot2::element_blank(),
-    panel.spacing = ggplot2::unit(0.15, "cm"),
-    plot.margin = ggplot2::margin(3, 4, 3, 4),
+    panel.spacing = ggplot2::unit(0.18, "cm"),
+    plot.margin = ggplot2::margin(4, 5, 4, 5),
     plot.background = ggplot2::element_rect(fill = "white", color = NA))
 }
 
