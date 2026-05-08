@@ -243,10 +243,13 @@ vignette("user_cohort_extension", package = "pdactrace")
 
 ## Reproducibility
 
-The R package ships with the reference atlas, the canonical 12-template
-trajectory catalog, the external anchor set, tests, and the build
-scripts under `data-raw/` that regenerate the bundled `data/*.rda`
-files end-to-end.
+The R package is **self-contained for atlas re-derivation.** It
+ships with the reference atlas (`data/*.rda`), the canonical
+12-template trajectory catalog, the external anchor set, all
+testthat suites, the build scripts under `data-raw/`, and — new
+in v0.99.3 — the **six small downstream phase tables** under
+`inst/extdata/phase{2c,29,42,60,77,80}_*.csv.xz`. The build chain
+runs end-to-end from these bundled inputs alone:
 
 ```r
 # Rebuild the bundled atlas + auxiliary objects from data-raw/
@@ -256,21 +259,35 @@ source("data-raw/build_meta_analysis.R")
 source("data-raw/build_atlas_metadata.R")
 ```
 
-Full multi-omics analysis pipelines (FASTQ → DESeq2 / scVI / FragPipe
-→ phase scripts) and the BiB manuscript assets live in a separate
-companion repository, [PDAC_biomarker_manuscript](https://github.com/jibeomko/PDAC_biomarker_manuscript),
-which carries its own Zenodo archive
-([10.5281/zenodo.20067849](https://doi.org/10.5281/zenodo.20067849)).
+The two large upstream CSVs (`phase33_deseq2_coef_12template.csv`
+RNA fit, `phase34_protein_pooled_12template.csv` protein fit) are
+not bundled in `inst/extdata` because together they push the
+tarball past Bioconductor's 5 MB ceiling. The build scripts
+fall through a clean lookup chain — `inst/extdata/` →
+`$PDAC_BASE_DIR/...` → an informative error pointing to the
+manuscript Zenodo archive
+([10.5281/zenodo.20067849](https://doi.org/10.5281/zenodo.20067849))
+where `phase33_deseq2_coef_12template.csv` and
+`phase34_protein_pooled_12template.csv` are available verbatim.
+
+User cohorts can be projected end-to-end through the same audit
+framework via [`project_user_cohort()`](#use-your-own-cohort)
+without touching `data-raw/` at all — the atlas itself is the
+prebuilt deliverable, and the rebuild path is for verifying it
+or extending it to new cohorts.
 
 Key bundled data:
 
 | File | Role |
 |---|---|
 | `data/pdactrace_reference.rda` | Bundled 10,113-gene atlas |
+| `data/pdactrace_protein_betas.rda` | Per-stage tissue-protein effect sizes |
 | `data/default_templates.rda` | Canonical 12-template catalog |
 | `data/pdactrace_external_anchors.rda` | External anchor set |
 | `data/meta_analysis.rda` | Random-effects RNA meta-analysis summaries |
 | `data/atlas_metadata.rda` | Atlas provenance + cohort manifest |
+| `data/pdactrace_data_sources.rda` | 26 contributing public datasets |
+| `inst/extdata/phase*.csv.xz` | Six bundled downstream phase tables |
 
 ## Citation
 

@@ -9,19 +9,30 @@
 #   PDAC_BASE_DIR=/home/kjb9412/PDAC_biomarker \
 #     Rscript data-raw/build_protein_betas.R
 
-base_dir <- Sys.getenv("PDAC_BASE_DIR",
-                        "/home/kjb9412/PDAC_biomarker")
-src_path <- file.path(
-  base_dir,
-  "analysis/manuscript/tissue_to_serum_biomarker/results",
-  "phase34_protein_pooled_12template.csv")
-if (!file.exists(src_path)) {
-  stop("Cannot find ", src_path,
-       " - set PDAC_BASE_DIR to the manuscript-monorepo root.",
-       call. = FALSE)
+.find_phase_csv <- function(stem) {
+  # 1. Bundled in inst/extdata (canonical, self-contained path)
+  bundled <- file.path("inst", "extdata",
+                        paste0(stem, ".csv.xz"))
+  if (file.exists(bundled)) return(bundled)
+  # 2. Companion manuscript-monorepo (developer fallback)
+  base_dir <- Sys.getenv("PDAC_BASE_DIR",
+                          "/home/kjb9412/PDAC_biomarker")
+  ext <- file.path(
+    base_dir,
+    "analysis/manuscript/tissue_to_serum_biomarker/results",
+    paste0(stem, ".csv"))
+  if (file.exists(ext)) return(ext)
+  stop("Cannot find ", stem,
+       ".csv(.xz). Re-run data-raw/bundle_phase_csvs.R or set ",
+       "PDAC_BASE_DIR.", call. = FALSE)
 }
+src_path <- .find_phase_csv("phase34_protein_pooled_12template")
 
-src <- data.table::fread(src_path)
+src <- if (grepl("\\.xz$", src_path)) {
+  data.table::fread(cmd = paste("xz -dc", shQuote(src_path)))
+} else {
+  data.table::fread(src_path)
+}
 stopifnot(all(c("gene", "beta_E", "beta_M", "beta_L",
                  "prot_pat", "prot_rho") %in% names(src)))
 

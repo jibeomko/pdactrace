@@ -21,19 +21,42 @@ suppressPackageStartupMessages({
 })
 
 # ── Paths ────────────────────────────────────────────────────
-PROJ <- "/home/kjb9412/PDAC_biomarker"
+PROJ <- Sys.getenv("PDAC_BASE_DIR", "/home/kjb9412/PDAC_biomarker")
 TS   <- file.path(PROJ, "analysis/manuscript/tissue_to_serum_biomarker/results")
 RNA  <- file.path(PROJ, "analysis/transcriptomics/results/figure1")
 PKG  <- rprojroot::find_package_root_file()
 
+# .find_phase_csv: canonical lookup that prefers the package's own
+# inst/extdata bundle over the companion manuscript-monorepo. Returns
+# the path; downstream `read_phase()` knows how to handle the .csv.xz
+# suffix.
+.find_phase_csv <- function(stem) {
+  bundled <- file.path(PKG, "inst", "extdata",
+                        paste0(stem, ".csv.xz"))
+  if (file.exists(bundled)) return(bundled)
+  ext_xz <- file.path(TS, paste0(stem, ".csv.xz"))
+  if (file.exists(ext_xz)) return(ext_xz)
+  ext_csv <- file.path(TS, paste0(stem, ".csv"))
+  if (file.exists(ext_csv)) return(ext_csv)
+  stop("Cannot find ", stem,
+       ".csv(.xz). Either run data-raw/bundle_phase_csvs.R against ",
+       "a manuscript-monorepo at PDAC_BASE_DIR, or download from ",
+       "the manuscript Zenodo archive (10.5281/zenodo.20067849).",
+       call. = FALSE)
+}
+read_phase <- function(stem) {
+  fp <- .find_phase_csv(stem)
+  if (grepl("\\.xz$", fp)) {
+    fread(cmd = paste("xz -dc", shQuote(fp)))
+  } else {
+    fread(fp)
+  }
+}
+
 # ── 1. RNA layer (phase33 = base) ────────────────────────────
 cat("[1/8] phase33 RNA 12-template (atlas surface = 4-Early only) ...\n")
 # Canonical 12-template filename (v0.4.0); falls back to legacy alias.
-p33_path <- file.path(TS, "phase33_deseq2_coef_12template.csv")
-if (!file.exists(p33_path)) {
-  p33_path <- file.path(TS, "phase33_deseq2_coef_8template.csv")
-}
-p33 <- fread(p33_path)
+p33 <- read_phase("phase33_deseq2_coef_12template")
 # coef_pat is the canonical 12-template call. We surface only 4-Early in
 # rna_pattern; the other 8 (Mid×4, Late×2, Monotonic×2) are flagged via
 # excluded_*_pattern columns for transparency.
@@ -123,12 +146,8 @@ ref <- merge(ref, mcc_summary, by = "gene_symbol", all.x = TRUE)
 
 # ── 3. Tissue protein layer (phase34) ────────────────────────
 cat("[3/8] phase34 tissue protein 4-Early-pattern ...\n")
-# Canonical 12-template filename (v0.4.0); falls back to legacy alias.
-p34_path <- file.path(TS, "phase34_protein_pooled_12template.csv")
-if (!file.exists(p34_path)) {
-  p34_path <- file.path(TS, "phase34_protein_pooled_8template.csv")
-}
-p34 <- fread(p34_path)
+# Canonical 12-template filename (v0.4.0).
+p34 <- read_phase("phase34_protein_pooled_12template")
 p34 <- p34[, .(gene_symbol = gene,
                 prot_pattern_8 = prot_pat,
                 prot_rho       = prot_rho)]
@@ -146,7 +165,7 @@ ref[, prot_tier := fcase(
 
 # ── 4. scRNA cell origin (phase2c) ───────────────────────────
 cat("[4/8] phase2c scRNA cell origin + tau ...\n")
-p2c <- fread(file.path(TS, "phase2c_celltype_specificity.csv"))
+p2c <- read_phase("phase2c_celltype_specificity")
 ct_cols <- grep("^mean_", names(p2c), value = TRUE)
 # top celltype + distribution list + specificity tau (v0.1.1 detail)
 p2c_dt <- p2c[, .(gene_symbol = gene,
@@ -162,7 +181,7 @@ ref <- merge(ref, p2c_dt, by = "gene_symbol", all.x = TRUE)
 
 # ── 5. Serum + translation class (phase42 + phase77) ─────────
 cat("[5/8] phase42 + phase77 serum / translation_class + raw means ...\n")
-p42 <- fread(file.path(TS, "phase42_pancreatitis_check.csv"))
+p42 <- read_phase("phase42_pancreatitis_check")
 # v0.1.1 detail: keep raw cohort means + t-test p-value
 p42 <- p42[, .(gene_symbol = gene,
                 serum_log2fc_PDAC_vs_HC = pdac_mean - hc_mean,
@@ -172,7 +191,7 @@ p42 <- p42[, .(gene_symbol = gene,
                 ann_hc_mean   = hc_mean,
                 ann_pdac_vs_pan_pval = t_pval)]
 
-p77 <- fread(file.path(TS, "phase77_strict_RNAprotConvergent_serum.csv"))
+p77 <- read_phase("phase77_strict_RNAprotConvergent_serum")
 # vs_serum schema: "Opposite" (inverse) or "Same" (concordant)
 # translation_class assignment is direction-based (NOT padj-gated) per
 # manuscript canonical phrasing; LTBP1 (vs_serum=Opposite, padj NA) is
@@ -204,7 +223,7 @@ ref[, serum_n_cohorts_detected := fifelse(
 
 # ── 6. Resectable markers (phase29) ──────────────────────────
 cat("[6/8] phase29 resectable markers ...\n")
-p29 <- fread(file.path(TS, "phase29_resectable_markers.csv"))
+p29 <- read_phase("phase29_resectable_markers")
 ref[, resectable_marker := gene_symbol %in% p29$gene]
 # Add phase29-native pattern (s_pat) — separate from phase33 coef_pat
 # because cohort-adjustment can shift profiles. Manuscript canonical
@@ -226,7 +245,7 @@ cat(sprintf("    phase33 coef_pat (cohort-adjusted):  %d Early / %d Mid-excluded
 
 # ── 6b. Filter status + annotation (phase60_signalP_pipeline) ─
 cat("[6b] phase60 filter status (7-step audit trail) ...\n")
-p60 <- fread(file.path(TS, "phase60_signalP_pipeline.csv"))
+p60 <- read_phase("phase60_signalP_pipeline")
 p60_keep <- p60[, .(
   gene_symbol            = gene,
   flt_signal_peptide     = f_sp,
@@ -252,7 +271,7 @@ cat(sprintf("  phase60 coverage: %d genes / final pass: %d\n",
 
 # ── 7. Panel members (phase80) ───────────────────────────────
 cat("[7/8] phase80 panel members ...\n")
-p80 <- fread(file.path(TS, "phase80_ltbp1_pancreatitis_predeclared_panels.csv"))
+p80 <- read_phase("phase80_ltbp1_pancreatitis_predeclared_panels")
 panel_genes <- unique(unlist(strsplit(p80$genes, "[,;+ ]+")))
 panel_genes <- panel_genes[panel_genes != "" & !is.na(panel_genes)]
 ref[, panel_member := gene_symbol %in% panel_genes]

@@ -1,3 +1,54 @@
+# pdactrace 0.99.3
+
+**Self-contained reproducibility — small phase CSVs bundled in
+`inst/extdata`.** The package now ships the six small downstream
+phase tables (phase2c / phase42 / phase77 / phase29 / phase60 /
+phase80; ~52 KB compressed total) so that the full
+`build_reference.R` re-derivation chain runs without the companion
+manuscript-monorepo. Two large upstream CSVs (phase33 RNA fit,
+phase34 protein fit) remain external because they push the tarball
+over Bioconductor's 5 MB limit; the build scripts now fall through
+a clean lookup chain (`inst/extdata/` → `$PDAC_BASE_DIR/...` →
+informative error pointing at the manuscript Zenodo archive
+[10.5281/zenodo.20067849](https://doi.org/10.5281/zenodo.20067849)).
+
+## New
+
+- `inst/extdata/phase{2c,29,42,60,77,80}_*.csv.xz` — bundled,
+  xz-compressed copies of the six small phase outputs that
+  `build_reference.R` joins onto the RNA/protein base. Total ~52 KB
+  added to the tarball; no impact on R CMD check or BiocCheck.
+- `data-raw/bundle_phase_csvs.R` — bundler that re-creates the
+  `inst/extdata/*.csv.xz` set from the manuscript-monorepo when
+  `PDAC_BASE_DIR` is set. Strips phase33 to the 16 columns that
+  `build_reference.R` actually uses; everything else is a verbatim
+  trim + xz pass.
+
+## Changed
+
+- `data-raw/build_reference.R` — adds an internal `read_phase()`
+  helper that prefers the bundled `inst/extdata` copy, falls back to
+  `$PDAC_BASE_DIR/.../*.csv` (and `.csv.xz`), and errors with a
+  clear "set PDAC_BASE_DIR or download from Zenodo
+  10.5281/zenodo.20067849" message if neither exists. Six of the
+  seven `fread()` calls in the script now route through this helper.
+  The two large CSVs (phase33, phase34) still come via
+  `read_phase()` but resolve via the fallback chain because the
+  tarball can't accommodate them.
+- `data-raw/build_protein_betas.R` — same lookup chain via
+  `.find_phase_csv()` + xz-aware fread. Re-running the script now
+  works against the bundled CSV (set
+  `data/pdactrace_protein_betas.rda` rebuild path entirely
+  in-package once the phase34 input is available).
+
+## Documentation
+
+- README "Reproducibility" section update is queued — the current
+  v0.99.0..v0.99.2 wording still claims phase scripts "live in a
+  separate companion repository". A subsequent commit will rewrite
+  this section to acknowledge the bundled `inst/extdata` chain and
+  the Zenodo download path for the two remaining external CSVs.
+
 # pdactrace 0.99.2
 
 **Human-readable provenance + larger Arial-bold typography on all
