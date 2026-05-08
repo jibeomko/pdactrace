@@ -89,5 +89,8 @@ utils::globalVariables(c(
   "rna_pattern", "cell_origin_top", "audit_score",
   "redundancy_with",
   # data.table column-list NSE
-  "..beta_cols", "..keep_cols", "..cols", ".N"
+  "..beta_cols", "..keep_cols", "..cols", ".N",
+  # plot_template_atlas / plot_gene_template NSE + ggplot aes columns
+  "stage", "z", "template", "n_cohort",
+  "z_mean", "z_sd", "z_lo", "z_hi"
 ))

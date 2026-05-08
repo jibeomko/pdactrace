@@ -190,6 +190,14 @@ plot_stage_effect("SERPINA1")
 plot_per_cohort("SERPINA1")
 plot_meta_forest("SERPINA1", contrast = "Mid_vs_Early")
 plot_gene_hexagon("LGALS3BP", comparison = "high_confidence_mean")
+
+# Per-template trajectory atlas (12 PDFs per layer; v0.99.1)
+plot_template_atlas("rna",     output_dir = tempdir())
+plot_template_atlas("protein", output_dir = tempdir())
+
+# Per-gene trajectory overlaid on its matched template panel
+plot_gene_template("LTBP1",    layer = "rna")
+plot_gene_template("LGALS3BP", layer = "protein")
 ```
 
 ## Use Your Own Cohort
