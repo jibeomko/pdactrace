@@ -1,3 +1,42 @@
+# pdactrace 0.99.4
+
+**Reproducibility vignette + on-demand phase33/34 fetcher.** Closes
+the v0.99.3 self-contained-rebuild story: the bundled `inst/extdata`
+plus the new `download_phase_csvs()` helper plus a 4-layer
+`vignette("05_reproducibility")` give end users a complete documented
+path from the prebuilt atlas all the way back to the public
+phase-CSV inputs, without cloning the manuscript-monorepo.
+
+## New
+
+- `download_phase_csvs(target, ref, cache, verbose)` — fetches the
+  two large upstream phase CSVs (`phase33_deseq2_coef_12template.csv`,
+  `phase34_protein_pooled_12template.csv`) on demand from
+  `raw.githubusercontent.com/jibeomko/PDAC_biomarker` (Zenodo
+  10.5281/zenodo.20067849) and caches them via
+  [`BiocFileCache::BiocFileCache()`]. Returns a named character
+  vector of cached file paths. `BiocFileCache` is a soft
+  (`Suggests`) dependency picked up at runtime via
+  `requireNamespace()` — no impact on packages that only need the
+  query / score / report API.
+- `vignettes/05_reproducibility.Rmd` — 4-layer reproducibility
+  guide:
+  1. Layer 1 — offline, bundled (use `data/*.rda` directly; no
+     network).
+  2. Layer 2 — user cohort (project a count / intensity matrix
+     through `project_user_cohort()`).
+  3. Layer 3 — re-derive the bundled atlas from the package's own
+     `inst/extdata` plus the two upstream CSVs cached via
+     `download_phase_csvs()`.
+  4. Layer 4 — full FASTQ → counts → fits pipeline (out of scope;
+     pointer to the manuscript-monorepo).
+
+## Changed
+
+- `DESCRIPTION` — `Suggests:` gains `BiocFileCache` for the new
+  helper. Version bumped 0.99.3 → 0.99.4. Imports / Depends are
+  unchanged.
+
 # pdactrace 0.99.3
 
 **Self-contained reproducibility — small phase CSVs bundled in

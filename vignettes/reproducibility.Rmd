@@ -1,0 +1,172 @@
+---
+title: "5. Reproducibility from raw data"
+author: "pdactrace"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{5. Reproducibility from raw data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+# Goal
+
+`pdactrace` ships a frozen 10,113-gene atlas plus the audit, query,
+report, and projection API that consumes it. This vignette
+documents **four reproducibility layers**, ordered from "no
+external data needed" to "the entire FASTQ-to-atlas pipeline":
+
+1. **Layer 1 — offline, bundled.** Use the prebuilt `data/*.rda`
+   directly. No network, no rebuild.
+2. **Layer 2 — user cohort.** Project a user-supplied count or
+   intensity matrix through the same audit framework via
+   `project_user_cohort()`.
+3. **Layer 3 — bundled phase chain.** Re-derive the bundled atlas
+   from the package's own `inst/extdata` plus the two large
+   upstream phase CSVs (downloaded once via
+   `download_phase_csvs()`).
+4. **Layer 4 — full pipeline (FASTQ → counts → fits).**
+   Out of scope for the package; this layer is the
+   manuscript-monorepo's job. Pointer at the bottom.
+
+# Layer 1 — Offline, bundled
+
+```{r layer1, eval = FALSE}
+library(pdactrace)
+
+# All bundled atlas objects load lazily from `data/`:
+data(pdactrace_reference)
+data(pdactrace_protein_betas)
+data(default_templates)
+data(pdactrace_external_anchors)
+data(meta_analysis)
+data(atlas_metadata)
+data(pdactrace_data_sources)
+
+query_gene("LTBP1")             # uses pdactrace_reference internally
+explain_score("LTBP1")          # same
+list_data_sources(layer = "RNA")
+atlas_provenance()
+```
+
+This is the canonical use case — most users never need anything
+beyond Layer 1.
+
+# Layer 2 — User cohort
+
+If you have your own staged RNA-seq counts (and optionally a
+matched tissue-protein intensity matrix), feed it into the same
+framework:
+
+```{r layer2, eval = FALSE}
+data(toy_counts); data(toy_coldata); data(toy_protein)
+
+res <- project_user_cohort(
+  rna        = toy_counts,
+  coldata    = toy_coldata,
+  stage_col  = "stage",
+  cohort_col = "cohort",
+  protein    = toy_protein)
+
+res$summary
+head(res$audit[order(-audit_score)])
+```
+
+`project_user_cohort()` chains four steps internally:
+`fit_stage_de()` → `classify_trajectory()` → `assemble_user_evidence()`
+→ `compute_audit_score()`. Each can be called individually for
+custom workflows; see `vignette("user_cohort_extension")`.
+
+`SummarizedExperiment` input works identically — pass an `SE` whose
+`assay()` is the count matrix and whose `colData()` carries the
+stage / cohort columns (`fit_stage_de(se, stage_col, cohort_col)`).
+
+# Layer 3 — Re-derive the bundled atlas
+
+The full `data-raw/build_reference.R` chain reproduces
+`data/pdactrace_reference.rda` from public phase CSVs. The package
+already ships the **six small downstream tables** in
+`inst/extdata/phase{2c,29,42,60,77,80}_*.csv.xz` (~52 KB
+compressed total). The two large upstream fits — `phase33` (RNA)
+and `phase34` (protein) — are too big to bundle and are pulled
+once via `download_phase_csvs()`:
+
+```{r layer3, eval = FALSE}
+# 1. Pull the two large upstream CSVs (~3.5 MB total) into the user's
+#    BiocFileCache. Subsequent calls reuse the cached copy.
+paths <- download_phase_csvs("both")
+paths
+#> phase33  /home/.../BiocFileCache/.../phase33_deseq2_coef_12template.csv
+#> phase34  /home/.../BiocFileCache/.../phase34_protein_pooled_12template.csv
+
+# 2. The build_reference.R script's lookup chain
+#    (inst/extdata -> $PDAC_BASE_DIR -> error) finds phase33/34 once
+#    PDAC_BASE_DIR points to a local copy.  Easiest setup: clone the
+#    manuscript-monorepo and point PDAC_BASE_DIR at it:
+#       git clone https://github.com/jibeomko/PDAC_biomarker
+#       export PDAC_BASE_DIR=$PWD/PDAC_biomarker
+#       Rscript data-raw/build_reference.R
+```
+
+The build re-creates `data/pdactrace_reference.rda` byte-identical
+to the bundled object, given the same upstream CSVs and the same
+R / data.table versions.
+
+The `build_meta_analysis.R`, `build_atlas_metadata.R`,
+`build_audit_scores_v2.R`, etc. scripts under `data-raw/` extend
+the same chain — all are deterministic given the bundled inputs +
+the two cached CSVs.
+
+For a one-off "fresh" rebuild without cloning the manuscript repo,
+the snippet below works as long as both phase CSVs are reachable
+on the local filesystem (regardless of where `PDAC_BASE_DIR`
+points):
+
+```{r layer3-direct, eval = FALSE}
+# Manual rebuild path — pure R, no shell needed
+paths <- download_phase_csvs("both")
+target_dir <- file.path(
+  Sys.getenv("PDAC_BASE_DIR", tempdir()),
+  "analysis/manuscript/tissue_to_serum_biomarker/results")
+dir.create(target_dir, recursive = TRUE, showWarnings = FALSE)
+file.copy(paths, target_dir, overwrite = TRUE)
+
+# Now `read_phase()` inside build_reference.R will resolve via the
+# $PDAC_BASE_DIR fallback even if PDAC_BASE_DIR was just a tempdir.
+Sys.setenv(PDAC_BASE_DIR = dirname(dirname(dirname(target_dir))))
+source(system.file("..", "data-raw", "build_reference.R",
+                    package = "pdactrace"))
+```
+
+# Layer 4 — From FASTQ
+
+This layer — raw FASTQ → STAR/salmon counts → DESeq2 LRT → phase33
+CSV — is **out of scope for `pdactrace`**. The required cohort-
+specific Snakemake / Nextflow pipelines, ~110 numbered
+`phase*` scripts, FragPipe configs, scVI / liana notebooks, and
+~100 GB of intermediate artefacts live in the companion
+manuscript-monorepo:
+
+* GitHub: <https://github.com/jibeomko/PDAC_biomarker>
+* Zenodo: [10.5281/zenodo.20067849](https://doi.org/10.5281/zenodo.20067849)
+
+That repository carries the public-data accession manifests under
+`analysis/metadata/`; `list_data_sources()` exposes the same
+information programmatically inside `pdactrace`.
+
+# Provenance summary
+
+```{r prov, eval = FALSE}
+ap <- atlas_provenance()
+ap$package_doi
+ap$manuscript_doi
+ap$data_layers
+list_data_sources()
+```
+
+Every gene's `provenance` field is renderable as a plain-English
+evidence summary via [`format_provenance()`].
