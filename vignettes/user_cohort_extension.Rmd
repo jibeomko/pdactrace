@@ -197,6 +197,88 @@ multi-layer evidence — varying it changes which dictionary you align
 against, not the patient. Disease-agnostic atlas building (Level 2)
 is planned for v0.5.
 
+# Appendix A — Stage harmonization (TNM / AJCC -> Normal / Early / Mid / Late)
+
+The tissue layer requires `stage` labels in
+`c("Normal", "Early", "Mid", "Late")`. Most public PDAC cohorts
+report TNM (T-stage) or AJCC (I / II / III / IV); the canonical
+mapping pdactrace uses internally for the bundled atlas is:
+
+| Source label                         | Standardised | Notes                            |
+|--------------------------------------|--------------|----------------------------------|
+| Adjacent normal / matched control    | Normal       | "non-tumor", "normal pancreas"   |
+| AJCC IA / IB; T1; T1N0M0             | Early        | localised, resectable            |
+| AJCC IIA / IIB; T2; T3 N0; T1-2 N1   | Mid          | locally advanced, resectable / borderline |
+| AJCC III; T3 N+; T4 any N            | Mid          | locally advanced unresectable    |
+| AJCC IV; M1; any T any N M1          | Late         | metastatic                       |
+
+If a cohort reports only "stage" without TNM detail, use the AJCC
+roman-numeral row.
+
+If you only have **N vs T** at the tissue layer (no clinical
+staging), pdactrace's tissue layer does **not** apply -- the
+12-template trajectory framework needs at least 2 of the 4 stage
+levels with samples to discriminate trajectory shape. Three
+options:
+
+1. Look for clinical staging in a separate metadata file (most
+   TCGA / GEO / CPTAC submissions include it; map via the table
+   above).
+2. Use a different tool for tissue analysis and bring the **serum**
+   side through `project_user_serum_cohort()` (Appendix B), which
+   needs only PDAC vs HC.
+3. Re-cast all tumor samples to one stage (e.g. all -> "Early").
+   Technically runs but loses framework value -- the trajectory
+   classification degenerates to "up vs down". Not recommended.
+
+# Appendix B -- Serum projection (binary group contrast, no stage)
+
+The serum side of the framework is binary: the bundled atlas
+computes `serum_log2fc_PDAC_vs_HC` and `serum_log2fc_Pan_vs_HC`
+from group means, not from stage-aware regression. So a user with
+their own serum DIA / TMT cohort can project it through the
+framework with only PDAC / HC ± Pancreatitis group labels:
+
+```{r serum_projection_demo, eval = FALSE}
+# Synthetic example: 50 genes x 24 samples (8 PDAC, 8 HC, 8 Pancreatitis)
+g <- 50; n <- 24
+intensity <- matrix(rnorm(g * n, mean = 5),
+                    nrow = g, ncol = n,
+                    dimnames = list(paste0("GENE", seq_len(g)),
+                                     paste0("S", seq_len(n))))
+intensity[1:10, 1:8] <- intensity[1:10, 1:8] + 2  # PDAC-up signal
+
+coldata <- data.frame(
+  sample = colnames(intensity),
+  group  = rep(c("PDAC", "HC", "Pancreatitis"), each = 8))
+
+serum_summary <- project_user_serum_cohort(
+  intensity, coldata,
+  group_col  = "group",
+  pdac_label = "PDAC",
+  hc_label   = "HC",
+  pan_label  = "Pancreatitis",   # optional
+  test       = "limma_eBayes",   # or "wilcox" / "t_test"
+  padj_cutoff = 0.05)
+head(serum_summary)
+```
+
+The output is a `data.table` with `gene_symbol`,
+`serum_log2fc_PDAC_vs_HC`, `serum_padj_PDAC_vs_HC`,
+`serum_log2fc_Pan_vs_HC`, `serum_padj_Pan_vs_HC`,
+`translation_class` (joined with bundled atlas RNA direction:
+A = same-direction tissue<->serum, B = opposite, C = decoupled),
+and `serum_detected`. Plug it into the assembler:
+
+```{r serum_assembly_demo, eval = FALSE}
+ev <- assemble_user_evidence(serum_summary = serum_summary)
+audit <- compute_audit_score(evidence = ev)
+```
+
+If you also have a tissue cohort projected through
+`project_user_cohort()`, pass both into `assemble_user_evidence()`
+to get the full multi-layer audit score.
+
 ```{r session_info}
 sessionInfo()
 ```

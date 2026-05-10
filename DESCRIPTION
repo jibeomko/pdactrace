@@ -1,7 +1,7 @@
 Package: pdactrace
 Type: Package
 Title: Transparent Multi-Omics Tissue-to-Serum Biomarker Translation Framework with PDAC Reference Atlas
-Version: 0.99.8
+Version: 0.99.9
 Authors@R: c(
     person(given = "Jibeom", family = "Ko",
            email = "rhwlqja1779@gmail.com",

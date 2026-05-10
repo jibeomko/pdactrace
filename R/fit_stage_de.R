@@ -73,18 +73,48 @@ setMethod("fit_stage_de", "ANY",
          "Install via BiocManager::install('DESeq2').")
   }
   counts <- object
-  stage <- factor(stage, levels = c("Normal", "Early", "Mid", "Late"))
+  # ---- friendly stage-label check (v0.99.9) -----------------------
+  # The 12-template trajectory framework is stage-aware; binary
+  # Normal vs Tumor input does NOT apply. Surface the mismatch
+  # explicitly instead of silent factor() coercion + downstream
+  # "Need at least 8 samples" which obscures the root cause.
+  stage_in <- as.character(stage)
+  required <- c("Normal", "Early", "Mid", "Late")
+  unmatched <- setdiff(unique(stage_in), required)
+  matched   <- intersect(unique(stage_in), required)
+  if (length(matched) < 2L) {
+    msg <- sprintf(
+      paste0("Stage labels you provided: %s\n",
+             "Required levels:           %s\n",
+             "Matched: %d / %d unique stage values.\n\n",
+             "pdactrace tissue layer needs stage-aware data ",
+             "(Normal/Early/Mid/Late, >=2 levels with samples).\n",
+             "  - If you only have Normal vs Tumor: this framework ",
+             "does not apply at the tissue layer.\n",
+             "  - For serum proteomics (binary group contrasts), ",
+             "use project_user_serum_cohort() instead.\n",
+             "  - To map clinical TNM/AJCC stages to ",
+             "Normal/Early/Mid/Late, see vignette('user_cohort_extension')."),
+      paste(sort(unique(stage_in)), collapse = ", "),
+      paste(required, collapse = ", "),
+      length(matched), length(unique(stage_in)))
+    stop(msg, call. = FALSE)
+  }
+
+  stage <- factor(stage_in, levels = required)
   if (any(is.na(stage))) {
     keep <- !is.na(stage)
     counts <- counts[, keep, drop = FALSE]
     stage  <- stage[keep]
     if (!is.null(cohort)) cohort <- cohort[keep]
     message(sprintf(
-      "Dropped %d samples with stage outside Normal/Early/Mid/Late.",
-      sum(!keep)))
+      "Dropped %d samples with stage labels not in Normal/Early/Mid/Late: %s",
+      sum(!keep), paste(unmatched, collapse = ", ")))
   }
   if (length(stage) < 8L) stop(
-    "Need at least 8 samples across stages for DESeq2 LRT.")
+    "Need at least 8 samples across stages for DESeq2 LRT. ",
+    "After mapping to Normal/Early/Mid/Late you have ",
+    length(stage), " samples.", call. = FALSE)
 
   cd <- data.frame(stage_group = stage)
   if (!is.null(cohort)) cd$cohort <- factor(cohort)

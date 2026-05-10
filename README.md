@@ -614,15 +614,42 @@ barplot(setNames(aln$rna$cor_to_stage_axis, aln$rna$stage),
          main = "Patient stage alignment")
 ```
 
-## Scenario 6 — Project your own staged cohort
+## Scenario 6 — Project your own data through the framework
 
-The most common "use pdactrace on my own data" path. Inputs:
+The user-data side of pdactrace is **asymmetric**, mirroring the
+data availability in the field: the **tissue layer** (RNA / tissue
+protein) requires stage-aware input (Normal / Early / Mid / Late),
+while the **serum layer** only needs binary group contrasts
+(PDAC vs HC, optionally Pancreatitis vs HC). The two paths share
+the same downstream evidence-assembly + audit-score machinery.
+
+> ⚠️ **Important data requirement (tissue side).** The 12-template
+> trajectory framework matches per-gene **N → E → M → L curve
+> shapes** to one of 12 pre-declared templates. **Binary
+> Normal vs Tumor input does NOT apply at the tissue layer** —
+> the framework needs at least 2 of the 4 stage levels with
+> samples to discriminate trajectory shape. If you only have
+> N vs T for your tissue cohort, you have three options:
+>
+> 1. Add stage info from clinical metadata if available
+>    (TNM / AJCC mapping table is in the `user_cohort_extension`
+>    vignette).
+> 2. Use a different tool for tissue analysis (e.g., direct
+>    DESeq2 / limma) and bring the **serum** side through
+>    `project_user_serum_cohort()` (Scenario 6b below) which
+>    needs only N vs T.
+> 3. Re-cast all tumor samples to one stage (degenerate; loses
+>    framework value).
+
+### Scenario 6a — Tissue projection (stage-aware)
+
+**Inputs:**
 
 - A count matrix (genes × samples) — integer matrix or `data.frame`,
   or a `SummarizedExperiment` with the counts in its `assay()`.
-- A `coldata` `data.frame` with at least `stage` (must contain levels
-  from `c("Normal", "Early", "Mid", "Late")`) and optionally
-  `cohort`.
+- A `coldata` `data.frame` with at least `stage` (must contain
+  levels from `c("Normal", "Early", "Mid", "Late")`) and
+  optionally `cohort`. Minimum 8 samples across stages.
 - (optional) A matched tissue-protein log2 intensity matrix on the
   same samples.
 
@@ -690,6 +717,88 @@ plot_template_atlas("protein", output_dir = tempdir())
 
 plot_gene_template("LTBP1", layer = "rna")
 plot_gene_template("LTBP1", layer = "protein")
+```
+
+### Scenario 6b — Serum projection (binary group contrast)
+
+**Inputs:** much simpler than 6a, no stage labels required.
+
+- A **log2 protein abundance matrix** (genes × samples) — `matrix`
+  or `data.frame`. Pre-log2 transformation is required; raw MS
+  intensities will produce nonsensical log2FC values.
+- A `coldata` `data.frame` with at least one column carrying
+  group labels matching `pdac_label`, `hc_label`, and optionally
+  `pan_label`. `nrow(coldata)` must equal `ncol(intensity)`,
+  same order. Minimum 3 samples per group recommended.
+
+```r
+# Example: 50 genes × 24 samples (8 PDAC, 8 HC, 8 Pancreatitis)
+set.seed(1)
+g <- 50; n <- 24
+intensity <- matrix(rnorm(g * n, mean = 5),
+                     nrow = g, ncol = n,
+                     dimnames = list(paste0("GENE", seq_len(g)),
+                                      paste0("S", seq_len(n))))
+intensity[1:10, 1:8] <- intensity[1:10, 1:8] + 2   # PDAC-up signal
+
+coldata <- data.frame(
+  sample = colnames(intensity),
+  group  = rep(c("PDAC", "HC", "Pancreatitis"), each = 8))
+
+serum_summary <- project_user_serum_cohort(
+  intensity, coldata,
+  group_col  = "group",
+  pdac_label = "PDAC",
+  hc_label   = "HC",
+  pan_label  = "Pancreatitis")    # optional
+
+head(serum_summary)
+#>    gene_symbol serum_log2fc_PDAC_vs_HC serum_padj_PDAC_vs_HC
+#> 1:       GENE1                    2.05                3.4e-04
+#> 2:       GENE2                    1.92                4.1e-04
+#> ...
+#>    serum_log2fc_Pan_vs_HC translation_class serum_detected
+#> 1:                  -0.31                 B           TRUE
+```
+
+The function:
+
+- Computes per-gene `serum_log2fc_PDAC_vs_HC` and (if `pan_label`
+  is set) `serum_log2fc_Pan_vs_HC`.
+- Runs a per-gene two-group test
+  (`test = "limma_eBayes"` default; falls back to `"wilcox"` or
+  `"t_test"`) and BH-adjusts.
+- Joins the bundled `pdactrace_reference`'s tissue direction to
+  assign `translation_class` (A = same direction tissue ↔ serum;
+  B = opposite, the rare inverse-translation case;
+  C = decoupled).
+- Flags `serum_detected = TRUE` for genes with
+  `padj_PDAC_vs_HC <= padj_cutoff` (default 0.05).
+
+The output table plugs directly into
+`assemble_user_evidence(serum_summary = ...)`.
+
+### Scenario 6c — Combined tissue + serum into final audit score
+
+If the user has both tissue and serum cohorts (rare, but ideal):
+
+```r
+# Step 1: tissue side (stage-aware)
+tis <- project_user_cohort(rna = my_counts, coldata = my_tissue_cd,
+                            stage_col = "stage", cohort_col = "cohort",
+                            protein   = my_tissue_protein)
+
+# Step 2: serum side (binary)
+ser <- project_user_serum_cohort(intensity = my_serum,
+                                   coldata = my_serum_cd,
+                                   pan_label = "Pancreatitis")
+
+# Step 3: combine into one evidence frame + score
+ev <- assemble_user_evidence(rna_fit       = tis$rna_pattern,
+                              prot_fit      = tis$prot_pattern,
+                              serum_summary = ser)
+audit <- compute_audit_score(evidence = ev)
+head(audit[order(-audit_score)], 20)
 ```
 
 # Audit scoring rule

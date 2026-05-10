@@ -1,3 +1,71 @@
+# pdactrace 0.99.9
+
+**Asymmetric user-data projection: serum needs only PDAC vs HC.**
+The tissue side (RNA + tissue protein) requires stage-aware input
+(N/E/M/L 4-level) for the 12-template trajectory framework, but
+the **serum side** uses binary group contrasts -- which is exactly
+what most public PDAC serum DIA / TMT studies publish. Until now
+pdactrace had no user-facing helper for the serum side; this
+release adds one and explicitly closes the documentation /
+friendly-error gaps that left users with N vs T input confused.
+
+## New
+
+- `project_user_serum_cohort(intensity, coldata, group_col,
+  pdac_label, hc_label, pan_label, test, padj_cutoff,
+  link_to_atlas)` -- projects a user's serum proteomics matrix
+  through the binary-contrast pipeline. Computes
+  `serum_log2fc_PDAC_vs_HC` and (optionally)
+  `serum_log2fc_Pan_vs_HC`, runs a per-gene two-group test
+  (limma_eBayes / wilcox / t_test), BH-adjusts, joins the bundled
+  atlas RNA direction to assign `translation_class` (A / B / C),
+  and flags `serum_detected`. Output plugs straight into
+  `assemble_user_evidence(serum_summary = ...)`. No stage labels
+  required; minimum 3 samples per group recommended.
+
+## Changed
+
+- `fit_stage_de()` -- new pre-validation step that surfaces a
+  **friendly error** when the user provides binary `c("Normal",
+  "Tumor")` instead of `c("Normal", "Early", "Mid", "Late")`.
+  Previously the silent factor() coercion dropped Tumor samples
+  and the user got the misleading "Need at least 8 samples"
+  error downstream. The new error names which labels matched /
+  unmatched and points the user at three options
+  (clinical staging, `project_user_serum_cohort()` for serum,
+  or the `user_cohort_extension` vignette's TNM/AJCC mapping
+  table).
+- `vignettes/user_cohort_extension.Rmd` -- two new appendices:
+  Appendix A is a TNM / AJCC -> Normal / Early / Mid / Late
+  harmonization table for users mapping their clinical staging
+  data; Appendix B walks `project_user_serum_cohort()` end-to-end
+  with a synthetic 50-gene x 24-sample (8 PDAC / 8 HC / 8
+  Pancreatitis) example that returns ready-to-assemble
+  serum_summary.
+- `README.md` Scenario 6 -- restructured into 6a (tissue
+  projection, stage-aware), 6b (serum projection, binary), and
+  6c (combined tissue + serum -> single audit score). Adds an
+  explicit "Important data requirement" callout at the top of
+  Scenario 6 that documents the asymmetry and tells N vs T
+  users which path to take.
+
+## Tests
+
+- 9 new test_that blocks in
+  `tests/testthat/test-project-user-serum.R` covering schema,
+  log2FC = mean(PDAC) - mean(HC), planted PDAC-up signal
+  detection, missing/wrong group labels (friendly errors),
+  link_to_atlas TRUE / FALSE, and translation_class
+  cross-checks (LTBP1 / LGALS3BP -> A; ALB -> B; GAPDH -> C).
+- One new block verifies the friendly stage error fires on
+  N vs T input to `fit_stage_de()`.
+- Full suite: 504 PASS / 0 FAIL.
+
+`project_user_serum_cohort` is a new export; no public API
+removals. `fit_stage_de()` behaviour is strictly stricter (now
+errors on N vs T instead of silently degenerating), but no
+previously valid input changes outcome.
+
 # pdactrace 0.99.8
 
 **`viz_gene()` expanded to a six-panel evidence-to-score canvas
