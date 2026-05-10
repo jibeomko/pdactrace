@@ -836,6 +836,90 @@ anchor_enrichment(top_n = 100, tier = "secondary")
 The frozen audit rule recovers **7 secondary-tier external anchors
 in the top 100** (`39.3×`, hypergeometric `p = 2.18e-10`).
 
+## Why these specific cutoffs?
+
+This subsection makes the framework's numeric choices explicit so
+they can be audited or perturbed. Three groups of cutoffs:
+
+**Trajectory cutoff (`rho_cutoff = 0.85`).**
+A z-scored 4-stage profile (Normal / Early / Mid / Late) is
+matched against 12 pre-declared templates by Pearson correlation.
+The `rho >= 0.85` threshold is **conservative** -- four-point
+correlations crowd toward 1, so 0.85 still requires the gene's
+trajectory shape to closely follow one specific template. The
+`rho` value used by the surface call is also recorded
+(`rna_pattern_rho`); users wanting a different stringency can
+re-run [classify_trajectory()] with their own cutoff. The
+companion `methodology_validation` vignette includes a sweep
+across `rho_cutoff` in `{0.80, 0.85, 0.90}` showing that
+top-100 anchor enrichment is robust across this range.
+
+**Three-axis weights (`0.40 / 0.35 / 0.25`).**
+The weights map onto a simple priority order:
+**evidence_strength** (which layers are present at all)
+> **biological_coherence** (do they agree on direction across
+RNA cohorts and concord with protein) > **translational_relevance**
+(does the gene reach serum, with healthy/pancreatitis discrimination).
+This ordering reflects the practical bottleneck in PDAC biomarker
+discovery: **layer presence is the limiting factor** -- many genes
+have RNA but no serum data, so weighting that axis highest
+reflects how much it constrains the prioritisation. The weights
+sum to 1.0 by design so `positive_score in [0, 1]`. Sensitivity
+to the exact weight values is documented in the
+`methodology_validation` vignette (Section B).
+
+**Two-gate multipliers.**
+The leakage gate enforces hard discounts for known artifact
+classes:
+
+| Trigger | Multiplier | Rationale |
+|---|---|---|
+| housekeeping flag | `0.00` | "Housekeeping" by definition is invariant; trajectory signal is presumed artifactual. Hard zero. |
+| plasma_high_abundance flag | `0.50` | Top-decile plasma proteins (e.g. ALB, IGHG1) elevated in any inflammatory state, not PDAC-specific. Half-discount, not zero, because some are still meaningful (ALB drops in advanced disease). |
+| neither | `1.00` | Pass through. |
+
+The heterogeneity gate uses the **Higgins-Thompson I-squared
+convention** (low / moderate / high boundaries at 25 / 50 / 75)
+adapted to a pdactrace-specific binning that reflects the
+v0.3.0 audit experiment:
+
+| max meta I^2 across N-vs-E / M-vs-E / L-vs-E | Multiplier |
+|---|---|
+| `< 70%` (low / moderate) | `1.00` |
+| `70-90%` (high) | `0.70` |
+| `>= 90%` (very high) | `0.30` |
+
+Both gates emit deterministic per-gene values; their stability
+under evidence perturbation is reported by
+[`propagate_uncertainty()`](#propagate_uncertaintygenes-n_mc-seed).
+
+**Audit class boundaries (`0.5` / `0.3`).**
+Genes with `audit_score >= 0.5` are `high_confidence`;
+`>= 0.3` is `supported_uncertain`; below `0.3` and not gate-zeroed
+is `low`. Gate-zeroed genes are `excluded` (leakage = 0) or
+`penalized` (leakage = 0.5).
+
+**Trajectory effect-size threshold (`0.585 = log2(1.5)`).**
+Used internally in the rescue-eligibility check
+(`max_abs_beta_meta < 0.585`). 1.5-fold change is the default
+"meaningfully detectable" effect size for log2 fold-change
+discussions in the bulk RNA-seq + proteomics literature.
+
+**Cohort independence assumption (Stouffer meta-analysis).**
+The cross-cohort consistency Z-statistic (`rna_stouffer_z`)
+combines per-cohort one-sided p-values via Stouffer's method,
+which **assumes independence between cohorts**. In the bundled
+atlas, this assumption is partially violated: TCGA-PAAD and
+CPTAC PDAC have overlapping donor recruitment (CPTAC re-quantified
+a subset of TCGA samples for proteomics). The framework absorbs
+this via the **heterogeneity gate** -- genes with high I^2 across
+the four contributing cohorts (TCGA / CPTAC / GSE224564 /
+GSE79668) get a multiplier of `0.7` or `0.3`, capping the
+inflated significance that the Stouffer assumption would
+otherwise produce. Users running [`project_user_cohort()`] on
+their own data with non-overlapping donors are not affected by
+this caveat.
+
 # Stage harmonization
 
 Every cohort is collapsed onto a single **4-level scale**

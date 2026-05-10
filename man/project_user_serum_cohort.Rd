@@ -71,7 +71,7 @@ projection asymmetric to the tissue side: where
 \code{\link[=project_user_cohort]{project_user_cohort()}} needs Normal / Early / Mid / Late stage
 labels for its 12-template trajectory matching, this helper
 accepts the kind of serum DIA dataset most public PDAC serum
-studies actually publish (PDAC + HC ± pancreatitis, no clinical
+studies actually publish (PDAC + HC +/- pancreatitis, no clinical
 stage labels needed).
 }
 \section{What this function does}{

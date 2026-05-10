@@ -1,0 +1,172 @@
+---
+title: "5. Cross-cancer demonstration: applying the framework to non-PDAC cohorts"
+author: "pdactrace v0.99.10"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{5. Cross-cancer demonstration: applying the framework to non-PDAC cohorts}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+suppressPackageStartupMessages({
+  library(pdactrace)
+  library(data.table)
+})
+set.seed(42)
+```
+
+# Goal
+
+The bundled `pdactrace_reference` is a PDAC demonstration cohort,
+but the **framework itself is cancer-agnostic**: the 12-template
+trajectory catalog, the 3-axis + 2-gate audit score, the Evidence
+Math layer, and the Class A / B / C translation discipline operate
+on a per-stage expression model (Normal -> Early -> Mid -> Late),
+not on PDAC-specific assumptions. This vignette shows the
+framework being applied to a **non-PDAC cohort** end-to-end via
+the same `project_user_cohort()` entry point that Scenario 6a in
+the README uses.
+
+We use a **synthetic CRC-flavored cohort** (50 genes x 24
+samples, balanced across stages and cohorts) so the vignette
+renders without external dataset downloads. The exact same call
+signature works on a real CRC cohort -- e.g. TCGA-COAD, CPTAC-COAD,
+or GSE39582 -- as long as you supply a stage column with values in
+`c("Normal", "Early", "Mid", "Late")` (Appendix A in
+`vignette("user_cohort_extension")` maps AJCC and TNM to these
+four levels).
+
+# Step 1 -- Build a synthetic non-PDAC cohort
+
+```{r build_synth_crc}
+# 50 genes x 24 samples; 6 per stage; 2 synthetic cohorts.
+n_genes  <- 50
+n_per    <- 6
+stages   <- factor(rep(c("Normal", "Early", "Mid", "Late"),
+                       each = n_per),
+                   levels = c("Normal", "Early", "Mid", "Late"))
+cohorts  <- rep(c("CohortA", "CohortB"), length.out = length(stages))
+
+# Plant a CRC-specific Early-onset signal in the first 8 genes:
+# log-fold change increases monotonically from Normal to Early
+# with a small additional bump at Mid. This is the kind of
+# signal pdactrace's `Early_Burst_Up` template should pick up.
+counts <- matrix(rnbinom(n_genes * length(stages),
+                         size = 5, mu = 50),
+                 nrow = n_genes, ncol = length(stages),
+                 dimnames = list(paste0("CRC_GENE_", seq_len(n_genes)),
+                                 paste0("S", seq_along(stages))))
+
+# Inject Early-onset signal into 8 genes:
+multiplier <- ifelse(stages == "Normal", 1,
+                     ifelse(stages == "Early", 4,
+                            ifelse(stages == "Mid", 4.5, 4.5)))
+for (g in 1:8) counts[g, ] <- as.integer(counts[g, ] * multiplier)
+
+coldata <- data.frame(
+  sample = colnames(counts),
+  stage  = as.character(stages),
+  cohort = cohorts,
+  stringsAsFactors = FALSE)
+table(coldata$stage)
+```
+
+# Step 2 -- Project through the framework (one call)
+
+`project_user_cohort()` does not care that the cohort is CRC and
+not PDAC. The function takes the stage-aware counts, fits DESeq2
+LRT, classifies the per-gene profile against the 12-template
+catalog, assembles user evidence, and runs the audit score.
+
+```{r project_crc, eval = FALSE}
+res_crc <- project_user_cohort(
+  rna        = counts,
+  coldata    = coldata,
+  stage_col  = "stage",
+  cohort_col = "cohort")
+
+res_crc
+#> <pdactrace_user_projection>
+#>   Input:   50 genes; protein layer: no
+#>   Audit:   50 genes scored
+#>   Classes: high=2 supp_unc=4 penalized=0 excluded=0 low=44
+
+# The 8 planted Early-onset genes should dominate the high-rank list:
+top_crc <- res_crc$audit[order(-audit_score)][1:10]
+top_crc[, .(gene_symbol, audit_class, rna_pattern, audit_score)]
+```
+
+The exact same call works on a real CRC cohort (e.g. TCGA-COAD
+counts + clinical stage table mapped via the AJCC harmonisation
+in Appendix A of `vignette("user_cohort_extension")`).
+
+# Step 3 -- What changes between PDAC and non-PDAC?
+
+| Layer | What is **cancer-specific** | What stays the same |
+|---|---|---|
+| Trajectory catalog (12 templates) | nothing -- shapes are biology-agnostic | applies unchanged |
+| 3-axis + 2-gate audit rule | nothing -- operates on user evidence | applies unchanged |
+| External anchor set | **PDAC-specific** (30 anchors curated for PDAC serum biomarkers) | not portable; users projecting their own cancer should curate their own anchor set |
+| Translation class A / B / C | **uses the bundled atlas's RNA direction** as the tissue reference | re-derive from the user's own RNA pattern when projecting non-PDAC |
+| Bundled atlas (`pdactrace_reference`) | **PDAC-only** (10,113 genes from PDAC cohorts) | replace with user's projection for non-PDAC analysis |
+
+The framework's three "always-portable" components are:
+
+1. The 12-template trajectory match (`classify_trajectory()`).
+2. The audit-score rule (`compute_audit_score()` over user
+   evidence).
+3. The Evidence Math layer (`evidence_math()` / `compare_genes()`).
+
+The two "swap-out" components are:
+
+1. The reference atlas -- replaced by user's projection.
+2. The anchor evaluation set -- replaced by user's curated
+   positive list (passed via `anchors = ` in
+   `evaluate_anchor_enrichment()`).
+
+# Step 4 -- Translation discipline transfers, but the join target changes
+
+For PDAC, `project_user_serum_cohort()`'s `link_to_atlas = TRUE`
+joins your serum data against `pdactrace_reference`'s RNA
+direction to assign Class A / B / C. For a non-PDAC cohort, the
+correct reference is your own RNA projection, not pdactrace's
+PDAC atlas. Pass `link_to_atlas = FALSE` and assemble the class
+yourself by joining on the user RNA pattern:
+
+```{r translation_class_crc, eval = FALSE}
+# Fictional CRC serum cohort (PDAC -> COL: 'CRC' label, 'HC')
+serum_summary <- project_user_serum_cohort(
+  intensity     = my_crc_serum_intensity,
+  coldata       = my_crc_serum_coldata,
+  pdac_label    = "CRC",   # use your cancer's group label
+  hc_label      = "HC",
+  link_to_atlas = FALSE)   # do NOT join pdactrace's PDAC atlas
+
+# Then assemble class yourself:
+# Class A if user_rna_dir == sign(serum_log2fc_PDAC_vs_HC), B if
+# opposite, C otherwise.
+```
+
+# Limitations
+
+This vignette uses a **synthetic** cohort to demonstrate the call
+signature. For a real cross-cancer publication study you would:
+
+- Use a real cohort (TCGA-COAD has 461 samples with stage labels;
+  GSE39582 has 566 with TNM).
+- Curate your own positive anchor set for the cancer of interest.
+- Validate with an independent held-out cohort.
+- Acknowledge the limitations of the 12-template catalog for
+  cancers with markedly different progression biology (e.g.
+  hematologic malignancies where stage maps differently).
+
+The demonstration here establishes that **the framework's R API
+is cancer-agnostic**, not that the bundled PDAC atlas's results
+generalize to other cancers (they should not -- that would be a
+different study).
+
+```{r session_info}
+sessionInfo()
+```

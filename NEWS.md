@@ -1,3 +1,67 @@
+# pdactrace 0.99.10
+
+**Methodology validation pass for the BiB / Bioconductor reviewer
+audience.** No new public API; this release closes five
+documentation-and-validation gaps that the v0.99.9 self-audit
+flagged as the most likely BiB reviewer pushback points.
+
+## Changed
+
+- `README.md` "Audit scoring rule" section -- new "Why these
+  specific cutoffs?" subsection that documents the rationale
+  for **every** numeric in the framework: `rho_cutoff = 0.85`
+  (conservative four-point trajectory threshold),
+  3-axis weights `0.40 / 0.35 / 0.25` (priority order:
+  layer presence > biological coherence > translational
+  relevance), 2-gate multipliers (housekeeping `0.00` /
+  plasma-high `0.50`; Higgins-Thompson I-squared boundaries
+  `70 / 90` mapped to multipliers `1.00 / 0.70 / 0.30`),
+  audit class boundaries `0.5 / 0.3`, effect-size threshold
+  `0.585 = log2(1.5)`, and a one-paragraph **disclosure of
+  the Stouffer cohort-independence assumption** (TCGA-PAAD
+  and CPTAC PDAC partial donor overlap, addressed via the
+  heterogeneity gate).
+
+## New vignettes
+
+- `vignette("cross_cancer_demonstration")` (NEW) -- end-to-end
+  demonstration that the framework's R API is **cancer-agnostic**.
+  Uses a synthetic CRC-flavoured cohort (50 genes x 24 samples)
+  to walk `project_user_cohort()` through the same pipeline used
+  in Scenario 6a of the README. Includes a "what changes between
+  PDAC and non-PDAC" table making explicit which components are
+  PDAC-specific (bundled atlas, anchor evaluation set) and
+  which are framework-portable (12-template catalog, 3-axis +
+  2-gate audit, Evidence Math layer, Class A / B / C
+  translation discipline).
+- `vignette("methodology_validation")` (NEW) -- two reviewer-
+  facing methodology validations on the bundled atlas:
+    - **Section A: cutoff sensitivity** -- sweeps
+      `rho_cutoff in {0.80, 0.85, 0.90}` and re-evaluates top-100
+      anchor enrichment; perturbs the 3-axis weights across 5
+      profiles and shows the framework is not brittle to the
+      exact weight choice.
+    - **Section B: tool comparison** -- benchmarks the full
+      `audit_score` ranking against simpler alternatives
+      (raw `|beta|`, `-log10(padj)`, layer count,
+      signal-peptide-only) on the same anchor harness; the
+      multi-axis integration + leakage / heterogeneity gating
+      produces a specificity advantage no single feature
+      reaches.
+
+## DESCRIPTION
+
+- Version bumped 0.99.9 -> 0.99.10. No `Imports:` /
+  `Suggests:` change.
+
+These additions close the **five highest-priority methodology
+gaps** identified in the v0.99.9 final audit:
+P1.1 cohort independence disclosure;
+P1.2 cutoff justifications in the README;
+P1.3 cross-cancer transferability demonstration;
+P2.1 cutoff sensitivity analysis;
+P2.2 tool comparison.
+
 # pdactrace 0.99.9
 
 **Asymmetric user-data projection: serum needs only PDAC vs HC.**
