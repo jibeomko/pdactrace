@@ -1,3 +1,28 @@
+# pdactrace 0.99.14
+
+**Pre-Bioconductor-submission audit fix.**
+
+`inst/CITATION` was stale (carried the old "Queryable Stage-Aware
+PDAC Tissue-to-Serum Biomarker Reference Atlas" title and a
+hard-coded "0.99.0" version note). Updated to the current
+DESCRIPTION title ("Transparent Multi-Omics Tissue-to-Serum
+Biomarker Translation Framework with PDAC Reference Atlas") and
+to read `utils::packageVersion("pdactrace")` so the citation note
+follows future version bumps automatically.
+
+This release also marks the **end of pre-submission hardening**.
+v0.99.0 -> v0.99.14 covers: Bioconductor pre-submission blockers
+(v0.99.0), Bioconductor compliance pass (v0.99.3), reproducibility
+vignette + on-demand fetcher (v0.99.4), Evidence Math layer
+(v0.99.5), interpretable ML layer (v0.99.6), pandoc-friendly
+report_gene (v0.99.6.1), viz_gene canvas + BiB framing (v0.99.7),
+viz_gene rebalanced (v0.99.7.1), viz_gene 6-panel +
+plot_serum_direction (v0.99.8), serum projection helper (v0.99.9),
+methodology validation pass (v0.99.10), anchor-language softening
+(v0.99.11), held-out PDAC stress test + 3-way baseline (v0.99.12),
+BIOCONDUCTOR.md submission summary (v0.99.13), CITATION fix
+(this release).
+
 # pdactrace 0.99.13
 
 **Reviewer-facing documentation pass + Bioconductor submission
