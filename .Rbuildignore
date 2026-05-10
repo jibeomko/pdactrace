@@ -30,3 +30,4 @@
 ^CHANGELOG\.md$
 ^CLAUDE\.md$
 ^BIOCONDUCTOR\.md$
+^\.claude$

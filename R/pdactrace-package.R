@@ -90,15 +90,22 @@ utils::globalVariables(c(
   "rna_pattern", "cell_origin_top", "audit_score",
   "redundancy_with",
   # data.table column-list NSE
-  "..beta_cols", "..keep_cols", "..cols", "..feat_cols", ".N",
+  "..beta_cols", "..keep_cols", "..cols", "..feat_cols",
+  "..flt_cols", ".N",
   # plot_template_atlas / plot_gene_template NSE + ggplot aes columns
   "stage", "z", "template", "n_cohort",
   "z_mean", "z_sd", "z_lo", "z_hi",
+  # .template_aggregate per-stage z-score NSE
+  "z_N", "z_E", "z_M", "z_L", "template_argmax",
+  # .ft_serum_strip ggplot aes NSE
+  "contrast", "class_lbl", "log2fc",
   # evidence_math / compare_genes NSE
   "gene_symbol", "axis", "metric", "value", "key",
   # evidence_features / anchor_similarity / evidence_model NSE
   "feature", "coef_value", "anchor_similarity", "evidence_tier",
   "include_primary_eval", "include_secondary_eval", "gene",
   "prot_beta_E", "prot_beta_M", "prot_beta_L", "prot_pattern_rho",
-  "predicted_prob"
+  "predicted_prob",
+  # plot_filter_trace serum strip helper
+  "serum_log2fc_Pan_vs_HC"
 ))

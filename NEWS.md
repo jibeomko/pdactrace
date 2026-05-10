@@ -1,3 +1,64 @@
+# pdactrace 0.99.15
+
+**Final pre-Bioconductor-submission audit fixes.** Addresses two
+items found in the v0.99.14 R CMD check NOTEs and tightens
+BIOCONDUCTOR.md to proactively address the maintainer-team
+review questions most likely to come up.
+
+## Fixed
+
+- `.Rbuildignore` now excludes the `.claude` hidden directory
+  (caught by R CMD check `checking for hidden files and
+  directories ... NOTE`). The directory holds editor scratch
+  state and is not part of the package.
+- `R/pdactrace-package.R` `utils::globalVariables()` now declares
+  `serum_log2fc_Pan_vs_HC` (caught by R CMD check `checking R
+  code for possible problems ... NOTE` for the
+  `.ft_serum_strip()` helper).
+
+## BIOCONDUCTOR.md hardened
+
+- New top "Submission overview" paragraph -- a copy-paste-ready
+  risk-neutralizing summary for the reviewer issue body that
+  states up-front that pdactrace is a Software package for
+  interpretable, stage-aware multi-omics biomarker prioritization,
+  not a clinical diagnostic classifier; that the bundled atlas
+  is PDAC-focused while the projection interface is
+  cancer-agnostic; and that anchor enrichment is reported as a
+  sanity check, not validation.
+- New "Primary user workflow" section that intentionally
+  spotlights the small Core API (`viz_gene`, `query_gene`,
+  `explain_gene`, `compare_candidates`) and frames the broader
+  71-export API as layered, not unstructured.
+- New "Known submission risks" section that proactively
+  discloses:
+    - tarball ~5.83 MB exceeds the 5 MB BiocCheck
+      software-package threshold (medium-high risk; reasoning:
+      atlas required for offline reproducibility; pdactraceData
+      ExperimentHub companion planned for v1.1; if reviewers
+      request atlas relocation as a pre-acceptance condition we
+      are prepared to split on the first iteration);
+    - API surface size (with the deprecation list of 5 alias
+      pairs ready if reviewers prefer a smaller surface);
+    - the two local R CMD check WARNINGs are vignette-build-
+      environment artefacts (no pandoc locally; all 7 vignettes
+      knit cleanly via `knitr::knit()`);
+    - BiocCheck network step was blocked in our sandbox; package
+      previously passed BiocCheck cleanly at v0.99.0.
+
+## Tests
+
+- Full suite: 504 PASS / 0 FAIL.
+- R CMD check --as-cran on v0.99.15 tarball: 0 ERROR / 2 WARN
+  (vignette-only) / **3 NOTE** (down from 4; `.claude` hidden-dir
+  NOTE eliminated; `serum_log2fc_Pan_vs_HC` global-binding NOTE
+  eliminated; remaining 3 are CRAN incoming feasibility,
+  pandoc-not-installed, pre-existing R CMD check static-analysis
+  noise).
+
+DESCRIPTION bumped 0.99.14 -> 0.99.15. End of pre-submission
+hardening.
+
 # pdactrace 0.99.14
 
 **Pre-Bioconductor-submission audit fix.**
