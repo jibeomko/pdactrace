@@ -1,3 +1,48 @@
+# pdactrace 0.99.17
+
+**README compression for Bioconductor reviewer scan-readability.**
+The pre-submission README had grown to 1,749 lines as scenarios
+and a per-function reference accreted; this rewrite compresses
+it to 532 lines (-70%) without removing any reviewer-defending
+content. Function-level argument tables are intentionally pushed
+to `?function_name` Rd pages (the canonical R discovery surface)
+and scenario-level worked examples to the existing vignettes.
+
+## Changed
+
+- `README.md` rewritten:
+  - Hero + value prop + 39.3x sanity check + install + quick-start
+    block at the top (~80 lines, scan-readable on first screen).
+  - Six Scenarios compressed from ~700 lines of prose to ~120
+    lines of code blocks plus 2-3 sentence framing each, with
+    explicit `vignette("...")` pointers for the long form.
+  - Function reference compressed from ~600 lines of per-function
+    blocks to a single grouped table covering all 59 exports;
+    detailed argument and return shape now live in
+    `?function_name` (the canonical R help surface).
+  - Trajectory framework + Stage harmonization + Reference atlas
+    sections trimmed to essentials (~60 lines combined).
+- Preserved verbatim: audit scoring rule + cutoffs justification
+  ("Why these specific cutoffs?"), the three-way projection
+  stress-test table + housekeeping negative-control table,
+  Reproducibility section's four-layer description, Citation /
+  License blocks. These are the reviewer-defending sections.
+- Added an explicit **Limitations** section (PDAC-only atlas,
+  cohort independence caveat, held-out RNA-only baseline does
+  not recover anchor enrichment, no supervised classifier
+  shipped) that previously was scattered across the long-form
+  scenarios.
+- Walked back over-reaching cancer-agnostic language ("framework
+  applies unchanged to other cancers" / "transferable to any
+  cancer") to stay consistent with the package name and with the
+  fact that the bundled atlas, the curated external anchor set,
+  and all validation work are PDAC-specific. The API is now
+  described as *designed for transferability* given an analogous
+  per-stage atlas, not as turnkey pan-cancer.
+
+No code, vignette, test, or NAMESPACE changes; documentation-only
+release.
+
 # pdactrace 0.99.16
 
 **`viz_gene()` gains `layout = "split"` for full-size per-panel

@@ -24,3 +24,14 @@ Thumbs.db
 *.swp
 .vscode/
 .idea/
+
+# Research / non-package directories (tool-paper monorepo: package at root,
+# analysis pipelines + raw data live alongside but are NOT package code)
+analysis/
+data_raw/
+figure/
+
+# Personal / draft artefacts
+*.pptx
+*.docx
+*.xlsx
