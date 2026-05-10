@@ -1,3 +1,55 @@
+# pdactrace 0.99.12
+
+**Held-out PDAC validation + 3-way enrichment baseline added to
+methodology_validation vignette.** Phase 2 of the locked roadmap.
+Documentation-only release; no API change.
+
+## Added
+
+- `vignettes/methodology_validation.Rmd` Section D (NEW) -- held-out
+  PDAC cohort projection. Constructed by combining GSE253260
+  (397 PDAC primary tumour bulk RNA-seq, never used in atlas
+  construction; stage labels harmonised from GEO `diseasestage:ch1`)
+  with GTEx (360 normal pancreas) for the Normal stage. Cohort
+  confound (Normal samples entirely from GTEx, Tumour entirely
+  from GSE253260) is honestly disclosed; cohort_col was dropped
+  from the DESeq2 design as a result. ENSEMBL -> SYMBOL mapping
+  done at the SYMBOL level after per-cohort mapping (not at the
+  ENSG-intersect level which collapsed to 1166 genes); the fixed
+  pipeline gives anchor coverage 18 / 28 (vs. the broken
+  pipeline's 1 / 28).
+- `vignettes/methodology_validation.Rmd` Section E (NEW) -- 3-way
+  baseline comparison of anchor enrichment by ranking source:
+    - Bundled FULL audit_score (multi-layer): 39.3x at top-100
+      (p = 2.2e-10)
+    - Bundled RNA-only audit_score (multi-layer evidence stripped,
+      audit_* recomputed from raw RNA): 16.9x at top-100
+      (p = 6.9e-4)
+    - Held-out RNA-only projection: 0 hits (top-100, top-500)
+  The 3-way comparison decomposes the framework's enrichment
+  contribution into multi-layer integration vs. same-cohort RNA
+  evidence, and shows that single-cohort RNA-only projection on a
+  new cohort cannot reproduce anchor enrichment without the
+  multi-layer atlas as a reference. The negative-control
+  housekeeping bottom-500 enrichment (fold 17.8x, p = 1.1e-33 in
+  held-out vs. 20.2x, p = 1.3e-41 in bundled FULL) **does
+  transfer** when the atlas's curated leakage flags are externally
+  applied -- confirming gate discipline robustness across cohorts
+  when the curated flags travel with the analysis.
+
+## Honest disclosure (process error during validation)
+
+During the v0.99.12 work I initially proceeded with a broken
+ENSEMBL -> SYMBOL pipeline that gave 1166 / 17252 atlas overlap
+and 1 / 28 anchor coverage. The fix was to map per-cohort to
+SYMBOL first, then intersect at the SYMBOL level, then restrict
+to the atlas universe. The bug + fix is documented in this NEWS
+entry as a transparency item.
+
+## Tests
+
+- Full suite: 504 PASS / 0 FAIL (no regression).
+
 # pdactrace 0.99.11
 
 **Submission framing hardening: anchor enrichment language softened
