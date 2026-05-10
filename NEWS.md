@@ -1,3 +1,47 @@
+# pdactrace 0.99.13
+
+**Reviewer-facing documentation pass + Bioconductor submission
+summary added.** Final hardening before Bioconductor submission
+issue. No API change; documentation-only.
+
+## Added
+
+- `BIOCONDUCTOR.md` (NEW) -- single-page submission summary
+  prepared as a copy-paste-ready body for the Bioconductor
+  review issue. Documents package purpose, what the package is
+  and is not, user-facing API groups (Core query / Visualization /
+  Evidence math / User cohort / Translation discipline /
+  Optional / Reports + I/O), evaluation discipline including
+  the 3-way anchor enrichment table, an explicit limitations
+  section, and the conservative submission tone for the issue
+  body itself ("prepared for Bioconductor review and passes
+  local checks; standard reviewer iteration expected").
+- `README.md` -- new top-level section "Projection stress test
+  and evidence-layer dependence" inserted into the Audit
+  scoring rule chapter. Surfaces the 3-way anchor enrichment
+  table (Bundled FULL multi-layer 39.3x at top-100; Bundled
+  RNA-only 16.9x; Held-out RNA-only 0) and the negative-control
+  housekeeping bottom-500 enrichment after atlas-defined
+  leakage annotations are applied (17.8x, p = 1.1e-33). Frames
+  the held-out RNA-only result as a "projection stress test",
+  not as definitive external multi-omics validation.
+
+## Phrasing nuances locked
+
+- "Atlas-defined leakage annotations were applied" (not "gates
+  transferred automatically") -- the leakage flags are manually
+  curated at v0.3.0 freeze and require explicit transfer to
+  user / external projections.
+- "Projection stress test" (not "external validation") -- the
+  held-out cohort uses RNA only and lacks the multi-layer
+  evidence the bundled atlas integrates.
+
+These wording rules are in `feedback_submission_framing.md`.
+
+## Tests
+
+- Full suite: 504 PASS / 0 FAIL (no regression).
+
 # pdactrace 0.99.12
 
 **Held-out PDAC validation + 3-way enrichment baseline added to

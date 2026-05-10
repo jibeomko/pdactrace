@@ -933,6 +933,39 @@ otherwise produce. Users running [`project_user_cohort()`] on
 their own data with non-overlapping donors are not affected by
 this caveat.
 
+## Projection stress test and evidence-layer dependence
+
+We performed a three-way evaluation comparing the bundled full
+multi-layer atlas, a bundled RNA-only baseline, and an external
+RNA-only projection. The full atlas showed the strongest anchor
+enrichment, the bundled RNA-only baseline retained partial
+enrichment, and the held-out RNA-only projection did not recover
+anchor enrichment. In contrast, housekeeping negative-control
+discipline was reproduced in the held-out projection after
+transfer of atlas-defined leakage annotations.
+
+| Source | Top-50 fold | Top-100 fold | Top-200 fold | Top-500 fold |
+|---|---:|---:|---:|---:|
+| Bundled FULL, multi-layer | 44.9x | 39.3x | 22.5x | 10.1x |
+| Bundled RNA-only | 33.7x | 16.9x | 8.4x | 4.5x |
+| Held-out RNA-only | 0 | 0 | 0 | 0 |
+
+Negative-control housekeeping bottom-500 enrichment:
+
+| Source | hits / 31 | fold | p-value |
+|---|---:|---:|---:|
+| Bundled FULL | 31 | 20.2x | 1.3e-41 |
+| Bundled RNA-only (audit_* recomputed) | 1 | 0.65 | 0.79 |
+| Held-out RNA-only (atlas leakage annotations applied) | 28 | 17.8x | 1.1e-33 |
+
+These results indicate that the frozen audit score gains
+specificity from multi-layer evidence integration rather than
+stage-aware RNA trajectory alone. The held-out RNA-only
+projection is therefore reported as a **projection stress test**,
+not as a definitive external multi-omics validation. Full
+methodology and code is in `vignette("methodology_validation")`
+Sections D and E.
+
 # Stage harmonization
 
 Every cohort is collapsed onto a single **4-level scale**
