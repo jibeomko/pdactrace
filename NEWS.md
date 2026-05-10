@@ -1,3 +1,23 @@
+# pdactrace 0.99.6.1
+
+**Friendlier `report_gene()` failure when pandoc is missing.** Patch
+release for the one user-facing rough edge that surfaced during the
+post-v0.99.6 install verification: `report_gene()` requires `pandoc`
+(a system tool that powers `rmarkdown::render()`), but until now
+the failure was reported as a generic `rmarkdown` error.
+
+## Changed
+
+- `R/report_gene.R` — pre-checks `rmarkdown::pandoc_available("1.12.3")`
+  and raises a friendly error pointing the user at install
+  instructions for RStudio / Debian / macOS / `pandoc.org`.
+- `README.md` Scenario 4 — adds an explicit "System requirement"
+  callout naming pandoc as the dependency. Reaffirms that all
+  other pdactrace functions (`query_gene`, `evidence_math`,
+  `plot_*`, etc.) work without pandoc.
+
+No public API changes; nothing to migrate.
+
 # pdactrace 0.99.6
 
 **Optional interpretable ML layer + Bioconductor hygiene patch.**

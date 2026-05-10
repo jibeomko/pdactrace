@@ -57,6 +57,19 @@ report_gene <- function(gene_symbol,
            call. = FALSE)
     }
   }
+  if (!rmarkdown::pandoc_available("1.12.3")) {
+    stop("`report_gene()` renders an HTML report via ",
+         "rmarkdown::render(), which requires the system tool ",
+         "`pandoc` (>= 1.12.3) to be installed and on the PATH.\n",
+         "  - RStudio bundles pandoc, so simply running R inside ",
+         "RStudio is enough.\n",
+         "  - On a bare R install: `sudo apt install pandoc` ",
+         "(Debian/Ubuntu), `brew install pandoc` (macOS), or see ",
+         "https://pandoc.org/installing.html for other systems.\n",
+         "All other pdactrace functions (query_gene, evidence_math, ",
+         "plot_*, etc.) work without pandoc.",
+         call. = FALSE)
+  }
   is_panel <- length(gene_symbol) > 1L
   template_name <- if (is_panel) "panel_report.Rmd" else "gene_report.Rmd"
   template <- system.file("rmd", template_name, package = "pdactrace")

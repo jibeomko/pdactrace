@@ -449,6 +449,15 @@ plot_gene_hexagon(c("LGALS3BP", "LTBP1", "SERPINA1"))
 
 For a polished, share-with-collaborator artifact:
 
+> **System requirement.** `report_gene()` renders an HTML report
+> via `rmarkdown::render()`, which needs the system tool **pandoc**
+> (>= 1.12.3). RStudio bundles pandoc, so simply running R inside
+> RStudio is enough. On a bare R install: `sudo apt install pandoc`
+> (Debian / Ubuntu), `brew install pandoc` (macOS), or see
+> <https://pandoc.org/installing.html>. All other pdactrace
+> functions (`query_gene`, `evidence_math`, `plot_*`, etc.) work
+> without pandoc.
+
 ```r
 fp <- report_gene("LTBP1", output_dir = tempdir())
 fp
