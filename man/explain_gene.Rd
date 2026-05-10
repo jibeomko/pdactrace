@@ -40,10 +40,10 @@ invisibly either way.
 Three views are supported:
 
 \describe{
-\item{\code{"evidence"}}{Plain-English provenance summary only —
+\item{\code{"evidence"}}{Plain-English provenance summary only --
 same content \code{\link[=format_provenance]{format_provenance()}} produces, plus the
 gene's \code{audit_class} headline.}
-\item{\code{"math"}}{Per-axis Evidence Math output — eight axes
+\item{\code{"math"}}{Per-axis Evidence Math output -- eight axes
 (trajectory_fit, effect_magnitude, cohort_consistency,
 rna_protein_coupling, serum_bridge, cell_specificity,
 filter_survival, clinical_role).}

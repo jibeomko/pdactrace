@@ -66,8 +66,9 @@
 #' @docType package
 #' @name pdactrace-package
 #' @aliases pdactrace
-#' @importFrom utils data
+#' @importFrom utils data head
 #' @importFrom methods setGeneric setMethod is
+#' @importFrom stats complete.cases
 "_PACKAGE"
 
 # Required by data.table when := and .SD are used inside package code.
@@ -89,10 +90,15 @@ utils::globalVariables(c(
   "rna_pattern", "cell_origin_top", "audit_score",
   "redundancy_with",
   # data.table column-list NSE
-  "..beta_cols", "..keep_cols", "..cols", ".N",
+  "..beta_cols", "..keep_cols", "..cols", "..feat_cols", ".N",
   # plot_template_atlas / plot_gene_template NSE + ggplot aes columns
   "stage", "z", "template", "n_cohort",
   "z_mean", "z_sd", "z_lo", "z_hi",
   # evidence_math / compare_genes NSE
-  "gene_symbol", "axis", "metric", "value", "key"
+  "gene_symbol", "axis", "metric", "value", "key",
+  # evidence_features / anchor_similarity / evidence_model NSE
+  "feature", "coef_value", "anchor_similarity", "evidence_tier",
+  "include_primary_eval", "include_secondary_eval", "gene",
+  "prot_beta_E", "prot_beta_M", "prot_beta_L", "prot_pattern_rho",
+  "predicted_prob"
 ))

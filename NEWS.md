@@ -1,3 +1,94 @@
+# pdactrace 0.99.6
+
+**Optional interpretable ML layer + Bioconductor hygiene patch.**
+Adds an opt-in machine-learning prioritisation layer on top of the
+v0.99.5 deterministic atlas. Per-axis-first by design: an ML-ready
+feature matrix, a descriptive feature-space similarity score that
+uses curated anchors **without training a classifier**, and a
+user-supplied supervised wrapper for callers who bring their own
+labels. The package still **ships no pretrained predictor**.
+
+Deep learning is intentionally out of scope for the core
+Bioconductor package: PDAC biomarker discovery has limited samples,
+many features, and ambiguous labels — the regime where DL invites
+hard-to-defend reviewer questions about training labels, leakage,
+external validation, and Python / GPU dependencies. DL extensions
+belong in the manuscript-monorepo, not in the tool package.
+
+## New
+
+- `make_evidence_features(genes, scale, impute, drop_na_rows)` —
+  flat numeric `data.table` (genes × ~21 features) suitable for
+  `glmnet`, `ranger`, scikit-learn, etc. Computes the same
+  arithmetic that `evidence_math()` exposes per-axis but in a
+  tabular shape. `scale` ∈ `{"none", "z", "robust"}`; `impute` ∈
+  `{"none", "mean", "zero"}` for callers that need complete-case
+  numerics for ML fitting.
+- `score_anchor_similarity(genes, anchors, method, tier)` —
+  descriptive cosine / inverse-Euclidean similarity in z-scored
+  feature space to the centroid of the bundled
+  `pdactrace_external_anchors` set. Reuses the same `tier`
+  partition (primary / secondary / all) as
+  `evaluate_anchor_enrichment()`. The bundled anchor labels define
+  the centroid only — they are never used as supervised training
+  labels for any shipped predictor.
+- `fit_user_evidence_model(features, labels, method = "elastic_net",
+  alpha, nfolds, seed)` — wraps `glmnet::cv.glmnet(family =
+  "binomial")`. Requires user-supplied labels; errors politely on
+  `NULL`, single-class, or length-mismatched inputs. Returns an S3
+  `pdactrace_user_model` carrying CV AUC, coefficient table,
+  top-N positive / negative contributors, and a model card.
+  `glmnet` joins `Suggests:` (runtime-checked via
+  `requireNamespace()`).
+- `predict_user_evidence_model(model, new_features)` — score new
+  genes from a fitted user model.
+- `explain_user_evidence_model(model, top_n)` — print signed top-N
+  positive and top-N negative coefficients with feature names.
+  This is the user-facing rationale for the supervised score
+  ("Main positive / negative contributors").
+- `model_card(source, model, verbose)` — single point of
+  reviewer-facing metadata. For `"anchor_similarity"`: feature set
+  version, anchor count, "no labels used for training", intended
+  use, leakage controls, limitations. For `"user_model"`: same
+  shape, plus n_positives / n_train / CV AUC ± SD / lambda.min /
+  alpha / seed / top contributors.
+
+## Bioconductor hygiene
+
+- `.Rbuildignore`: now excludes `analysis/`, `data_raw/`, `figure/`,
+  `*.pptx`, `*.docx`, `*.xlsx`, `..Rcheck`, `pdactrace_*.tar.gz`,
+  `pdactrace.Rcheck`, `pdactrace.BiocCheck`, plus repo docs
+  (`AGENTS.md`, `CHANGELOG.md`, `CLAUDE.md`, `BIOCONDUCTOR.md`).
+  Without these, the next `R CMD build` could pull a 99 GB
+  `analysis/` tree into the tarball.
+- `inst/extdata/multi_cohort_consistency.csv.xz` (NEW; ~518 KB) —
+  bundles the Stouffer + per-cohort RNA consistency table that
+  `data-raw/build_reference.R` previously read from
+  `analysis/transcriptomics/results/figure1/`. The Layer 3
+  reproducibility claim ("rebuild from documented processed
+  inputs") now actually holds without the manuscript-monorepo.
+  `data-raw/build_reference.R` routes the read through the same
+  bundled-first lookup chain as the six existing phase CSVs.
+- `data-raw/bundle_multi_cohort_consistency.R` — bundler script
+  mirroring `data-raw/bundle_phase_csvs.R` for this single file.
+
+## Tests
+
+- 4 new test files (~25 `test_that` blocks): coverage for feature
+  matrix integrity (numeric, no duplicates, scale moments, NA
+  policy), anchor-similarity rank quality (T1 anchors enrich into
+  the top decile), label-leakage discipline (no training labels in
+  `score_anchor_similarity()`; `fit_user_evidence_model()` requires
+  user-supplied labels), and model card content.
+- Full suite: 476 PASS / 0 FAIL.
+
+## DESCRIPTION
+
+- `Suggests:` gains `glmnet` (used by `fit_user_evidence_model()`
+  via runtime `requireNamespace()`; not a hard dependency for any
+  user who only wants the lookup / scoring / Evidence Math API).
+- Version bumped 0.99.5 → 0.99.6.
+
 # pdactrace 0.99.5
 
 **Evidence Math layer.** Adds a third interpretability layer between

@@ -5,7 +5,7 @@
 #' canonical machine-readable form sitting between the plain-English
 #' phase-tag layer ([format_provenance()]) and the audit-score
 #' decomposition ([explain_score()]). The point is to expose
-#' *what the math actually says* — not just labels, not just a
+#' *what the math actually says* -- not just labels, not just a
 #' composite score.
 #'
 #' Every value reported here is either read directly from
@@ -108,7 +108,7 @@ evidence_math <- function(gene_symbol, reference = NULL) {
   ru  <- as.numeric(row$rna_pattern_rho_runner_up)
   drho <- if (is.na(rho) || is.na(ru)) NA_real_ else rho - ru
   note <- if (is.na(pat))
-    "non-Early best match — use score_trajectory() for the full 12-rho vector"
+    "non-Early best match -- use score_trajectory() for the full 12-rho vector"
     else NA_character_
   list(rna_pattern   = pat,
        rho_best      = rho,

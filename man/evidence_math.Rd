@@ -24,7 +24,7 @@ frozen v0.3.0 audit decisions, organised by axis. This is the
 canonical machine-readable form sitting between the plain-English
 phase-tag layer (\code{\link[=format_provenance]{format_provenance()}}) and the audit-score
 decomposition (\code{\link[=explain_score]{explain_score()}}). The point is to expose
-\emph{what the math actually says} — not just labels, not just a
+\emph{what the math actually says} -- not just labels, not just a
 composite score.
 }
 \details{

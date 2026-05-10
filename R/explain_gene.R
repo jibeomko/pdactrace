@@ -10,10 +10,10 @@
 #' Three views are supported:
 #'
 #' \describe{
-#'   \item{`"evidence"`}{Plain-English provenance summary only —
+#'   \item{`"evidence"`}{Plain-English provenance summary only --
 #'     same content [format_provenance()] produces, plus the
 #'     gene's `audit_class` headline.}
-#'   \item{`"math"`}{Per-axis Evidence Math output — eight axes
+#'   \item{`"math"`}{Per-axis Evidence Math output -- eight axes
 #'     (trajectory_fit, effect_magnitude, cohort_consistency,
 #'     rna_protein_coupling, serum_bridge, cell_specificity,
 #'     filter_survival, clinical_role).}
@@ -95,7 +95,7 @@ explain_gene <- function(gene_symbol,
 # ---- formatting helpers (internal) -------------------------------------
 
 .ex_header <- function(gene, audit_class) {
-  cat(gene, " — Evidence Math Summary",
+  cat(gene, " -- Evidence Math Summary",
       if (!is.na(audit_class)) sprintf("  [%s]", audit_class) else "",
       "\n", sep = "")
 }

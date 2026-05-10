@@ -293,6 +293,111 @@ Multi-cohort RNA forest plot (the data behind the
 plot_per_cohort("LTBP1")
 ```
 
+### Optional: interpretable ML prioritization (v0.99.6)
+
+The deterministic `audit_score` and the per-axis `evidence_math()`
+layer cover most use cases. For callers who want a continuous
+ML-flavoured prioritisation signal — feature-space proximity to
+known biomarkers, or a supervised model trained on their *own*
+positive set — v0.99.6 ships an opt-in interpretable ML layer. It
+follows three strict design choices:
+
+1. **No deep learning** in the core package — DL belongs in the
+   manuscript-monorepo.
+2. **No pretrained classifier** is shipped — every supervised fit
+   is owned by the user and trained on user-supplied labels.
+3. **Per-axis interpretability is preserved** — the user-facing
+   output names which evidence features pushed a gene up or down,
+   not just a black-box probability.
+
+Step 1 — build a flat feature matrix:
+
+```r
+feats <- make_evidence_features(scale = "z", impute = "mean")
+dim(feats)
+#> [1] 10113    22
+```
+
+`make_evidence_features()` returns one row per gene and ~21 numeric
+feature columns (trajectory_delta_rho, RNA / protein ‖β‖₂,
+RNA-protein cosine, Stouffer Z, cohort agreement, cell-specificity
+tau, filter pass fraction, etc.). `impute = "mean"` fills the NA
+gaps from the protein and serum layers — necessary because most
+genes are missing at least one layer.
+
+Step 2 — descriptive similarity to bundled anchors (no training):
+
+```r
+sim <- score_anchor_similarity(tier = "primary")
+head(sim, 5)
+#>    gene_symbol anchor_similarity anchor_n anchor_tier
+#> 1:      IGFBP3             0.957        7     primary
+#> 2:      IGFBP2             0.957        7     primary
+#> 3:         FN1             0.955        7     primary
+#> 4:        ECM1             0.953        7     primary
+#> 5:       ANPEP             0.951        7     primary
+```
+
+The bundled `pdactrace_external_anchors` set defines a centroid in
+the z-scored feature space; `anchor_similarity` is each gene's
+cosine to that centroid. **No supervised classifier is trained** —
+this is descriptive feature-space distance, defensible to
+reviewers as the same evaluation-only discipline already documented
+for `evaluate_anchor_enrichment()`.
+
+The new `score_col` value plugs straight into the existing
+evaluation harness:
+
+```r
+ev <- merge(sim, feats[, .(gene_symbol)], by = "gene_symbol")
+evaluate_anchor_enrichment(score_col = "anchor_similarity",
+                            evidence = ev, tier = "primary")
+```
+
+Step 3 — supervised user-fitted model (only with user labels):
+
+```r
+# User supplies their own positive set (their lab's validated panel,
+# their literature shortlist, etc.). The package ships nothing.
+my_positives <- c("LTBP1", "TIMP1", "LGALS3BP", "LRG1", "CEACAM5")
+y <- as.integer(feats$gene_symbol %in% my_positives)
+
+fit <- fit_user_evidence_model(feats, y, alpha = 0.5)
+fit
+#> <pdactrace_user_model>
+#>   method:      elastic_net
+#>   n_train:     10113  (positives = 5)
+#>   n_features:  21
+#>   CV AUC:      0.96 +/- 0.01 at lambda.min = 0.0013
+#>   alpha:       0.5  seed: 1
+
+explain_user_evidence_model(fit, top_n = 5)
+#> Main positive contributors (push score UP):
+#>   +0.276  filter_pass_fraction
+#>   +0.255  prot_beta_max_abs
+#>   +0.134  serum_n_cohorts_detected
+#>   +0.131  serum_abs_log2fc
+#>   +0.087  prot_beta_norm
+#>
+#> Main negative contributors (push score DOWN):
+#>   ...
+
+predict_user_evidence_model(fit, feats)   # rank the rest of the atlas
+```
+
+Step 4 — model card for reviewers:
+
+```r
+model_card("anchor_similarity")           # describes the descriptive layer
+model_card("user_model", model = fit)     # describes the user's fit
+```
+
+The model card is the single point of reviewer-facing
+documentation: feature set version, anchor count, what labels were
+or were not used, leakage controls, intended use, limitations.
+
+---
+
 ## Scenario 3 — Compare a small panel side-by-side
 
 You have several candidate genes and want to pick the strongest, or
@@ -1272,9 +1377,12 @@ from public inputs:
 
 - **Layer 3 — processed-input atlas rebuild.** Rebuild
   `data/pdactrace_reference.rda` from the documented processed
-  phase tables and `data-raw/build_reference.R`. Input file
-  provenance and build determinism are described in the
-  reproducibility vignette.
+  phase tables and `data-raw/build_reference.R`. As of v0.99.6,
+  the seven processed inputs the build script reads
+  (`multi_cohort_consistency.csv` plus six phase tables) are all
+  bundled in `inst/extdata/*.csv.xz`, so the rebuild runs without
+  the manuscript-monorepo. Input file provenance and build
+  determinism are described in the reproducibility vignette.
 - **Layer 4 — raw-data reanalysis.** FASTQ / raw proteomics
   processing, count generation, model fitting, and large
   intermediate files are **outside the scope of this software

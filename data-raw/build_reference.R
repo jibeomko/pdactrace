@@ -123,7 +123,21 @@ ref[, rna_pattern_rho_runner_up := mapply(
 
 # ── 2. Multi-cohort Stouffer consistency + per-cohort detail ─
 cat("[2/8] multi_cohort_consistency Stouffer + per-cohort ...\n")
-mcc_full <- fread(file.path(RNA, "multi_cohort_consistency.csv"))
+.find_mcc <- function() {
+  bundled <- file.path(PKG, "inst", "extdata",
+                        "multi_cohort_consistency.csv.xz")
+  if (file.exists(bundled)) return(bundled)
+  ext_xz <- file.path(RNA, "multi_cohort_consistency.csv.xz")
+  if (file.exists(ext_xz)) return(ext_xz)
+  ext_csv <- file.path(RNA, "multi_cohort_consistency.csv")
+  if (file.exists(ext_csv)) return(ext_csv)
+  stop("Cannot find multi_cohort_consistency.csv(.xz). ",
+       "Run data-raw/bundle_multi_cohort_consistency.R against a ",
+       "manuscript-monorepo at PDAC_BASE_DIR.", call. = FALSE)
+}
+mcc_path <- .find_mcc()
+mcc_full <- if (grepl("\\.xz$", mcc_path))
+  fread(cmd = paste("xz -dc", shQuote(mcc_path))) else fread(mcc_path)
 # Aggregate trend / monotonic per cohort into list-columns
 mcc_summary <- mcc_full[, .(
   gene_symbol,
