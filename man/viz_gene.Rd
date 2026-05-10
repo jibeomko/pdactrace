@@ -20,20 +20,24 @@ A \code{patchwork} object printable to any active graphics
 device or saveable via \code{ggsave()} / \code{\link[=pdactrace_save]{pdactrace_save()}}.
 }
 \description{
-Returns a 2x2 \code{patchwork} composite that puts the four most
-load-bearing evidence layers for one gene on a single page:
+Returns a 2x2 \code{patchwork} composite that puts \strong{one panel per
+evidence layer} for a gene on a single page (v0.99.7.1
+rebalance from the previous RNA-heavy layout):
 }
 \details{
 \enumerate{
-\item Top-left: per-stage trajectory forest (log2FC +/- 95\%
-CI across Normal / Early / Mid / Late) -- the \emph{shape}.
-\item Top-right: per-cohort sign-vote bar with Stouffer
-summary -- \emph{cohort robustness}.
-\item Bottom-left: scRNA cell-of-origin distribution across
-all 11 cell types -- \emph{biological coherence}.
-\item Bottom-right: 7-step tissue-to-serum filter trace
-coloured by Class A / B / C translation outcome --
-\emph{translational relevance}.
+\item Top-left -- \strong{bulk RNA-seq}: per-stage log2FC forest
+(mean +/- 95\% CI vs Normal).
+\item Top-right -- \strong{tissue proteomics}: per-stage protein
+log2FC trajectory (point estimates; bundled per-stage SE
+unavailable so no CI).
+\item Bottom-left -- \strong{scRNA cell origin}: 11-celltype
+expression distribution with the dominant lineage
+highlighted.
+\item Bottom-right -- \strong{serum direction + filter trail}:
+per-gene PDAC vs HC and Pancreatitis vs HC log2FC,
+coloured by translation class (A / B / C), above the
+7-step phase60 filter trace.
 }
 
 A title strip across the top names the gene, its matched
@@ -43,10 +47,12 @@ is the recommended \strong{first call} for a gene a clinician or
 biologist hands you -- one plot, the whole evidence story, no
 pre-existing knowledge of the per-axis function names required.
 
-Internally composes \code{\link[=plot_stage_effect]{plot_stage_effect()}}, \code{\link[=plot_per_cohort]{plot_per_cohort()}},
+Internally composes \code{\link[=plot_stage_effect]{plot_stage_effect()}} (RNA + protein),
 \code{\link[=plot_celltype_full]{plot_celltype_full()}}, and \code{\link[=plot_filter_trace]{plot_filter_trace()}} via
-\code{\link[patchwork:wrap_plots]{patchwork::wrap_plots()}}. All four sub-panels remain available
-as standalone functions for users who want a single layer.
+\code{\link[patchwork:wrap_plots]{patchwork::wrap_plots()}}. All sub-panels remain available as
+standalone functions for users who want a single layer; the
+RNA per-cohort robustness view from the previous layout is
+available as \code{\link[=plot_per_cohort]{plot_per_cohort()}}.
 }
 \examples{
 viz_gene("LGALS3BP")

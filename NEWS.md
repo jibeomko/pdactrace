@@ -1,3 +1,51 @@
+# pdactrace 0.99.7.1
+
+**`viz_gene()` rebalanced to one panel per evidence layer +
+`plot_filter_trace()` enriched with serum direction context.**
+The v0.99.7 canvas was RNA-heavy: two of the four panels (per-stage
+forest + per-cohort sign-vote) read from the same RNA layer, while
+tissue proteomics and serum proteomics had no dedicated visual
+slot. This release rebalances so each of the four evidence layers
+(bulk RNA, tissue protein, scRNA cell origin, serum + filter)
+gets exactly one panel.
+
+## Changed
+
+- `R/plot_stage_effect.R` -- new `layer = c("rna", "protein")`
+  argument. The protein variant reads `prot_beta_N/E/M/L` from
+  the bundled [pdactrace_protein_betas] table and draws
+  per-stage point estimates. Per-stage SE is unavailable on the
+  protein side so no CI is drawn (the overall F-test padj is
+  reported in the subtitle instead). Genes absent from the
+  protein atlas render as a graceful "no data" placeholder.
+- `R/plot_filter_trace.R` -- new `show_serum = TRUE` default
+  appends a serum direction strip above the 7-step phase60 grid
+  showing per-gene PDAC vs HC and Pancreatitis vs HC log2FC,
+  coloured by translation class (Class A blue, Class B red,
+  Class C grey, NA light grey). Existing callers see a richer
+  panel by default; pass `show_serum = FALSE` to recover the
+  v0.99.7 layout. Output type is unchanged
+  (`inherits(., "ggplot")` still TRUE for all combinations).
+- `R/viz_gene.R` -- panel layout rebalanced to one-per-layer:
+  TL bulk RNA per-stage forest, TR tissue protein per-stage
+  trajectory (uses the new `layer = "protein"` arg), BL scRNA
+  cell-of-origin distribution, BR serum direction strip + 7-step
+  filter trace. The previous RNA per-cohort sign-vote panel
+  remains available standalone via [plot_per_cohort()].
+
+## Tests
+
+- 3 new `test_that` blocks in `tests/testthat/test-plots.R`
+  covering: `plot_filter_trace(show_serum = TRUE/FALSE)`,
+  `plot_stage_effect(layer = "protein")`, and graceful handling
+  for genes absent from `pdactrace_protein_betas`.
+
+No public API removals; `layer` and `show_serum` are additive
+optional arguments. The default behaviour of
+`plot_filter_trace()` now includes the serum strip; this is the
+intended improvement, and a one-line `show_serum = FALSE` opt-out
+is provided for callers who want the older bare grid.
+
 # pdactrace 0.99.7
 
 **Single-call visual evidence canvas + methodology-first

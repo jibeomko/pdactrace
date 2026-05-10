@@ -2,29 +2,47 @@
 % Please edit documentation in R/plot_filter_trace.R
 \name{plot_filter_trace}
 \alias{plot_filter_trace}
-\title{Visualise filter passage as a step bar chart}
+\title{Visualise tissue-to-serum filter passage with serum direction context}
 \usage{
-plot_filter_trace(gene, show_routes = TRUE)
+plot_filter_trace(gene, show_routes = TRUE, show_serum = TRUE)
 }
 \arguments{
 \item{gene}{Character vector of HGNC symbols.}
 
 \item{show_routes}{Logical. If \code{TRUE} (default), append the
-right-side panel showing phase77 strict / panel member /
-resectable marker flags.}
+right-side panel showing \code{phase77_strict} / \code{panel_member} /
+\code{resectable_marker} route flags.}
+
+\item{show_serum}{Logical. If \code{TRUE} (default), append the
+serum-direction strip above the filter grid.}
 }
 \value{
-A \code{ggplot2} object (or patchwork composite if
-\code{show_routes = TRUE}).
+A \code{ggplot2} object (or \code{patchwork} composite if
+\code{show_routes = TRUE} or \code{show_serum = TRUE}).
 }
 \description{
-For each gene, draws a 7-step horizontal bar showing which phase60
-filters passed (filled) vs failed (open) vs not evaluated (grey),
-alongside auxiliary route flags (phase77 strict, panel member,
-resectable marker). Designed for direct comparison between
-\code{phase60_final} exemplars (e.g. SERPINA1) and \code{phase77_classB}
-exemplars (e.g. LTBP1, CDH13, SPARC).
+For each gene, draws the 7-step phase60 filter trail (filled =
+pass, open = fail, grey = not evaluated) with two extra layers
+that the v0.99.6 baseline lacked:
+}
+\details{
+\itemize{
+\item A \strong{serum direction strip} above the filter grid showing
+the per-gene serum log2FC vs healthy control and vs
+pancreatitis (the values that actually drive the
+\code{direction-match} filter step), coloured by translation
+class (Class A blue / Class B red / Class C grey / NA
+light-grey).
+\item A \strong{per-gene title prefix} naming the translation
+class so the reader can read the trail in context.
+}
+
+Multi-gene calls show one row per gene, ordered by phase60
+pass count descending; this lets you compare \code{phase60_final}
+exemplars (e.g. SERPINA1) against \code{phase77} Class B exemplars
+(e.g. LTBP1, CDH13, SPARC) at a glance.
 }
 \examples{
   plot_filter_trace(c("SERPINA1", "LTBP1", "SPARC", "CDH13"))
+  plot_filter_trace("LTBP1", show_routes = FALSE)
 }

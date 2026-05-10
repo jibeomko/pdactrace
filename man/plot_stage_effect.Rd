@@ -2,21 +2,27 @@
 % Please edit documentation in R/plot_stage_effect.R
 \name{plot_stage_effect}
 \alias{plot_stage_effect}
-\title{Forest plot of per-stage effect size with 95\% CI}
+\title{Forest plot of per-stage effect size}
 \usage{
-plot_stage_effect(gene_symbol)
+plot_stage_effect(gene_symbol, layer = c("rna", "protein"))
 }
 \arguments{
 \item{gene_symbol}{HGNC symbol.}
+
+\item{layer}{One of \code{"rna"} (default) or \code{"protein"}. The
+protein layer reads from \link{pdactrace_protein_betas}.}
 }
 \value{
 A \code{ggplot2} object.
 }
 \description{
-Draws log2FC +/- 1.96 x lfcSE for each of the 4 stages
-(Normal, Early, Mid, Late), with significance asterisks at
-padj < 0.05.
+For RNA, draws log2FC +/- 1.96 x lfcSE per stage with
+significance asterisks at per-stage Wald padj < 0.05. For
+tissue protein, draws log2FC point estimates per stage; the
+bundled per-stage SE is unavailable so no CI is drawn (the
+overall F-test padj is reported in the subtitle instead).
 }
 \examples{
   plot_stage_effect("LTBP1")
+  plot_stage_effect("LTBP1", layer = "protein")
 }

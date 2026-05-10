@@ -1,18 +1,22 @@
 #' Single-call visual evidence canvas for one gene
 #'
-#' Returns a 2x2 `patchwork` composite that puts the four most
-#' load-bearing evidence layers for one gene on a single page:
+#' Returns a 2x2 `patchwork` composite that puts **one panel per
+#' evidence layer** for a gene on a single page (v0.99.7.1
+#' rebalance from the previous RNA-heavy layout):
 #'
 #' \enumerate{
-#'   \item Top-left: per-stage trajectory forest (log2FC +/- 95%
-#'     CI across Normal / Early / Mid / Late) -- the *shape*.
-#'   \item Top-right: per-cohort sign-vote bar with Stouffer
-#'     summary -- *cohort robustness*.
-#'   \item Bottom-left: scRNA cell-of-origin distribution across
-#'     all 11 cell types -- *biological coherence*.
-#'   \item Bottom-right: 7-step tissue-to-serum filter trace
-#'     coloured by Class A / B / C translation outcome --
-#'     *translational relevance*.
+#'   \item Top-left -- **bulk RNA-seq**: per-stage log2FC forest
+#'     (mean +/- 95% CI vs Normal).
+#'   \item Top-right -- **tissue proteomics**: per-stage protein
+#'     log2FC trajectory (point estimates; bundled per-stage SE
+#'     unavailable so no CI).
+#'   \item Bottom-left -- **scRNA cell origin**: 11-celltype
+#'     expression distribution with the dominant lineage
+#'     highlighted.
+#'   \item Bottom-right -- **serum direction + filter trail**:
+#'     per-gene PDAC vs HC and Pancreatitis vs HC log2FC,
+#'     coloured by translation class (A / B / C), above the
+#'     7-step phase60 filter trace.
 #' }
 #'
 #' A title strip across the top names the gene, its matched
@@ -22,10 +26,12 @@
 #' biologist hands you -- one plot, the whole evidence story, no
 #' pre-existing knowledge of the per-axis function names required.
 #'
-#' Internally composes [plot_stage_effect()], [plot_per_cohort()],
+#' Internally composes [plot_stage_effect()] (RNA + protein),
 #' [plot_celltype_full()], and [plot_filter_trace()] via
-#' [patchwork::wrap_plots()]. All four sub-panels remain available
-#' as standalone functions for users who want a single layer.
+#' [patchwork::wrap_plots()]. All sub-panels remain available as
+#' standalone functions for users who want a single layer; the
+#' RNA per-cohort robustness view from the previous layout is
+#' available as [plot_per_cohort()].
 #'
 #' @param gene_symbol HGNC gene symbol (length-1 character).
 #' @param title Optional title override. `NULL` (default) builds
@@ -62,13 +68,15 @@ viz_gene <- function(gene_symbol, title = NULL, ncol = 2L) {
   }
   if (is.null(title)) title <- .vg_headline(row)
 
-  # Build the 4 panels. Each returns a ggplot.
-  p_traj <- plot_stage_effect(gene_symbol)
-  p_coh  <- plot_per_cohort(gene_symbol)
+  # Build the 4 panels -- one per evidence layer.
+  p_rna  <- plot_stage_effect(gene_symbol, layer = "rna")
+  p_prot <- plot_stage_effect(gene_symbol, layer = "protein")
   p_cell <- suppressWarnings(plot_celltype_full(gene_symbol))
-  p_filt <- plot_filter_trace(gene_symbol, show_routes = FALSE)
+  p_filt <- plot_filter_trace(gene_symbol,
+                                show_routes = FALSE,
+                                show_serum  = TRUE)
 
-  composed <- patchwork::wrap_plots(p_traj, p_coh, p_cell, p_filt,
+  composed <- patchwork::wrap_plots(p_rna, p_prot, p_cell, p_filt,
                                      ncol = ncol) +
               patchwork::plot_annotation(
                 title = title,
