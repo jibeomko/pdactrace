@@ -92,5 +92,7 @@ utils::globalVariables(c(
   "..beta_cols", "..keep_cols", "..cols", ".N",
   # plot_template_atlas / plot_gene_template NSE + ggplot aes columns
   "stage", "z", "template", "n_cohort",
-  "z_mean", "z_sd", "z_lo", "z_hi"
+  "z_mean", "z_sd", "z_lo", "z_hi",
+  # evidence_math / compare_genes NSE
+  "gene_symbol", "axis", "metric", "value", "key"
 ))

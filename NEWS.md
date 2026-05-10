@@ -1,3 +1,49 @@
+# pdactrace 0.99.5
+
+**Evidence Math layer.** Adds a third interpretability layer between
+the existing plain-English provenance text (`format_provenance()`) and
+the audit-score decomposition (`explain_score()`): the *mathematical
+evidence values* that actually fed those decisions, exposed per axis.
+Per-axis-first by design — there is no new black-box composite score.
+
+## New
+
+- `evidence_math(gene_symbol)` — returns a structured list with one
+  element per axis (trajectory_fit, effect_magnitude,
+  cohort_consistency, rna_protein_coupling, serum_bridge,
+  cell_specificity, filter_survival, clinical_role). All values are
+  read directly from the bundled atlas or derived by a single named
+  arithmetic operation. New derived quantities: `delta_rho =
+  rho_best - rho_runner_up` (template specificity margin), `||beta||_2`
+  (Euclidean norm of the per-stage beta vector over E,M,L) and
+  `cosine(beta_RNA, beta_prot)` (RNA-protein direction concordance).
+- `explain_gene(gene_symbol, view = c("evidence", "math", "both"))` —
+  text formatter that prints either the plain-English provenance, the
+  Evidence Math sections, or both. Mirrors `explain_score()` in
+  pattern (verbose-print + invisible structured return).
+- `compare_genes(gene_symbols, axes, wide)` — multi-gene tidy-table
+  pivot of `evidence_math()` output. Long form by default
+  (`gene, axis, metric, value`); `wide = TRUE` for one row per gene
+  with `axis.metric` columns suitable for manuscript tables.
+
+## Documentation
+
+- README.md: new **Evidence Math** subsection demonstrating
+  `evidence_math("LTBP1")`, `explain_gene("LTBP1", view = "math")`,
+  and `compare_genes(...)` with truncated example output.
+- README.md: Reproducibility section rewritten to position the
+  bundled atlas as the **default offline path** (Layer 1) and the
+  user-cohort projection (Layer 2) as the second core scope. The
+  optional processed-input rebuild (Layer 3) and raw-data
+  reanalysis (Layer 4) are clearly framed as *advanced
+  reproducibility / data provenance* outside the package's primary
+  user path. `download_phase_csvs()` is documented as not evaluated
+  during package checks.
+- README.md: note that the appropriate Bioconductor mechanism for
+  hosting the larger raw quantification matrices is a companion
+  `pdactraceData` ExperimentHub package, planned for a future
+  release.
+
 # pdactrace 0.99.4
 
 **Reproducibility vignette + on-demand phase33/34 fetcher.** Closes

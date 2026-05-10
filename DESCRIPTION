@@ -1,7 +1,7 @@
 Package: pdactrace
 Type: Package
 Title: Queryable Stage-Aware PDAC Tissue-to-Serum Biomarker Reference Atlas
-Version: 0.99.4
+Version: 0.99.5
 Authors@R: c(
     person(given = "Jibeom", family = "Ko",
            email = "rhwlqja1779@gmail.com",

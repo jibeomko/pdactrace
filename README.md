@@ -138,6 +138,14 @@ detail$filter_diag       # 7 rows, one per filter step
 detail$serum_per_cohort
 ```
 
+**Visualize.** All four evidence layers in a single composite figure:
+
+```r
+plot_gene_evidence("LTBP1")
+# Default panels: trajectory + cell_origin + serum + summary.
+# Subset with layers = c("trajectory", "serum") for a smaller figure.
+```
+
 ## Scenario 2 — Understand *why* a gene got its score
 
 The audit score is a frozen, deterministic weighted sum:
@@ -185,6 +193,104 @@ res$axes      # data.table: axis, weight, value, contribution
 res$gates     # data.table: gate, value, triggered_by
 res$audit_class
 res$audit_score
+```
+
+### Going deeper: per-axis Evidence Math (v0.99.5)
+
+`explain_score()` rolls everything up into one weighted-sum number
+plus two gates. If you want the actual *math* behind each evidence
+axis, use `evidence_math()` and `explain_gene()`. These show the
+underlying values per axis (rho_best, delta_rho, ‖β‖₂, Stouffer Z,
+RNA-protein cosine, tau, A/B/C class, 7/7 filters) without folding
+them into a composite score:
+
+```r
+explain_gene("LTBP1", view = "math")
+```
+
+Truncated output:
+
+```
+LTBP1 — Evidence Math Summary  [supported_uncertain]
+
+Trajectory fit
+  pattern        : Early_Burst_Up
+  rho_best       : 0.999
+  rho_runner_up  : 0.810
+  delta_rho      : 0.188    (specificity margin; >0.10 = clean)
+
+Effect magnitude
+  ||beta_RNA||_2 : 0.848    (target stage: E)
+  ||beta_prot||_2: 1.828
+
+Cohort consistency
+  Stouffer Z     : 0.658    (padj = 1.0000)
+  agreement      : 0.50  fraction of cohorts agreeing
+  max meta I2    : 75%
+
+RNA-protein coupling
+  cosine(beta_RNA, beta_prot) : 0.997
+  prot_pattern   : Early_Burst_Up
+  prot_tier      : Tier1_gold
+
+Serum bridge
+  translation_class      : B
+  ...
+Cell specificity
+  cell_origin_top: myCAF
+  tau index      : 0.883
+
+Filter survival
+  passed 1 / 7 steps
+```
+
+Use `view = "evidence"` for the plain-English provenance only,
+`view = "math"` for math only, `view = "both"` for both. Pass
+`verbose = FALSE` to suppress printing and just capture the
+underlying list.
+
+The pure-data accessor is `evidence_math()` — same content, no
+formatting:
+
+```r
+m <- evidence_math("LTBP1")
+m$trajectory_fit$delta_rho        # 0.188
+m$rna_protein_coupling$cosine     # 0.997
+m$filter_survival$passed          # 1
+```
+
+To compare a panel of genes side-by-side on the math layer, use
+`compare_genes()`:
+
+```r
+compare_genes(c("LGALS3BP", "LTBP1", "TIMP1"),
+              axes = c("trajectory_fit", "rna_protein_coupling"),
+              wide = TRUE)
+#>     gene  trajectory_fit.delta_rho  rna_protein_coupling.cosine  ...
+#> 1: LGALS3BP                  0.093                       0.999
+#> 2:    LTBP1                  0.188                       0.997
+#> 3:    TIMP1                  0.131                       0.961
+```
+
+Default `wide = FALSE` returns a long table with one row per
+(gene × axis × metric) — convenient for `data.table::dcast()` into
+custom layouts. Note that `compare_candidates()` is the audit-score
+ranking layer; `compare_genes()` is the Evidence Math layer. Both
+read the same atlas, neither replaces the other.
+
+**Visualize.** The 7-step tissue-to-serum filter trace (matches
+`filter_survival` from `evidence_math()`):
+
+```r
+plot_filter_trace("LTBP1")
+plot_filter_trace(c("LGALS3BP", "LTBP1", "ALB"))   # multi-gene comparison
+```
+
+Multi-cohort RNA forest plot (the data behind the
+`heterogeneity_gate`):
+
+```r
+plot_per_cohort("LTBP1")
 ```
 
 ## Scenario 3 — Compare a small panel side-by-side
@@ -268,6 +374,16 @@ The panel template starts with a `compare_candidates()` table at
 the top, then a multi-gene evidence radar, then one
 `explain_score()`-derived rationale card per gene.
 
+**Visualize the report's component panels standalone.** Useful when
+you want to embed individual panels in a slide or paper without the
+HTML wrapper:
+
+```r
+plot_celltype_full("LTBP1") # full cell-type origin distribution
+plot_panel_heatmap(c("LGALS3BP", "LTBP1", "GAPDH"))  # gene x evidence heatmap
+plot_candidate_landscape()  # tissue x serum scatter, Class A/B colored
+```
+
 ## Scenario 5 — Single-patient trajectory alignment
 
 You have a single patient's tumor-vs-matched-normal log2 fold-change
@@ -305,6 +421,16 @@ voting agrees: Late (vote_share=0.42).
 supervised model is fit; the atlas is frozen and the function is
 deterministic given (input, atlas). Misalignment with all three
 stage axes is itself a finding (it does **not** imply Normal).
+
+**Visualize.** `align_patient_profile()` returns a structured list
+(`$rna`, `$prot`, `$summary`); render the four-stage rho profile
+with base barplot:
+
+```r
+barplot(setNames(aln$rna$cor_to_stage_axis, aln$rna$stage),
+         ylim = c(0, 1), ylab = "rho vs stage axis",
+         main = "Patient stage alignment")
+```
 
 ## Scenario 6 — Project your own staged cohort
 
@@ -369,6 +495,19 @@ se <- SummarizedExperiment(
 res <- project_user_cohort(rna = se,
                              stage_col = "stage",
                              cohort_col = "cohort")
+```
+
+**Visualize.** Atlas-wide reference panels for sanity-checking your
+cohort's trajectories, plus a single-gene overlay onto the matched
+template:
+
+```r
+plot_template_atlas("rna",     output_dir = tempdir())
+plot_template_atlas("protein", output_dir = tempdir())
+# 12 PDFs per layer (Early × 4 + Mid × 4 + Late × 2 + Monotonic × 2).
+
+plot_gene_template("LTBP1", layer = "rna")
+plot_gene_template("LTBP1", layer = "protein")
 ```
 
 # Audit scoring rule
@@ -626,6 +765,97 @@ explain_score("LTBP1")     # prints to console
 res <- explain_score("LTBP1", verbose = FALSE)  # capture only
 res$gates
 ```
+
+### `evidence_math(gene_symbol, reference = NULL)`
+
+Returns the per-axis mathematical evidence values that fed the audit
+decisions, organised by axis. The pure-data accessor underneath
+`explain_gene()` and `compare_genes()`.
+
+| Argument | Type | Default | Description |
+|---|---|---|---|
+| `gene_symbol` | character(1) | required | HGNC symbol |
+| `reference` | data.table | `NULL` | optional atlas override (testing) |
+
+**Returns:** a list with one element per axis:
+
+- `trajectory_fit` — `rna_pattern`, `rho_best`, `rho_runner_up`,
+  `delta_rho`, `note`.
+- `effect_magnitude` — `rna_beta_norm` (‖β‖₂ over E,M,L),
+  `rna_beta_max_abs`, `rna_max_at_stage`, `rna_target_stage`,
+  protein-side counterparts.
+- `cohort_consistency` — `stouffer_z`, `stouffer_p`,
+  `stouffer_padj`, `cohort_agreement`, `max_meta_I2`.
+- `rna_protein_coupling` — `cosine` (E,M,L), `prot_pattern`,
+  `prot_pattern_rho`, `prot_tier`, `rnaprot_concordant`,
+  `prot_in_atlas`, `note`.
+- `serum_bridge` — `translation_class` (A/B/C),
+  `serum_log2fc_PDAC_vs_HC`, `serum_log2fc_Pan_vs_HC`,
+  `serum_n_cohorts_detected`, `phase77_strict`.
+- `cell_specificity` — `cell_origin_top`, `tau`, `cell_origin_padj`.
+- `filter_survival` — `passed`, `total`, `per_step` (named logical).
+- `clinical_role` — `resectable_marker`, `panel_member`.
+
+```r
+m <- evidence_math("LTBP1")
+m$trajectory_fit$delta_rho
+m$rna_protein_coupling$cosine
+m$filter_survival$per_step
+```
+
+### `explain_gene(gene_symbol, view, verbose, reference)`
+
+Console-friendly text formatter wrapping `format_provenance()` (the
+plain-English provenance summary) and `evidence_math()` (the
+per-axis math). Mirrors `explain_score()` in pattern: prints when
+`verbose = TRUE`, returns the structured data invisibly either way.
+
+| Argument | Type | Default | Description |
+|---|---|---|---|
+| `gene_symbol` | character(1) | required | HGNC symbol |
+| `view` | character(1) | `"evidence"` | `"evidence"`, `"math"`, or `"both"` |
+| `verbose` | logical | `TRUE` | if `TRUE`, prints sections to console |
+| `reference` | data.table | `NULL` | optional atlas override (testing) |
+
+**Returns (invisibly):** list with `$gene`, `$view`, `$audit_class`,
+`$provenance` (compact one-liner), `$math` (the `evidence_math()`
+list, or `NULL` for `view = "evidence"`).
+
+```r
+explain_gene("LTBP1", view = "math")    # math only
+explain_gene("LTBP1", view = "both")    # provenance + math
+res <- explain_gene("LTBP1", view = "math", verbose = FALSE)
+res$math$trajectory_fit$delta_rho
+```
+
+### `compare_genes(gene_symbols, axes, wide, reference)`
+
+Multi-gene tidy-table pivot of `evidence_math()`. Long form by
+default (`gene, axis, metric, value`); `wide = TRUE` returns one row
+per gene with `axis.metric` columns suitable for manuscript tables.
+
+| Argument | Type | Default | Description |
+|---|---|---|---|
+| `gene_symbols` | character | required | HGNC symbols |
+| `axes` | character | `NULL` (all) | axis filter — any of the 8 axis names |
+| `wide` | logical | `FALSE` | one row per gene with `axis.metric` columns |
+| `reference` | data.table | `NULL` | optional atlas override (testing) |
+
+**Returns:** a `data.table`. Long form columns: `gene, axis,
+metric, value` (numeric values formatted to 4 sig figs as character
+to keep one column type). Wide form: `gene` plus one column per
+`axis.metric` pair.
+
+```r
+compare_genes(c("LGALS3BP", "LTBP1", "TIMP1"))
+compare_genes(c("LGALS3BP", "LTBP1"),
+              axes = c("trajectory_fit", "rna_protein_coupling"),
+              wide = TRUE)
+```
+
+Note: `compare_candidates()` is the audit-score ranking layer (with
+redundancy grouping); `compare_genes()` is the Evidence Math layer.
+Both read the same atlas, neither replaces the other.
 
 ### `compare_candidates(gene_symbols)`
 
@@ -946,12 +1176,23 @@ list_data_sources(layer = "RNA") # 6 rows
 
 ### `download_phase_csvs(target = "both", ref = "main", cache = NULL)`
 
-Fetch the two large upstream phase CSVs (`phase33` RNA fit, `phase34`
-protein fit) from `raw.githubusercontent.com/jibeomko/PDAC_biomarker`
-and cache them via `BiocFileCache::BiocFileCache()`. Required only
-for users who want to fully re-run `data-raw/build_reference.R`
-without cloning the manuscript-monorepo (see
-[Reproducibility](#reproducibility)).
+**Advanced / manual rebuild only — not part of the default user
+path.** Helper for users who want to rebuild
+`data/pdactrace_reference.rda` from the documented public processed
+inputs (Layer 3 in the [Reproducibility](#reproducibility) section).
+Caches the two large upstream phase tables via
+`BiocFileCache::BiocFileCache()` so subsequent rebuilds reuse the
+cache.
+
+Requires network access at first call and is intentionally **not
+evaluated** by the package's vignettes, examples, or unit tests.
+Only use when manually re-running `data-raw/build_reference.R`.
+
+```r
+## Not evaluated during package checks.
+## Requires network access; intended only for manual rebuilds.
+# download_phase_csvs("both")
+```
 
 ## Summary of all 59 exported objects
 
@@ -1000,39 +1241,60 @@ vignette("reproducibility",        package = "pdactrace")
 
 ## Reproducibility
 
-The R package is **self-contained for atlas re-derivation.** It
-ships with the reference atlas (`data/*.rda`), the canonical
-12-template trajectory catalog, the external anchor set, all
-testthat suites, the build scripts under `data-raw/`, and the
-**six small downstream phase tables** under
-`inst/extdata/phase{2c,29,42,60,77,80}_*.csv.xz`. The build chain
-runs end-to-end from these bundled inputs alone, plus the two
-upstream CSVs fetched via [`download_phase_csvs()`](#download_phase_csvstarget--both-ref--main-cache--null).
+The package provides a **pre-built PDAC trajectory reference atlas
+for offline use**, together with the 12-template catalog, the
+external anchor set, the unit-test suite, and documented build
+scripts (`data-raw/`) used to assemble the distributed reference
+object.
 
-Four reproducibility layers (see
-`vignette("reproducibility")` for the full walkthrough):
-
-1. **Layer 1 — offline, bundled** — use `data/*.rda` directly.
-   Most users start and stop here.
-2. **Layer 2 — user cohort** — project a count / intensity matrix
-   through `project_user_cohort()`.
-3. **Layer 3 — re-derive the atlas** — `download_phase_csvs()` +
-   `data-raw/build_reference.R`. Self-contained from public inputs.
-4. **Layer 4 — full FASTQ → counts → fits pipeline** — out of
-   scope for the package; lives in the manuscript-monorepo
-   ([github.com/jibeomko/PDAC_biomarker](https://github.com/jibeomko/PDAC_biomarker),
-   Zenodo
-   [10.5281/zenodo.20067849](https://doi.org/10.5281/zenodo.20067849)).
+For ordinary use, **no network access is required**:
 
 ```r
-# Layer 1 — direct atlas use
 library(pdactrace)
 query_gene("LTBP1")
-
-# Layer 3 — re-derive the atlas
-download_phase_csvs("both")
-# ...then run data-raw/build_reference.R as the vignette describes
 ```
+
+The package supports several reproducibility levels (see
+`vignette("reproducibility")` for the full walkthrough):
+
+- **Layer 1 — bundled reference atlas.** Use the distributed
+  `data/*.rda` objects directly. This is the default user path and
+  the only path required for normal evidence lookup, scoring,
+  reporting, and visualization.
+- **Layer 2 — user cohort projection.** Project a user-supplied
+  count or intensity matrix onto the canonical trajectory templates
+  with `project_user_cohort()`. Runs entirely on local inputs.
+
+The two layers above are the package's primary scope. The two
+layers below are documented as **advanced reproducibility / data
+provenance** for users who want to rebuild the distributed object
+from public inputs:
+
+- **Layer 3 — processed-input atlas rebuild.** Rebuild
+  `data/pdactrace_reference.rda` from the documented processed
+  phase tables and `data-raw/build_reference.R`. Input file
+  provenance and build determinism are described in the
+  reproducibility vignette.
+- **Layer 4 — raw-data reanalysis.** FASTQ / raw proteomics
+  processing, count generation, model fitting, and large
+  intermediate files are **outside the scope of this software
+  package** and are documented in the associated manuscript
+  workflow archive.
+
+The distributed atlas is **self-contained for offline use**.
+Re-derivation from processed public inputs (Layer 3) is documented
+separately in the vignette.
+
+### Where the large quantification matrices live
+
+The raw quantification matrices (per-cohort RNA count tables,
+FragPipe protein intensity tables, the 372k-cell scVI atlas
+embedding) are intentionally **not** bundled in the package
+tarball. The appropriate Bioconductor mechanism for hosting these
+artefacts is a companion **`pdactraceData` ExperimentHub package**
+(`biocViews: ExperimentData, ExperimentHub`); that package is
+planned for a future release and will allow lazy on-demand access
+via `ExperimentHub::ExperimentHub()`.
 
 ## Citation
 
