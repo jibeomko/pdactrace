@@ -42,8 +42,14 @@ plot_filter_trace <- function(gene,
                  "flt_serum_significant", "flt_pancreatitis_pdac",
                  "flt_pancreatitis_hc", "flt_direction_match",
                  "flt_final")
-  flt_labels <- c("SignalP", "serum-measurable", "serum-significant",
-                   "pan vs PDAC", "HC-in-middle", "direction-match",
+  # Short two-line labels -- compact, render horizontally without
+  # rotation. Keep semantic match to flt_cols.
+  flt_labels <- c("signal\npeptide",
+                   "serum\nmeasurable",
+                   "serum\nsignif.",
+                   "PDAC vs\npancr.",
+                   "HC vs\npancr.",
+                   "direction\nmatch",
                    "FINAL")
 
   long <- data.table::melt(tf, id.vars = "gene_symbol",
@@ -58,30 +64,54 @@ plot_filter_trace <- function(gene,
     pass == FALSE,   "FAIL")]
   long[, status := factor(status,
     levels = c("PASS", "FAIL", "not evaluated"))]
-  # Preserve gene order from trace_filters (rank by n_phase60_pass desc)
+
+  # Preserve gene order from trace_filters (rank by n_phase60_pass
+  # desc). Append per-gene "X/7" pass-count badge to the row label
+  # for visual at-a-glance summary.
+  pass_count <- vapply(tf$gene_symbol, function(g) {
+    v <- as.logical(unlist(tf[gene_symbol == g, ..flt_cols]))
+    sum(v, na.rm = TRUE)
+  }, integer(1L))
+  badge_labels <- sprintf("%s  %d/7", tf$gene_symbol, pass_count)
+  names(badge_labels) <- tf$gene_symbol
   long[, gene_symbol := factor(gene_symbol,
                                   levels = tf$gene_symbol)]
 
-  pal <- c(PASS = "#2E7D32", FAIL = "#FFFFFF",
-            "not evaluated" = "grey92")
+  # Higher-contrast palette: solid teal pass / soft blush fail /
+  # neutral grey "not evaluated". Thinner tile borders.
+  pal <- c(PASS            = "#00796B",
+           FAIL            = "#FFE0E0",
+           "not evaluated" = "grey92")
 
   p_left <- ggplot2::ggplot(
     long,
     ggplot2::aes(x = step, y = gene_symbol, fill = status)) +
-    ggplot2::geom_tile(color = "grey50", linewidth = 0.4) +
-    ggplot2::scale_fill_manual(values = pal, name = NULL) +
-    ggplot2::scale_x_discrete(position = "top") +
+    ggplot2::geom_tile(color = "white", linewidth = 0.6) +
+    ggplot2::scale_fill_manual(values = pal, name = NULL,
+                                drop = FALSE) +
+    ggplot2::scale_x_discrete(position = "bottom") +
+    ggplot2::scale_y_discrete(labels = badge_labels) +
+    ggplot2::coord_equal() +
     ggplot2::labs(
       title = "phase60 7-step filter trail",
-      subtitle = "Filled = pass, open = fail, grey = not evaluated",
       x = NULL, y = NULL) +
     pdactrace_axes_theme() +
     ggplot2::theme(
-      axis.text.x = ggplot2::element_text(angle = 45, hjust = 0,
-                                              size = 5.5),
-      axis.text.y = ggplot2::element_text(size = 6, face = "bold"),
-      panel.grid = ggplot2::element_blank(),
-      legend.position = "bottom")
+      axis.text.x = ggplot2::element_text(size = 7,
+                                            lineheight = 0.85,
+                                            hjust = 0.5,
+                                            vjust = 1),
+      axis.text.y = ggplot2::element_text(size = 7.5,
+                                            face = "bold",
+                                            family = "mono"),
+      axis.ticks  = ggplot2::element_blank(),
+      panel.grid  = ggplot2::element_blank(),
+      panel.background = ggplot2::element_blank(),
+      plot.title  = ggplot2::element_text(size = 9,
+                                            face = "bold"),
+      legend.position = "bottom",
+      legend.key.size = ggplot2::unit(0.35, "cm"),
+      legend.text     = ggplot2::element_text(size = 7))
 
   if (!show_routes) return(p_left)
 
@@ -93,7 +123,8 @@ plot_filter_trace <- function(gene,
     variable.factor = FALSE)
   route_long[, flag := factor(flag,
     levels = c("phase77_strict", "panel_member", "resectable_marker"),
-    labels = c("phase77 strict", "panel member", "resectable marker"))]
+    labels = c("phase77\nstrict", "panel\nmember",
+                "resectable\nmarker"))]
   route_long[, status := data.table::fcase(
     is.na(value),    "not evaluated",
     value == TRUE,   "FLAG",
@@ -103,29 +134,40 @@ plot_filter_trace <- function(gene,
   route_long[, gene_symbol := factor(gene_symbol,
                                         levels = tf$gene_symbol)]
 
-  pal_r <- c(FLAG = "#0D47A1", "-" = "#FFFFFF",
+  pal_r <- c(FLAG = "#1565C0", "-" = "#F5F5F5",
               "not evaluated" = "grey92")
 
   p_right <- ggplot2::ggplot(
     route_long,
     ggplot2::aes(x = flag, y = gene_symbol, fill = status)) +
-    ggplot2::geom_tile(color = "grey50", linewidth = 0.4) +
-    ggplot2::scale_fill_manual(values = pal_r, name = NULL) +
-    ggplot2::scale_x_discrete(position = "top") +
+    ggplot2::geom_tile(color = "white", linewidth = 0.6) +
+    ggplot2::scale_fill_manual(values = pal_r, name = NULL,
+                                drop = FALSE) +
+    ggplot2::scale_x_discrete(position = "bottom") +
+    ggplot2::coord_equal() +
     ggplot2::labs(
-      title = "Auxiliary routes",
-      subtitle = NULL,
+      title = "auxiliary routes",
       x = NULL, y = NULL) +
     pdactrace_axes_theme() +
     ggplot2::theme(
-      axis.text.x = ggplot2::element_text(angle = 45, hjust = 0,
-                                              size = 5.5),
+      axis.text.x = ggplot2::element_text(size = 7,
+                                            lineheight = 0.85,
+                                            hjust = 0.5,
+                                            vjust = 1),
       axis.text.y = ggplot2::element_blank(),
-      panel.grid = ggplot2::element_blank(),
-      legend.position = "bottom")
+      axis.ticks  = ggplot2::element_blank(),
+      panel.grid  = ggplot2::element_blank(),
+      panel.background = ggplot2::element_blank(),
+      plot.title  = ggplot2::element_text(size = 9,
+                                            face = "bold"),
+      legend.position = "bottom",
+      legend.key.size = ggplot2::unit(0.35, "cm"),
+      legend.text     = ggplot2::element_text(size = 7))
 
   filter_block <- patchwork::wrap_plots(p_left, p_right) +
-    patchwork::plot_layout(widths = c(2.5, 1))
+    patchwork::plot_layout(widths = c(2.5, 1),
+                            guides = "collect") &
+    ggplot2::theme(legend.position = "bottom")
 
   if (!isTRUE(show_serum)) return(filter_block)
 
@@ -185,16 +227,20 @@ plot_filter_trace <- function(gene,
     ggplot2::scale_fill_manual(values = pal, name = NULL,
                                 drop = FALSE) +
     ggplot2::labs(
-      title = "Serum direction context",
-      subtitle = paste0(
-        "Inputs to the `direction-match` filter step: ",
-        "PDAC log2FC vs HC and Pancreatitis log2FC vs HC, ",
-        "coloured by translation class."),
+      title = "serum direction context (drives `direction-match`)",
       x = "log2FC", y = NULL) +
     pdactrace_axes_theme() +
     ggplot2::theme(
-      axis.text.y = ggplot2::element_text(size = 6, face = "bold"),
-      strip.text  = ggplot2::element_text(size = 6, face = "bold"),
+      axis.text.y = ggplot2::element_text(size = 7.5,
+                                            face = "bold",
+                                            family = "mono"),
+      axis.text.x = ggplot2::element_text(size = 7),
+      strip.text  = ggplot2::element_text(size = 7.5,
+                                            face = "bold"),
+      plot.title  = ggplot2::element_text(size = 9,
+                                            face = "bold"),
       panel.grid.major.y = ggplot2::element_blank(),
-      legend.position = "bottom")
+      legend.position = "bottom",
+      legend.key.size = ggplot2::unit(0.35, "cm"),
+      legend.text     = ggplot2::element_text(size = 7))
 }

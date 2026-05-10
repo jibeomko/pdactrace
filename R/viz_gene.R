@@ -1,53 +1,64 @@
-#' Single-call visual evidence canvas for one gene
+#' Single-call visual evidence + scoring canvas for one gene
 #'
-#' Returns a 2x2 `patchwork` composite that puts **one panel per
-#' evidence layer** for a gene on a single page (v0.99.7.1
-#' rebalance from the previous RNA-heavy layout):
+#' Returns a 2x3 `patchwork` composite that puts **one panel per
+#' evidence layer plus the final audit-axis radar** for a gene on
+#' a single page (v0.99.8 expansion from the previous 4-panel
+#' layout). The figure shows the entire prioritisation flow on one
+#' page: four input layers (RNA, tissue protein, scRNA cell
+#' origin, serum direction), the 7-step tissue-to-serum filter
+#' trail that gates them, and the 6-axis hexagon that compresses
+#' all of the above into the final audit-score components.
 #'
 #' \enumerate{
 #'   \item Top-left -- **bulk RNA-seq**: per-stage log2FC forest
 #'     (mean +/- 95% CI vs Normal).
-#'   \item Top-right -- **tissue proteomics**: per-stage protein
-#'     log2FC trajectory (point estimates; bundled per-stage SE
-#'     unavailable so no CI).
-#'   \item Bottom-left -- **scRNA cell origin**: 11-celltype
+#'   \item Top-middle -- **tissue proteomics**: per-stage protein
+#'     log2FC trajectory (point estimates; per-stage SE not
+#'     available from the bundled limma F-test fit).
+#'   \item Top-right -- **scRNA cell origin**: 11-celltype
 #'     expression distribution with the dominant lineage
 #'     highlighted.
-#'   \item Bottom-right -- **serum direction + filter trail**:
-#'     per-gene PDAC vs HC and Pancreatitis vs HC log2FC,
-#'     coloured by translation class (A / B / C), above the
-#'     7-step phase60 filter trace.
+#'   \item Bottom-left -- **serum direction**: per-gene PDAC vs HC
+#'     and Pancreatitis vs HC log2FC, coloured by translation
+#'     class (Class A blue, Class B red, Class C grey).
+#'   \item Bottom-middle -- **7-step filter trace**: the phase60
+#'     tissue-to-serum audit trail with per-gene pass-count badge.
+#'   \item Bottom-right -- **6-axis audit hexagon**: the final
+#'     score's six component axes (multi-layer, direction,
+#'     stage-onset, serum bridge, leakage safety, cohort
+#'     consistency), the same axes [explain_score()] decomposes.
 #' }
 #'
 #' A title strip across the top names the gene, its matched
 #' template, audit class, and translation class. This single
-#' figure is the visual analog of [summarize_gene_evidence()] and
-#' is the recommended **first call** for a gene a clinician or
-#' biologist hands you -- one plot, the whole evidence story, no
-#' pre-existing knowledge of the per-axis function names required.
+#' figure is the visual analog of [summarize_gene_evidence()] +
+#' [explain_score()] combined and is the recommended **first
+#' call** for a gene a clinician or biologist hands you -- one
+#' plot, the whole evidence-to-score chain, no per-axis function
+#' names required.
 #'
 #' Internally composes [plot_stage_effect()] (RNA + protein),
-#' [plot_celltype_full()], and [plot_filter_trace()] via
-#' [patchwork::wrap_plots()]. All sub-panels remain available as
-#' standalone functions for users who want a single layer; the
-#' RNA per-cohort robustness view from the previous layout is
-#' available as [plot_per_cohort()].
+#' [plot_celltype_full()], [plot_serum_direction()],
+#' [plot_filter_trace()], and [plot_gene_hexagon()] via
+#' [patchwork::wrap_plots()]. Every sub-panel remains available
+#' standalone; the previous RNA per-cohort sign-vote view is at
+#' [plot_per_cohort()].
 #'
 #' @param gene_symbol HGNC gene symbol (length-1 character).
 #' @param title Optional title override. `NULL` (default) builds
 #'   the title from the bundled atlas headline.
-#' @param ncol Layout: `2` (default; 2x2) or `1` (4x1 vertical
-#'   strip suitable for narrow embedding).
+#' @param ncol Layout: `3` (default; 2x3), `2` (3x2), or `1`
+#'   (6x1 vertical strip suitable for narrow embedding).
 #' @return A `patchwork` object printable to any active graphics
 #'   device or saveable via `ggsave()` / [pdactrace_save()].
 #' @examples
 #' viz_gene("LGALS3BP")
+#' viz_gene("LTBP1", ncol = 2)   # 3x2 grid
 #' viz_gene("LTBP1", ncol = 1)   # vertical strip
 #' @seealso [summarize_gene_evidence()] for the text counterpart;
-#'   [plot_gene_evidence()] for the older single-row composite;
 #'   [report_gene()] for an HTML report (requires pandoc).
 #' @export
-viz_gene <- function(gene_symbol, title = NULL, ncol = 2L) {
+viz_gene <- function(gene_symbol, title = NULL, ncol = 3L) {
   if (!is.character(gene_symbol) || length(gene_symbol) != 1L) {
     stop("`gene_symbol` must be a length-1 character string.",
          call. = FALSE)
@@ -68,15 +79,32 @@ viz_gene <- function(gene_symbol, title = NULL, ncol = 2L) {
   }
   if (is.null(title)) title <- .vg_headline(row)
 
-  # Build the 4 panels -- one per evidence layer.
-  p_rna  <- plot_stage_effect(gene_symbol, layer = "rna")
-  p_prot <- plot_stage_effect(gene_symbol, layer = "protein")
-  p_cell <- suppressWarnings(plot_celltype_full(gene_symbol))
-  p_filt <- plot_filter_trace(gene_symbol,
-                                show_routes = FALSE,
-                                show_serum  = TRUE)
+  # Build the 6 panels -- 4 input layers + filter trace + final
+  # audit-axis radar. Every builder is wrapped so a NULL / error
+  # return is replaced by a graceful "no data" placeholder; this
+  # keeps the 6-panel grid intact for genes with sparse evidence.
+  p_rna   <- .vg_safe(plot_stage_effect(gene_symbol, layer = "rna"),
+                       gene_symbol, "RNA per-stage")
+  p_prot  <- .vg_safe(plot_stage_effect(gene_symbol, layer = "protein"),
+                       gene_symbol, "tissue protein per-stage")
+  p_cell  <- .vg_safe(suppressWarnings(plot_celltype_full(gene_symbol)),
+                       gene_symbol, "scRNA cell origin",
+                       msg = "no scRNA cell-origin data")
+  p_serum <- .vg_safe(suppressWarnings(plot_serum_direction(gene_symbol)),
+                       gene_symbol, "serum direction",
+                       msg = "no serum data")
+  p_filt  <- .vg_safe(plot_filter_trace(gene_symbol,
+                                          show_routes = FALSE,
+                                          show_serum  = FALSE),
+                       gene_symbol, "7-step filter trail",
+                       msg = "no phase60 filter data")
+  p_hex   <- .vg_safe(tryCatch(plot_gene_hexagon(gene_symbol),
+                                  error = function(e) NULL),
+                       gene_symbol, "audit hexagon",
+                       msg = "audit components missing")
 
-  composed <- patchwork::wrap_plots(p_rna, p_prot, p_cell, p_filt,
+  composed <- patchwork::wrap_plots(p_rna, p_prot, p_cell,
+                                     p_serum, p_filt, p_hex,
                                      ncol = ncol) +
               patchwork::plot_annotation(
                 title = title,
@@ -97,4 +125,24 @@ viz_gene <- function(gene_symbol, title = NULL, ncol = 2L) {
     paste0("Class ", row$translation_class)
   sprintf("%s -- %s | %s | %s",
           row$gene_symbol, pat, cls, trc)
+}
+
+.vg_empty_panel <- function(title, msg) {
+  ggplot2::ggplot() +
+    ggplot2::annotate("text", x = 1, y = 1, label = msg,
+                        color = "grey40", size = 3) +
+    ggplot2::labs(title = title, x = NULL, y = NULL) +
+    pdactrace_axes_theme() +
+    ggplot2::theme(axis.text  = ggplot2::element_blank(),
+                    axis.ticks = ggplot2::element_blank())
+}
+
+# Wrap a panel-builder result so NULL / non-ggplot returns become
+# a graceful "no data" placeholder; keeps the 6-panel grid intact
+# for genes with sparse evidence layers.
+.vg_safe <- function(p, gene_symbol, panel_label,
+                      msg = "no data") {
+  if (inherits(p, "ggplot")) return(p)
+  .vg_empty_panel(sprintf("%s -- %s", gene_symbol, panel_label),
+                   msg)
 }

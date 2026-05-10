@@ -66,8 +66,10 @@ plot_stage_effect <- function(gene_symbol,
                as.numeric(row$prot_beta_M),
                as.numeric(row$prot_beta_L)))
   padj <- as.numeric(row$prot_lrt_padj)
-  sub  <- if (is.na(padj)) "tissue protein 12-template fit" else
-    sprintf("F-test padj = %s",
+  sub  <- if (is.na(padj))
+    "tissue protein 12-template fit (no per-stage SE; F-test padj NA)"
+    else
+    sprintf("F-test padj = %s   (no per-stage SE: limma F-test; per-contrast Wald deferred to v0.99.8+)",
             formatC(padj, format = "g", digits = 3))
   ggplot2::ggplot(ps, ggplot2::aes(x = stage, y = log2FC)) +
     ggplot2::geom_hline(yintercept = 0, color = "grey60",

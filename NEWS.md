@@ -1,3 +1,69 @@
+# pdactrace 0.99.8
+
+**`viz_gene()` expanded to a six-panel evidence-to-score canvas
++ compact NCS-grade redesign of `plot_filter_trace()` +
+`plot_serum_direction()` exported.** The single-call composite
+now shows the entire prioritisation flow on one page: four input
+layers (RNA, tissue protein, scRNA cell origin, serum direction),
+the 7-step tissue-to-serum filter trail that gates them, and the
+6-axis hexagon that compresses all of the above into the final
+audit-score components.
+
+## New
+
+- `plot_serum_direction(gene)` -- exported standalone version of
+  the per-gene serum direction strip (PDAC vs HC and Pancreatitis
+  vs HC log2FC, faceted by contrast, coloured by translation
+  Class A / B / C). Previously available only as the strip
+  embedded above `plot_filter_trace()`'s grid.
+
+## Changed
+
+- `R/viz_gene.R` -- panel layout expanded from four to **six**
+  (default `ncol = 3`, 2x3 grid):
+  TL bulk RNA per-stage forest; TM tissue protein per-stage
+  trajectory; TR scRNA cell-of-origin distribution;
+  BL serum direction (PDAC + Pancreatitis log2FC);
+  BM 7-step filter trail with pass-count badges;
+  BR 6-axis audit hexagon. Every panel-builder is wrapped in a
+  `.vg_safe()` helper so a `NULL` / error return becomes a
+  graceful "no data" placeholder, keeping the grid intact for
+  genes with sparse evidence layers. New `ncol` options: `3`
+  (default), `2` (3x2), `1` (6x1 vertical). The previous RNA
+  per-cohort sign-vote panel remains available standalone via
+  [plot_per_cohort()].
+- `R/plot_filter_trace.R` -- visual rewrite of the 7-step filter
+  grid and the auxiliary-routes panel. Step labels move from top
+  (rotated 45 degrees, 5.5 pt) to **bottom (horizontal, 7 pt,
+  two-line)** for higher legibility at smaller embeddings; tile
+  borders go from `grey50 / 0.4` to `white / 0.6` for a cleaner
+  separation; pass-fill upgraded from olive (`#2E7D32`) to teal
+  (`#00796B`) and fail-fill from white to soft blush (`#FFE0E0`)
+  for higher contrast at print size; `coord_equal()` keeps cells
+  square. Each gene row gains an inline pass-count badge
+  ("`X/7`") in monospace. The serum direction strip header is
+  tightened (subtitle inlined into title; legend keys shrunk to
+  0.35 cm). Auxiliary routes panel mirrors the same compact
+  styling.
+- `R/plot_stage_effect.R` -- protein-layer subtitle now states
+  explicitly that no per-stage SE is rendered because the
+  upstream `phase34_protein_pooled_12template.csv` is a limma
+  F-test (overall significance) rather than per-contrast Wald
+  (which would yield `lfcSE_E/M/L`). Per-contrast Wald is
+  deferred (would require an upstream limma rerun + atlas
+  rebuild).
+
+## Tests
+
+- 4 new test_that blocks: viz_gene returns 6 panels; viz_gene
+  gracefully degrades on sparse-evidence genes (ALB, GAPDH,
+  SERPINA1); plot_serum_direction returns ggplot; errors on
+  empty input.
+- Full suite still passes (no regressions vs v0.99.7.1).
+
+No public API removals; six-panel layout is additive (was 4 in
+v0.99.7.1), and `plot_serum_direction` is a new export.
+
 # pdactrace 0.99.7.1
 
 **`viz_gene()` rebalanced to one panel per evidence layer +

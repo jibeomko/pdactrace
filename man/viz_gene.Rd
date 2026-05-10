@@ -2,9 +2,9 @@
 % Please edit documentation in R/viz_gene.R
 \name{viz_gene}
 \alias{viz_gene}
-\title{Single-call visual evidence canvas for one gene}
+\title{Single-call visual evidence + scoring canvas for one gene}
 \usage{
-viz_gene(gene_symbol, title = NULL, ncol = 2L)
+viz_gene(gene_symbol, title = NULL, ncol = 3L)
 }
 \arguments{
 \item{gene_symbol}{HGNC gene symbol (length-1 character).}
@@ -12,54 +12,65 @@ viz_gene(gene_symbol, title = NULL, ncol = 2L)
 \item{title}{Optional title override. \code{NULL} (default) builds
 the title from the bundled atlas headline.}
 
-\item{ncol}{Layout: \code{2} (default; 2x2) or \code{1} (4x1 vertical
-strip suitable for narrow embedding).}
+\item{ncol}{Layout: \code{3} (default; 2x3), \code{2} (3x2), or \code{1}
+(6x1 vertical strip suitable for narrow embedding).}
 }
 \value{
 A \code{patchwork} object printable to any active graphics
 device or saveable via \code{ggsave()} / \code{\link[=pdactrace_save]{pdactrace_save()}}.
 }
 \description{
-Returns a 2x2 \code{patchwork} composite that puts \strong{one panel per
-evidence layer} for a gene on a single page (v0.99.7.1
-rebalance from the previous RNA-heavy layout):
+Returns a 2x3 \code{patchwork} composite that puts \strong{one panel per
+evidence layer plus the final audit-axis radar} for a gene on
+a single page (v0.99.8 expansion from the previous 4-panel
+layout). The figure shows the entire prioritisation flow on one
+page: four input layers (RNA, tissue protein, scRNA cell
+origin, serum direction), the 7-step tissue-to-serum filter
+trail that gates them, and the 6-axis hexagon that compresses
+all of the above into the final audit-score components.
 }
 \details{
 \enumerate{
 \item Top-left -- \strong{bulk RNA-seq}: per-stage log2FC forest
 (mean +/- 95\% CI vs Normal).
-\item Top-right -- \strong{tissue proteomics}: per-stage protein
-log2FC trajectory (point estimates; bundled per-stage SE
-unavailable so no CI).
-\item Bottom-left -- \strong{scRNA cell origin}: 11-celltype
+\item Top-middle -- \strong{tissue proteomics}: per-stage protein
+log2FC trajectory (point estimates; per-stage SE not
+available from the bundled limma F-test fit).
+\item Top-right -- \strong{scRNA cell origin}: 11-celltype
 expression distribution with the dominant lineage
 highlighted.
-\item Bottom-right -- \strong{serum direction + filter trail}:
-per-gene PDAC vs HC and Pancreatitis vs HC log2FC,
-coloured by translation class (A / B / C), above the
-7-step phase60 filter trace.
+\item Bottom-left -- \strong{serum direction}: per-gene PDAC vs HC
+and Pancreatitis vs HC log2FC, coloured by translation
+class (Class A blue, Class B red, Class C grey).
+\item Bottom-middle -- \strong{7-step filter trace}: the phase60
+tissue-to-serum audit trail with per-gene pass-count badge.
+\item Bottom-right -- \strong{6-axis audit hexagon}: the final
+score's six component axes (multi-layer, direction,
+stage-onset, serum bridge, leakage safety, cohort
+consistency), the same axes \code{\link[=explain_score]{explain_score()}} decomposes.
 }
 
 A title strip across the top names the gene, its matched
 template, audit class, and translation class. This single
-figure is the visual analog of \code{\link[=summarize_gene_evidence]{summarize_gene_evidence()}} and
-is the recommended \strong{first call} for a gene a clinician or
-biologist hands you -- one plot, the whole evidence story, no
-pre-existing knowledge of the per-axis function names required.
+figure is the visual analog of \code{\link[=summarize_gene_evidence]{summarize_gene_evidence()}} +
+\code{\link[=explain_score]{explain_score()}} combined and is the recommended \strong{first
+call} for a gene a clinician or biologist hands you -- one
+plot, the whole evidence-to-score chain, no per-axis function
+names required.
 
 Internally composes \code{\link[=plot_stage_effect]{plot_stage_effect()}} (RNA + protein),
-\code{\link[=plot_celltype_full]{plot_celltype_full()}}, and \code{\link[=plot_filter_trace]{plot_filter_trace()}} via
-\code{\link[patchwork:wrap_plots]{patchwork::wrap_plots()}}. All sub-panels remain available as
-standalone functions for users who want a single layer; the
-RNA per-cohort robustness view from the previous layout is
-available as \code{\link[=plot_per_cohort]{plot_per_cohort()}}.
+\code{\link[=plot_celltype_full]{plot_celltype_full()}}, \code{\link[=plot_serum_direction]{plot_serum_direction()}},
+\code{\link[=plot_filter_trace]{plot_filter_trace()}}, and \code{\link[=plot_gene_hexagon]{plot_gene_hexagon()}} via
+\code{\link[patchwork:wrap_plots]{patchwork::wrap_plots()}}. Every sub-panel remains available
+standalone; the previous RNA per-cohort sign-vote view is at
+\code{\link[=plot_per_cohort]{plot_per_cohort()}}.
 }
 \examples{
 viz_gene("LGALS3BP")
+viz_gene("LTBP1", ncol = 2)   # 3x2 grid
 viz_gene("LTBP1", ncol = 1)   # vertical strip
 }
 \seealso{
 \code{\link[=summarize_gene_evidence]{summarize_gene_evidence()}} for the text counterpart;
-\code{\link[=plot_gene_evidence]{plot_gene_evidence()}} for the older single-row composite;
 \code{\link[=report_gene]{report_gene()}} for an HTML report (requires pandoc).
 }
