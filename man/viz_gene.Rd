@@ -4,7 +4,15 @@
 \alias{viz_gene}
 \title{Single-call visual evidence + scoring canvas for one gene}
 \usage{
-viz_gene(gene_symbol, title = NULL, ncol = 3L)
+viz_gene(
+  gene_symbol,
+  title = NULL,
+  ncol = 3L,
+  layout = c("compact", "split"),
+  output_dir = NULL,
+  width = 6,
+  height = 4.5
+)
 }
 \arguments{
 \item{gene_symbol}{HGNC gene symbol (length-1 character).}
@@ -14,6 +22,21 @@ the title from the bundled atlas headline.}
 
 \item{ncol}{Layout: \code{3} (default; 2x3), \code{2} (3x2), or \code{1}
 (6x1 vertical strip suitable for narrow embedding).}
+
+\item{layout}{One of \code{"compact"} (default; the 2x3 patchwork
+composite) or \code{"split"} (returns a named list of six
+ggplot panels so the caller can render each as a full-size
+figure on its own page).}
+
+\item{output_dir}{Optional directory path. Only used when
+\code{layout = "split"}. If supplied, each of the six panels is
+written to a separate cairo-PDF file via \code{\link[=pdactrace_save]{pdactrace_save()}}
+and the named list is returned invisibly with file paths
+attached as \code{attr(., "files")}.}
+
+\item{width, height}{Per-panel width and height in inches when
+\code{layout = "split"} and \code{output_dir} is set. Defaults
+\verb{6 x 4.5} (single-column, NCS-grade).}
 }
 \value{
 A \code{patchwork} object printable to any active graphics
@@ -67,8 +90,25 @@ standalone; the previous RNA per-cohort sign-vote view is at
 }
 \examples{
 viz_gene("LGALS3BP")
-viz_gene("LTBP1", ncol = 2)   # 3x2 grid
-viz_gene("LTBP1", ncol = 1)   # vertical strip
+\donttest{
+  # Alternative layouts (skipped in R CMD check examples for time;
+  # all run normally in interactive use).
+  viz_gene("LTBP1", ncol = 2)            # 3x2 grid
+  viz_gene("LTBP1", ncol = 1)            # vertical strip
+
+  # Split mode: get each panel as its own full-size figure
+  panels <- viz_gene("LTBP1", layout = "split")
+  panels$rna       # bulk RNA per-stage forest
+  panels$protein   # tissue protein per-stage trajectory
+  panels$cell      # scRNA cell-of-origin distribution
+  panels$serum     # serum direction strip
+  panels$filter    # 7-step filter trail
+  panels$hexagon   # 6-axis audit hexagon
+}
+\dontrun{
+  # Or write each panel to a separate PDF in one call:
+  viz_gene("LTBP1", layout = "split", output_dir = tempdir())
+}
 }
 \seealso{
 \code{\link[=summarize_gene_evidence]{summarize_gene_evidence()}} for the text counterpart;

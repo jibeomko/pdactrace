@@ -44,3 +44,36 @@ test_that("plot_serum_direction errors on empty input", {
   expect_error(plot_serum_direction(character(0L)),
                regexp = "non-empty character vector")
 })
+
+test_that("viz_gene(layout='split') returns named list of 6 ggplots", {
+  panels <- viz_gene("LGALS3BP", layout = "split")
+  expect_type(panels, "list")
+  expect_length(panels, 6L)
+  expect_setequal(names(panels),
+                   c("rna", "protein", "cell", "serum",
+                     "filter", "hexagon"))
+  for (nm in names(panels)) {
+    expect_true(inherits(panels[[nm]], "ggplot"),
+                info = nm)
+  }
+})
+
+test_that("viz_gene(layout='split', output_dir=...) writes 6 PDFs", {
+  tmpd <- tempfile("viz_split_")
+  res <- suppressMessages(viz_gene("LGALS3BP",
+                                     layout = "split",
+                                     output_dir = tmpd))
+  files <- attr(res, "files")
+  expect_equal(length(files), 6L)
+  expect_true(all(file.exists(files)))
+  expect_setequal(basename(files), sprintf(
+    "viz_gene_LGALS3BP_%s.pdf",
+    c("rna", "protein", "cell", "serum", "filter", "hexagon")))
+})
+
+test_that("viz_gene(layout='split') works for sparse-evidence genes", {
+  panels <- viz_gene("ALB", layout = "split")
+  expect_length(panels, 6L)
+  for (nm in names(panels))
+    expect_true(inherits(panels[[nm]], "ggplot"), info = nm)
+})

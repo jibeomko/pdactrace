@@ -1,3 +1,35 @@
+# pdactrace 0.99.16
+
+**`viz_gene()` gains `layout = "split"` for full-size per-panel
+output.** The 6-panel composite layout is great for a one-glance
+overview, but the per-panel cells get cramped at default print
+sizes. The new split mode returns each panel as its own
+full-size figure -- either as a named list of ggplots (for
+custom layout in a script) or as one cairo-PDF per panel
+(when `output_dir` is set).
+
+## Added
+
+- `viz_gene(layout = c("compact", "split"))` -- backwards-
+  compatible. `"compact"` (default) keeps the 2x3 patchwork
+  composite; `"split"` returns a named list of 6 ggplots
+  (`rna`, `protein`, `cell`, `serum`, `filter`, `hexagon`).
+- `viz_gene(..., layout = "split", output_dir = ...)` -- writes
+  each of the 6 panels to a separate cairo-PDF file via
+  [pdactrace_save()] (default `width = 6`, `height = 4.5`
+  inches, single-column NCS-grade). Files are named
+  `viz_gene_<gene>_<panel>.pdf`. Returns the named list
+  invisibly with `attr(., "files")` carrying the file paths.
+
+## Tests
+
+- 3 new test_that blocks covering split mode (return type,
+  names, output_dir file count, sparse-evidence gene support).
+- Full suite: 507 PASS / 0 FAIL (was 504).
+
+No public API removals; `layout`, `output_dir`, `width`, `height`
+are additive optional arguments.
+
 # pdactrace 0.99.15
 
 **Final pre-Bioconductor-submission audit fixes.** Addresses two

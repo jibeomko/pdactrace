@@ -53,20 +53,57 @@
 #'   device or saveable via `ggsave()` / [pdactrace_save()].
 #' @examples
 #' viz_gene("LGALS3BP")
-#' viz_gene("LTBP1", ncol = 2)   # 3x2 grid
-#' viz_gene("LTBP1", ncol = 1)   # vertical strip
+#' \donttest{
+#'   # Alternative layouts (skipped in R CMD check examples for time;
+#'   # all run normally in interactive use).
+#'   viz_gene("LTBP1", ncol = 2)            # 3x2 grid
+#'   viz_gene("LTBP1", ncol = 1)            # vertical strip
+#'
+#'   # Split mode: get each panel as its own full-size figure
+#'   panels <- viz_gene("LTBP1", layout = "split")
+#'   panels$rna       # bulk RNA per-stage forest
+#'   panels$protein   # tissue protein per-stage trajectory
+#'   panels$cell      # scRNA cell-of-origin distribution
+#'   panels$serum     # serum direction strip
+#'   panels$filter    # 7-step filter trail
+#'   panels$hexagon   # 6-axis audit hexagon
+#' }
+#' \dontrun{
+#'   # Or write each panel to a separate PDF in one call:
+#'   viz_gene("LTBP1", layout = "split", output_dir = tempdir())
+#' }
+#' @param layout One of `"compact"` (default; the 2x3 patchwork
+#'   composite) or `"split"` (returns a named list of six
+#'   ggplot panels so the caller can render each as a full-size
+#'   figure on its own page).
+#' @param output_dir Optional directory path. Only used when
+#'   `layout = "split"`. If supplied, each of the six panels is
+#'   written to a separate cairo-PDF file via [pdactrace_save()]
+#'   and the named list is returned invisibly with file paths
+#'   attached as `attr(., "files")`.
+#' @param width,height Per-panel width and height in inches when
+#'   `layout = "split"` and `output_dir` is set. Defaults
+#'   `6 x 4.5` (single-column, NCS-grade).
 #' @seealso [summarize_gene_evidence()] for the text counterpart;
 #'   [report_gene()] for an HTML report (requires pandoc).
 #' @export
-viz_gene <- function(gene_symbol, title = NULL, ncol = 3L) {
+viz_gene <- function(gene_symbol,
+                     title = NULL,
+                     ncol = 3L,
+                     layout = c("compact", "split"),
+                     output_dir = NULL,
+                     width = 6,
+                     height = 4.5) {
+  layout <- match.arg(layout)
   if (!is.character(gene_symbol) || length(gene_symbol) != 1L) {
     stop("`gene_symbol` must be a length-1 character string.",
          call. = FALSE)
   }
-  if (!requireNamespace("patchwork", quietly = TRUE)) {
-    stop("`patchwork` is required for viz_gene(). ",
-         "Install via install.packages(\"patchwork\").",
-         call. = FALSE)
+  if (layout == "compact" &&
+      !requireNamespace("patchwork", quietly = TRUE)) {
+    stop("`patchwork` is required for viz_gene(layout=\"compact\"). ",
+         "Install via install.packages(\"patchwork\"), or use ",
+         "layout = \"split\".", call. = FALSE)
   }
 
   # Resolve a one-line headline from the atlas.
@@ -103,6 +140,31 @@ viz_gene <- function(gene_symbol, title = NULL, ncol = 3L) {
                        gene_symbol, "audit hexagon",
                        msg = "audit components missing")
 
+  if (layout == "split") {
+    panels <- list(rna = p_rna, protein = p_prot, cell = p_cell,
+                    serum = p_serum, filter = p_filt,
+                    hexagon = p_hex)
+    if (!is.null(output_dir)) {
+      dir.create(output_dir, recursive = TRUE,
+                  showWarnings = FALSE)
+      files <- character(0L)
+      for (nm in names(panels)) {
+        fname <- sprintf("viz_gene_%s_%s", gene_symbol, nm)
+        suppressMessages(pdactrace_save(panels[[nm]], output_dir,
+                                         fname,
+                                         w = width, h = height))
+        files <- c(files, file.path(output_dir,
+                                     paste0(fname, ".pdf")))
+      }
+      attr(panels, "files") <- files
+      message(sprintf(
+        "Wrote %d panels to %s", length(files), output_dir))
+      return(invisible(panels))
+    }
+    return(panels)
+  }
+
+  # layout == "compact"
   composed <- patchwork::wrap_plots(p_rna, p_prot, p_cell,
                                      p_serum, p_filt, p_hex,
                                      ncol = ncol) +
