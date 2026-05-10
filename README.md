@@ -58,7 +58,7 @@ A Bioconductor submission is in preparation; once accepted,
 ```r
 library(pdactrace)
 
-# 1. One-call visual canvas — every evidence layer for a gene
+# 1. Per-gene evidence: 6 full-size panels rendered one per page
 viz_gene("LTBP1")
 
 # 2. Plain-English audit-score decomposition
@@ -126,16 +126,20 @@ bundled atlas.
 ## Scenario 1 — Look up one gene
 
 ```r
-viz_gene("LTBP1")            # 6-panel visual canvas
+viz_gene("LTBP1")            # 6 full-size evidence panels (one per page)
 query_gene("LTBP1")          # text view (full evidence dump)
 query_gene_detailed("LTBP1") # per-stage / per-cohort / per-celltype
 ```
 
-`viz_gene()` produces a 2×3 patchwork canvas with bulk RNA,
-tissue protein, scRNA cell-origin, serum direction, 7-step filter
-trace, and 6-axis audit hexagon. Pass `layout = "split"` to get
-each panel as a full-size figure. See
-`vignette("lookup_basics")`.
+`viz_gene()` returns the six gene-evidence panels (bulk RNA,
+tissue protein, scRNA cell-origin, serum direction, 7-step
+filter trace, 6-axis audit hexagon) as a `pdactrace_viz_panels`
+list whose `print()` method renders each panel as its own page
+in the active plot device — in RStudio you flip through the six
+panels with the plot-pane arrows, in a batch script with `pdf()`
+open the panels become six pages. Pass `layout = "compact"` for
+the single-page 2×3 patchwork composite (legacy embedding mode).
+See `vignette("lookup_basics")`.
 
 ## Scenario 2 — Understand *why* a gene got its score
 

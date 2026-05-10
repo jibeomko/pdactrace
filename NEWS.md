@@ -1,3 +1,38 @@
+# pdactrace 0.99.18
+
+**`viz_gene()` default flips to multi-page (`layout = "split"`).**
+The v0.99.16 split mode was opt-in, so the bare `viz_gene("X")`
+call still rendered the cramped single-page 2x3 patchwork. This
+release flips the default so the natural call gives the six
+panels at full size, one per plot-pane page.
+
+## Changed
+
+- `viz_gene(layout)` default flipped from `"compact"` to
+  `"split"`. Calling `viz_gene("LTBP1")` now returns a
+  `pdactrace_viz_panels` named list of six full-size ggplots
+  (`rna`, `protein`, `cell`, `serum`, `filter`, `hexagon`).
+- New S3 print method `print.pdactrace_viz_panels` renders each
+  of the six panels sequentially to the active graphics device.
+  In RStudio the six panels become six entries in the Plots
+  pane history (navigate with back/forward arrows). In a batch
+  script with `pdf()` open they become six pages of the PDF.
+- The single-page 2x3 patchwork composite is preserved as
+  `viz_gene("X", layout = "compact")` for embedding contexts
+  and back-compatibility.
+
+## Tests
+
+- Default `viz_gene("X")` test now expects
+  `pdactrace_viz_panels` instead of `patchwork`.
+- `layout = "compact"` patchwork tests retained, gated on
+  `skip_if_not_installed("patchwork")`.
+- New test for `print.pdactrace_viz_panels` round-trip.
+
+This is a behaviour change but not an API removal: every
+existing `viz_gene(..., layout = "compact")` call still works,
+and the named-list shape for `layout = "split"` is unchanged.
+
 # pdactrace 0.99.17
 
 **README compression for Bioconductor reviewer scan-readability.**

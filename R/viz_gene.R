@@ -72,10 +72,13 @@
 #'   # Or write each panel to a separate PDF in one call:
 #'   viz_gene("LTBP1", layout = "split", output_dir = tempdir())
 #' }
-#' @param layout One of `"compact"` (default; the 2x3 patchwork
-#'   composite) or `"split"` (returns a named list of six
-#'   ggplot panels so the caller can render each as a full-size
-#'   figure on its own page).
+#' @param layout One of `"split"` (default; returns a
+#'   `pdactrace_viz_panels` list of six full-size ggplots whose
+#'   `print()` method renders each panel as its own page in the
+#'   active plot device — in RStudio you flip through the six
+#'   panels with the plot-pane arrows) or `"compact"` (the
+#'   single-page 2x3 patchwork composite preserved for backward
+#'   compatibility and embedding contexts).
 #' @param output_dir Optional directory path. Only used when
 #'   `layout = "split"`. If supplied, each of the six panels is
 #'   written to a separate cairo-PDF file via [pdactrace_save()]
@@ -90,7 +93,7 @@
 viz_gene <- function(gene_symbol,
                      title = NULL,
                      ncol = 3L,
-                     layout = c("compact", "split"),
+                     layout = c("split", "compact"),
                      output_dir = NULL,
                      width = 6,
                      height = 4.5) {
@@ -141,9 +144,13 @@ viz_gene <- function(gene_symbol,
                        msg = "audit components missing")
 
   if (layout == "split") {
-    panels <- list(rna = p_rna, protein = p_prot, cell = p_cell,
-                    serum = p_serum, filter = p_filt,
-                    hexagon = p_hex)
+    panels <- structure(
+      list(rna = p_rna, protein = p_prot, cell = p_cell,
+            serum = p_serum, filter = p_filt,
+            hexagon = p_hex),
+      class = c("pdactrace_viz_panels", "list"),
+      gene_symbol = gene_symbol,
+      headline = title)
     if (!is.null(output_dir)) {
       dir.create(output_dir, recursive = TRUE,
                   showWarnings = FALSE)
@@ -174,6 +181,20 @@ viz_gene <- function(gene_symbol,
                   plot.title = ggplot2::element_text(
                     face = "bold", size = 11, hjust = 0)))
   composed
+}
+
+# ---- print method ----------------------------------------------------
+
+# Renders the six gene-evidence panels sequentially to the active
+# graphics device. In RStudio each ggplot becomes its own entry
+# in the Plots pane history (flip with back/forward arrows). In a
+# batch script with pdf() open, the six panels become six pages.
+#' @export
+print.pdactrace_viz_panels <- function(x, ...) {
+  for (nm in names(x)) {
+    print(x[[nm]], ...)
+  }
+  invisible(x)
 }
 
 # ---- internal --------------------------------------------------------
