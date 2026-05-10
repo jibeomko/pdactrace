@@ -1,3 +1,52 @@
+# pdactrace 0.99.7
+
+**Single-call visual evidence canvas + methodology-first
+positioning.** Two coordinated changes for non-technical reviewers
+and reader audiences: (1) one new function that turns the entire
+per-gene evidence story into a single composite figure, and (2) a
+DESCRIPTION + README reframing that leads with the
+*tissue-to-serum translation framework* and demotes the bundled
+PDAC atlas to the *demonstration cohort* role.
+
+## New
+
+- `viz_gene(gene_symbol, title, ncol)` -- 2x2 patchwork canvas
+  composing per-stage trajectory forest, per-cohort sign-vote bar,
+  scRNA cell-of-origin distribution, and 7-step tissue-to-serum
+  filter trace, under a one-line headline naming the matched
+  template, audit class, and translation class. The visual analog
+  of `summarize_gene_evidence()` and the recommended *first call*
+  for a clinician or biologist who hands you a gene -- one plot,
+  no per-axis function names required. `ncol = 1` for a vertical
+  strip suitable for narrow embedding.
+
+## Changed (BiB framing)
+
+- `DESCRIPTION`: `Title:` reframed from "Queryable Stage-Aware
+  PDAC Tissue-to-Serum Biomarker Reference Atlas" to "Transparent
+  Multi-Omics Tissue-to-Serum Biomarker Translation Framework
+  with PDAC Reference Atlas". `Description:` rewritten to lead
+  with the framework components (12-template catalog, 3-axis +
+  2-gate audit, Evidence Math layer, optional interpretable ML
+  layer, Class A / B / C translation discipline) and to position
+  the PDAC atlas explicitly as the demonstration cohort, not the
+  primary contribution.
+- `README.md` opening: same reframe, plus a quantitative anchor
+  for the framework's evaluation harness (39.3x external-anchor
+  enrichment, p = 2.18e-10; LOO median 41.6x; bootstrap 95% CI
+  [20.2, 56.3]).
+- `README.md` "What you get": now split into "Methodology
+  (transferable to any cancer)" and "PDAC demonstration cohort"
+  sub-sections; the four canonical case studies (LGALS3BP, LTBP1,
+  ALB, GAPDH) are listed equally as one-per-class
+  demonstrations, with no single gene treated as a flagship.
+- `README.md` Scenario 1: now leads with `viz_gene("LTBP1")` as
+  the visual entry point; the existing `query_gene("LTBP1")`
+  text view is presented as the scripting / knitr-report
+  alternative.
+
+No public API removals; `viz_gene()` is purely additive.
+
 # pdactrace 0.99.6.1
 
 **Friendlier `report_gene()` failure when pandoc is missing.** Patch

@@ -14,14 +14,31 @@
        alt="pdactrace workflow: staged omics evidence (RNA, protein, scRNA, serum, user cohort) → 12-template trajectory matching → Early-onset atlas surface → multi-layer evidence integration → 3-axis + 2-gate audit scoring → user outputs (query_gene, explain_score, compare_candidates, trace_filters, project_user_cohort). Transparent prioritization, not a supervised diagnostic classifier.">
 </p>
 
-`pdactrace` is an R package for querying and prioritizing pancreatic
-ductal adenocarcinoma (PDAC) biomarker candidates across bulk RNA-seq,
-tissue proteomics, single-cell RNA-seq, serum proteomics, and
-pancreatitis context.
+`pdactrace` is a **transparent, deterministic multi-omics
+framework** for prioritising tissue-to-serum biomarker candidates
+by integrating per-stage trajectory matching across bulk RNA-seq,
+tissue proteomics, single-cell origin, and serum proteomics, with
+explicit anchor-enrichment evaluation against a curated external
+reference set.
 
-It does **not** train a supervised biomarker classifier. Instead, it
-uses a frozen, interpretable scoring rule and reports uncertainty
-because PDAC early detection lacks robust gene-level ground truth.
+The framework is **methodology-first**: a 12-template competitive
+trajectory catalog, a 3-axis + 2-gate audit score, an Evidence
+Math layer, an optional interpretable elastic-net prioritisation
+layer, and a tissue-to-serum *translation discipline*
+(Class A / B / C) that distinguishes direction-preserved,
+direction-inverted, and decoupled candidates. The bundled PDAC
+reference atlas is the **demonstration cohort** -- the same
+framework applies unchanged to other cancers given a per-stage
+expression model.
+
+It does **not** train a supervised biomarker classifier and ships
+no pretrained predictor. Instead, it uses a frozen, interpretable
+scoring rule and reports uncertainty, because validated
+non-circular early-detection ground truth is unavailable in PDAC
+and several adjacent cancers. The framework recovers
+**7 secondary-tier external anchor biomarkers in the top 100**
+ranked candidates (39.3x hypergeometric enrichment,
+p = 2.18e-10; LOO median 41.6x; bootstrap 95% CI [20.2, 56.3]).
 
 ## Table of contents
 
@@ -40,18 +57,50 @@ because PDAC early detection lacks robust gene-level ground truth.
 
 ## What you get
 
-- A bundled reference atlas: **10,113 genes × 113 columns**
-- A **12-template competitive trajectory catalog** with an Early × 4
-  atlas surface
-- A transparent **3-axis + 2-gate audit score**
-- Per-gene lookup, panel lookup, candidate listing, filter tracing,
-  and visualization APIs
-- User-cohort helpers for applying the same framework to new RNA or
-  protein evidence
+**Methodology (transferable to any cancer):**
 
-Core message: **a PDAC tissue biomarker is not always a serum-up
-biomarker.** Tissue signals can preserve, invert, or decouple when
-projected into serum.
+- A **12-template competitive trajectory catalog** that classifies
+  per-gene Normal->Early->Mid->Late profiles into one of 12
+  pre-declared shapes (Early x 4 + Mid x 4 + Late x 2 + Monotonic x 2)
+  by Pearson correlation against z-scored templates.
+- A transparent **3-axis + 2-gate audit score** with closed-form
+  decomposition (`explain_score()`), Monte Carlo uncertainty
+  (`propagate_uncertainty()`), and **39.3x external-anchor
+  enrichment** (hypergeometric p = 2.18e-10) on a held-out
+  evaluation set.
+- An **Evidence Math layer** (`evidence_math()`,
+  `compare_genes()`) that exposes the per-axis math values
+  (delta_rho, ‖beta‖2, RNA-protein cosine, Stouffer Z, tau
+  specificity, 7-step filter pass count) without folding them
+  into a black-box composite.
+- An **optional interpretable ML layer** (`make_evidence_features()`,
+  `score_anchor_similarity()`, `fit_user_evidence_model()` over
+  elastic net) that runs only on user-supplied labels -- no
+  pretrained classifier is shipped.
+- A **tissue-to-serum translation discipline** that classifies
+  candidates as Class A (same-direction tissue<->serum), Class B
+  (direction-inverted) or Class C (decoupled), surfaced as
+  `translation_class` in the bundled atlas.
+
+**PDAC demonstration cohort** (bundled with the package):
+
+- A pre-built reference atlas: **10,113 genes x 113 columns**
+  across 11 RNA-seq cohorts, pooled tissue proteomics, scRNA cell
+  origin, and 3 serum proteomics cohorts.
+- Per-gene lookup, panel lookup, candidate listing, filter tracing,
+  and a single-call visual canvas (`viz_gene()`).
+- A user-cohort wrapper (`project_user_cohort()`) applies the same
+  framework to a user-supplied count or intensity matrix.
+
+Core finding (PDAC demonstration): **a tissue biomarker is not
+always a serum-up biomarker.** Tissue signals can preserve,
+invert, or decouple when projected into serum. Four canonical
+case studies illustrate the four audit classes -- LGALS3BP
+(`high_confidence`), LTBP1 (`supported_uncertain`, Class B
+inverse), ALB (`penalized`, plasma-high-abundance gate), and
+GAPDH (`excluded`, housekeeping leakage gate) -- with no single
+gene treated as a flagship; each is one demonstration of how the
+framework discriminates clean signal from leaky signal.
 
 ## Install
 
@@ -91,9 +140,28 @@ data download required for scenarios 1–4.
 You have a candidate gene (e.g., `LTBP1`) and want every layer of
 evidence the atlas has on it.
 
+**Visual entry point** (recommended for clinicians and biologists --
+one call, the whole evidence picture, no per-axis function names
+required):
+
 ```r
 library(pdactrace)
 
+viz_gene("LTBP1")
+```
+
+This produces a 2x2 patchwork canvas with: per-stage trajectory
+forest (top-left), per-cohort sign-vote bar (top-right), scRNA
+cell-of-origin distribution (bottom-left), and 7-step
+tissue-to-serum filter trace (bottom-right), under a one-line
+title strip naming the matched template, audit class, and
+translation class. Pass `ncol = 1` for a vertical strip suitable
+for narrow embedding.
+
+**Text view** (for scripting, knitr reports, or when you need
+specific column values):
+
+```r
 ev <- query_gene("LTBP1")
 ev
 ```

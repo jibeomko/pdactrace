@@ -1,20 +1,28 @@
 Package: pdactrace
 Type: Package
-Title: Queryable Stage-Aware PDAC Tissue-to-Serum Biomarker Reference Atlas
-Version: 0.99.6.1
+Title: Transparent Multi-Omics Tissue-to-Serum Biomarker Translation Framework with PDAC Reference Atlas
+Version: 0.99.7
 Authors@R: c(
     person(given = "Jibeom", family = "Ko",
            email = "rhwlqja1779@gmail.com",
            role = c("aut", "cre"),
            comment = c(ORCID = "0009-0002-8630-1973")))
-Description: pdactrace exposes a stage-aware pancreatic ductal adenocarcinoma
-    (PDAC) tissue-to-serum biomarker reference atlas across bulk RNA-seq,
-    tissue proteomics, single-cell origin, and serum proteomics. The current
-    release supports deterministic lookup, transparent GraphAudit evidence
-    aggregation, external-anchor enrichment evaluation, and Monte Carlo
-    uncertainty propagation. The package does not train a supervised biomarker
-    predictor because validated non-circular PDAC early-detection ground truth
-    is not available.
+Description: pdactrace implements a transparent, deterministic
+    multi-omics framework for prioritising tissue-to-serum biomarker
+    candidates by integrating per-stage trajectory matching across
+    bulk RNA-seq, tissue proteomics, single-cell origin, and serum
+    proteomics, with explicit anchor-enrichment evaluation against
+    a curated external reference set. The framework comprises a
+    12-template competitive trajectory catalog, a 3-axis + 2-gate
+    audit score, an Evidence Math layer, an optional interpretable
+    elastic-net prioritisation layer, and a tissue-to-serum
+    translation discipline (Class A / B / C) that distinguishes
+    direction-preserved, direction-inverted, and decoupled
+    candidates. The package ships a queryable PDAC reference atlas
+    as the demonstration cohort but is methodology-first: no
+    supervised classifier is trained or shipped, because validated
+    non-circular early-detection ground truth is unavailable in
+    PDAC and several adjacent cancers.
 License: MIT + file LICENSE
 URL: https://github.com/jibeomko/pdactrace
 BugReports: https://github.com/jibeomko/pdactrace/issues
