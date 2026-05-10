@@ -35,10 +35,12 @@ It does **not** train a supervised biomarker classifier and ships
 no pretrained predictor. Instead, it uses a frozen, interpretable
 scoring rule and reports uncertainty, because validated
 non-circular early-detection ground truth is unavailable in PDAC
-and several adjacent cancers. The framework recovers
-**7 secondary-tier external anchor biomarkers in the top 100**
-ranked candidates (39.3x hypergeometric enrichment,
-p = 2.18e-10; LOO median 41.6x; bootstrap 95% CI [20.2, 56.3]).
+and several adjacent cancers. As a post-freeze evaluation-only
+sanity check, the frozen audit rule preferentially ranks
+**7 of the curated secondary-tier external anchor biomarkers in
+the top 100** candidates (39.3x hypergeometric enrichment,
+p = 2.18e-10; LOO median 41.6x; bootstrap 95% CI [20.2, 56.3]) --
+this is a sanity check, not a fully-blinded external validation.
 
 ## Table of contents
 
@@ -65,9 +67,13 @@ p = 2.18e-10; LOO median 41.6x; bootstrap 95% CI [20.2, 56.3]).
   by Pearson correlation against z-scored templates.
 - A transparent **3-axis + 2-gate audit score** with closed-form
   decomposition (`explain_score()`), Monte Carlo uncertainty
-  (`propagate_uncertainty()`), and **39.3x external-anchor
-  enrichment** (hypergeometric p = 2.18e-10) on a held-out
-  evaluation set.
+  (`propagate_uncertainty()`), and a post-freeze evaluation-only
+  sanity check showing **39.3x anchor enrichment**
+  (hypergeometric p = 2.18e-10; LOO median 41.6x; bootstrap 95%
+  CI [20.2, 56.3]) -- the curated anchor set was frozen before
+  audit parameters were finalised, but anchor selection and
+  framework design share domain expert input, so this is a
+  sanity check rather than fully-blinded external validation.
 - An **Evidence Math layer** (`evidence_math()`,
   `compare_genes()`) that exposes the per-axis math values
   (delta_rho, ‖beta‖2, RNA-protein cosine, Stouffer Z, tau
@@ -833,8 +839,15 @@ propagate_uncertainty(c("LGALS3BP", "SERPINA1", "GAPDH"))
 anchor_enrichment(top_n = 100, tier = "secondary")
 ```
 
-The frozen audit rule recovers **7 secondary-tier external anchors
-in the top 100** (`39.3×`, hypergeometric `p = 2.18e-10`).
+As an evaluation-only sanity check, the frozen audit rule
+preferentially ranks **7 of the curated secondary-tier external
+anchors into the top 100** (`39.3x`, hypergeometric
+`p = 2.18e-10`). This is post-freeze (the anchor set was
+finalised before audit parameters), but the curators of the
+anchor set and the framework overlap, so the result is best
+interpreted as a sanity check rather than fully-blinded
+external validation. A held-out PDAC cohort run is planned for
+v1.0.
 
 ## Why these specific cutoffs?
 

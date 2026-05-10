@@ -93,9 +93,11 @@ model_card <- function(source = c("anchor_similarity", "user_model"),
       "evaluate_anchor_enrichment() in the post-hoc evaluator. ",
       "If you also use this similarity score for ranking you must ",
       "report enrichment computed on a held-out anchor split."),
-    validation_summary       = paste0(
-      "T1_validated anchors should land in the top decile by ",
-      "anchor_similarity (verified by test-anchor-similarity.R)."),
+    sanity_check_summary     = paste0(
+      "T1_validated anchors land in the top decile by ",
+      "anchor_similarity in the bundled atlas (post-freeze ",
+      "sanity check, not fully-blinded external validation; ",
+      "verified by test-anchor-similarity.R)."),
     limitations              = c(
       "Single bundled anchor table (n=30) limits centroid stability.",
       "Equal weighting per feature; no learned feature weights.",
@@ -152,7 +154,7 @@ model_card <- function(source = c("anchor_similarity", "user_model"),
            "n_features", "n_train", "n_positives",
            "cv_auc_mean", "cv_auc_sd",
            "alpha", "lambda_min", "seed",
-           "leakage_controls", "validation_summary",
+           "leakage_controls", "sanity_check_summary",
            "top_pos", "top_neg",
            "limitations")
   for (k in ord) {

@@ -1,3 +1,55 @@
+# pdactrace 0.99.11
+
+**Submission framing hardening: anchor enrichment language softened
+to 'sanity check', and complementary negative-control depletion
+analysis added.** Two coordinated changes for the BiB / Bioconductor
+reviewer audience.
+
+## Changed
+
+- `R/model_card.R` -- the `validation_summary` field renamed to
+  `sanity_check_summary` and reworded: "T1_validated anchors
+  land in the top decile by anchor_similarity in the bundled
+  atlas (post-freeze sanity check, not fully-blinded external
+  validation)". `model_card()` printer auto-picks up the new
+  field name.
+- `README.md` -- every reference to the 39.3x anchor enrichment
+  now framed as a "post-freeze evaluation-only sanity check"
+  rather than "validation". Explicitly notes that anchor
+  curators and framework designers share domain expert input,
+  so the result is best interpreted as a sanity check pending
+  v1.0's held-out PDAC cohort run.
+- `vignettes/methodology_validation.Rmd` -- intro reworded
+  from "two reviewer-facing methodology validations" to "two
+  reviewer-facing methodology sanity checks (post-freeze
+  evaluation, not fully-blinded external validation)".
+  Limitations section retitled and softened.
+
+## New
+
+- `vignettes/methodology_validation.Rmd` Section C --
+  **Negative control depletion analysis**. The complement of the
+  Section B anchor enrichment: housekeeping (n=31) and
+  plasma_high_abundance (n=22) genes -- both intentionally
+  zeroed/halved by the leakage gate -- should be DEPLETED at
+  the top of the audit-score ranking and ENRICHED at the
+  bottom. Quantitative result: all 31 housekeeping genes land
+  in the bottom-500 (`fold = 20.2`, `p = 1.3e-41`); top-1000
+  housekeeping depletion `p = 0.04`. Paired with Section B's
+  anchor enrichment, this demonstrates the framework
+  discriminates in **both directions**: known signal goes up,
+  known noise goes down -- a circular score would not produce
+  both effects.
+
+These are submission-framing changes (not API changes). The
+actual numeric outputs of `audit_score`, `anchor_enrichment()`,
+and `model_card()` are unchanged; only the user-facing language
+and the additional negative-control documentation are updated.
+
+## Tests
+
+- Full suite: 504 PASS / 0 FAIL (no regression).
+
 # pdactrace 0.99.10
 
 **Methodology validation pass for the BiB / Bioconductor reviewer

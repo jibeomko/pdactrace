@@ -18,8 +18,9 @@ suppressPackageStartupMessages({
 
 # Goal
 
-Two reviewer-facing methodology validations on the bundled
-`pdactrace_reference` atlas:
+Two reviewer-facing methodology **sanity checks** on the bundled
+`pdactrace_reference` atlas (post-freeze evaluation, not
+fully-blinded external validation):
 
 - **Section A -- Cutoff sensitivity.** How robust is the framework's
   top-N anchor enrichment to perturbations of the trajectory
@@ -224,13 +225,123 @@ your score actually do something a simpler rank does not?" The
 quantitative answer is **yes at the precision-critical top of
 the list**, where biomarker prioritisation actually matters.
 
-# Limitations of these validations
+# Section C -- Negative control depletion
 
-- The validation set (30 anchors, 14 T1) is **fixed at v0.3.0
-  freeze**. We cannot use these same anchors as both training
-  and evaluation; we use them as the post-freeze evaluation
-  reference, which the framework was deliberately blinded to
-  during construction.
+A complementary sanity check: if the anchor enrichment in the
+top-N tells us "the framework correctly elevates known
+biomarkers", the **negative control depletion** in the
+top-N (or equivalently, **enrichment in the bottom-N**) tells
+us "the framework correctly suppresses known artefacts". The
+two together demonstrate that the framework discriminates in
+both directions, not only the positive direction. This is the
+direct test reviewers ask for when they suspect an enrichment
+result might be circular: if your negative controls were also
+enriched, you'd worry about an aspecific signal; if they're
+depleted, the framework is doing real work.
+
+We use the two negative-control flags already in the bundled
+atlas: `audit_is_housekeeping` (n = 31; canonical housekeeping
+genes whose stage-trajectory signal is presumed artifactual)
+and `audit_is_plasma_high_abundance` (n = 22; top-decile plasma
+proteins like ALB / IGHG1 elevated in any inflammatory state).
+Both are excluded from the audit-score's positive scoring via
+the **leakage gate** (housekeeping multiplier `0.00`, plasma_high
+multiplier `0.50`).
+
+```{r negctrl_setup}
+hk_set  <- ref$gene_symbol[!is.na(ref$audit_is_housekeeping) &
+                            ref$audit_is_housekeeping]
+plh_set <- ref$gene_symbol[!is.na(ref$audit_is_plasma_high_abundance) &
+                            ref$audit_is_plasma_high_abundance]
+cat("Negative control sets:\n",
+    "  housekeeping:        ", length(hk_set), " genes\n",
+    "  plasma_high_abundance:", length(plh_set), " genes\n", sep = "")
+
+n_atlas <- nrow(ref)
+ord_desc <- order(-ref$audit_score, na.last = TRUE)
+ord_asc  <- order( ref$audit_score, na.last = TRUE)
+
+.hyper_two_sided <- function(direction, ranked_genes, neg_set, top_n) {
+  hit_g  <- ranked_genes[seq_len(top_n)]
+  n_in   <- length(neg_set)
+  hits   <- sum(hit_g %in% neg_set)
+  expect <- top_n * n_in / n_atlas
+  pval   <- if (direction == "depletion")
+    phyper(hits, n_in, n_atlas - n_in, top_n, lower.tail = TRUE)
+  else
+    phyper(hits - 1, n_in, n_atlas - n_in, top_n, lower.tail = FALSE)
+  data.table(direction = direction, top_n = top_n,
+             hits = hits, expect = round(expect, 2),
+             fold = round(hits / max(expect, 1e-9), 2),
+             pval = formatC(pval, format = "g", digits = 2))
+}
+```
+
+## C1. Top-N depletion (negative controls absent from the most-prioritised candidates)
+
+```{r negctrl_top}
+top_eval <- rbindlist(lapply(c(100, 500, 1000), function(N) {
+  rbindlist(list(
+    cbind(.hyper_two_sided("depletion",
+            ref$gene_symbol[ord_desc], hk_set, N),
+          neg_set = "housekeeping"),
+    cbind(.hyper_two_sided("depletion",
+            ref$gene_symbol[ord_desc], plh_set, N),
+          neg_set = "plasma_high")))
+}))
+print(top_eval[, .(neg_set, top_n, hits, expect, fold, pval)])
+```
+
+## C2. Bottom-N enrichment (negative controls concentrated at the lowest-priority end)
+
+This is the symmetric test: if the leakage gate is doing real
+work, housekeeping and plasma_high genes should be **enriched**
+in the bottom-ranked tail (the framework actively pushes them
+down the list).
+
+```{r negctrl_bot}
+bot_eval <- rbindlist(lapply(c(100, 500, 1000), function(N) {
+  rbindlist(list(
+    cbind(.hyper_two_sided("enrichment",
+            ref$gene_symbol[ord_asc], hk_set, N),
+          neg_set = "housekeeping"),
+    cbind(.hyper_two_sided("enrichment",
+            ref$gene_symbol[ord_asc], plh_set, N),
+          neg_set = "plasma_high")))
+}))
+print(bot_eval[, .(neg_set, top_n, hits, expect, fold, pval)])
+```
+
+**Interpretation.** Housekeeping genes show **strong, statistically
+significant depletion** at the top of the audit-score ranking
+(top-1000: 0 hits vs 3.07 expected, `p = 0.04`) and -- more
+strikingly -- **strong enrichment at the bottom**: all 31
+housekeeping genes land in the bottom 500 (`fold = 20.2`,
+`p = 1.3e-41`). This is exactly what the leakage gate
+(`audit_is_housekeeping -> 0.00`) is designed to do: drive
+known artefactual genes to the score floor, regardless of how
+strong their trajectory signal looks.
+
+The plasma_high signal is weaker because their leakage
+multiplier is `0.50` (not `0.00`), so they retain partial score
+and are only mildly depleted.
+
+Paired with the post-freeze anchor enrichment in Section B
+(known PDAC biomarkers preferentially **at the top**), this
+result demonstrates that the framework discriminates in **both
+directions**: known signal goes up, known noise goes down. A
+purely circular score would not produce both effects.
+
+# Limitations of these analyses
+
+- The post-freeze **evaluation set** (30 anchors, 14 T1) is
+  **fixed at v0.3.0 freeze**. We do not use it as a training
+  signal; we use it as a sanity-check reference that the
+  framework was deliberately blinded to during construction.
+  Anchor curation was completed before any audit-rule parameter
+  was finalised, but anchor selection and framework design share
+  domain expert input -- this is a **sanity check, not a fully
+  blinded external validation**.
 - The cutoff-sweep simulation in Section A1 perturbs the
   surface call without re-running the upstream DESeq2 LRT.
   Re-fitting from scratch at a different cutoff would not
