@@ -52,7 +52,7 @@ PDAC-specific.
 ```r
 # install.packages("remotes")
 
-# Development version from GitHub once the repository is public
+# Development version from GitHub
 remotes::install_github("jibeomko/pdactrace")
 
 # From a local checkout
