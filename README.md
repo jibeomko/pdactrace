@@ -9,11 +9,6 @@
 [![Bioconductor](https://img.shields.io/badge/Bioconductor-submission%20in%20preparation-lightgrey.svg)](https://www.bioconductor.org/)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20076698.svg)](https://doi.org/10.5281/zenodo.20076698)
 
-<p align="center">
-  <img src="man/figures/pdactrace_overview.jpg" width="900"
-       alt="pdactrace workflow: staged omics evidence (RNA, protein, scRNA, serum, user cohort) → 12-template trajectory matching → Early-onset atlas surface → multi-layer evidence integration → 3-axis + 2-gate reference score, TRACE-D, claim tiers, and robustness audits → user outputs (query_gene, explain_score, classify_claim_tier, trace_filters, project_user_cohort). Transparent claim auditing, not a supervised diagnostic classifier.">
-</p>
-
 `pdactrace` is a **stage-aware PDAC multi-omics atlas and
 deterministic biomarker claim-audit framework**. It separates a
 stage-aware tissue signal from the stronger claim that a molecule is
@@ -46,6 +41,11 @@ logic could be reused for other cancers given an analogous
 per-stage expression atlas, but the demonstrated value, the
 curated external anchor set, and the validation work are all
 PDAC-specific.
+
+<p align="center">
+  <img src="man/figures/pdactrace_overview.jpg" width="900"
+       alt="pdactrace workflow: staged omics evidence (RNA, protein, scRNA, serum, user cohort) → 12-template trajectory matching → Early-onset atlas surface → multi-layer evidence integration → 3-axis + 2-gate reference score, TRACE-D, claim tiers, and robustness audits → user outputs (query_gene, explain_score, classify_claim_tier, trace_filters, project_user_cohort). Transparent claim auditing, not a supervised diagnostic classifier.">
+</p>
 
 ## Install
 
