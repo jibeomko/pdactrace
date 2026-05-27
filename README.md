@@ -4,7 +4,7 @@
 > framework for tissue-to-blood biomarker evidence.
 
 [![R-CMD-check](https://github.com/jibeomko/pdactrace/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/jibeomko/pdactrace/actions/workflows/R-CMD-check.yaml)
-[![Version](https://img.shields.io/github/v/release/jibeomko/pdactrace?include_prereleases&sort=semver&label=version&color=blue)](https://github.com/jibeomko/pdactrace/releases)
+[![Version](https://img.shields.io/github/v/tag/jibeomko/pdactrace?sort=semver&label=version&color=blue)](https://github.com/jibeomko/pdactrace/tags)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Bioconductor](https://img.shields.io/badge/Bioconductor-submission%20in%20preparation-lightgrey.svg)](https://www.bioconductor.org/)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20076698.svg)](https://doi.org/10.5281/zenodo.20076698)
@@ -591,7 +591,7 @@ and will allow lazy on-demand access via
 If you use `pdactrace`, please cite the software via its Zenodo DOI:
 
 > Ko, J. (2026). *pdactrace: Stage-Aware PDAC Atlas and Tissue-to-Blood
-> Biomarker Claim-Audit Framework* (v0.99.18) [Software]. Zenodo.
+> Biomarker Claim-Audit Framework* (v0.99.19) [Software]. Zenodo.
 > [10.5281/zenodo.20076698](https://doi.org/10.5281/zenodo.20076698)
 
 ```bibtex
@@ -600,7 +600,7 @@ If you use `pdactrace`, please cite the software via its Zenodo DOI:
   title        = {{pdactrace: Stage-Aware PDAC Atlas and
                    Tissue-to-Blood Biomarker Claim-Audit Framework}},
   year         = 2026,
-  version      = {v0.99.18},
+  version      = {v0.99.19},
   publisher    = {Zenodo},
   doi          = {10.5281/zenodo.20076698},
   url          = {https://doi.org/10.5281/zenodo.20076698}

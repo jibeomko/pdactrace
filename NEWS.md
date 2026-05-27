@@ -1,3 +1,37 @@
+# pdactrace 0.99.19
+
+**BiB-facing claim-audit release.** This release reframes pdactrace
+from a scalar biomarker prioritisation package into a deterministic
+stage-aware PDAC atlas and tissue-to-blood biomarker claim-audit
+framework.
+
+## Added
+
+- `classify_claim_tier()` and `summarize_translation_gap()` separate
+  tissue dysregulation from stronger blood-biomarker claims.
+- `compute_trace_d()` implements TRACE-D in strict mode, with an
+  explicit `legacy_translation = "fallback"` compatibility mode for
+  historical `translation_class` annotations.
+- `run_weight_robustness()`, `compute_pareto_class()`,
+  `compute_pareto_layers()`, and `evaluate_pareto_stability()` audit
+  whether candidates depend on one arbitrary 3-axis weight vector.
+
+## Changed
+
+- README, DESCRIPTION, and CITATION now use the claim-audit framing:
+  stage-aware tissue evidence is not treated as validated blood
+  biomarker evidence unless serum observability, direction concordance,
+  and confounding checks support that stronger claim.
+- The GitHub version badge now follows semantic tags rather than
+  GitHub Releases, so package-version display remains correct for
+  lightweight tagged development releases.
+
+## Tests
+
+- Added focused tests for claim tiers, TRACE-D strict/fallback
+  behaviour, weight robustness, and Pareto support.
+- `R CMD check --no-manual` passes with rebuilt vignettes.
+
 # pdactrace 0.99.18
 
 **`viz_gene()` default flips to multi-page (`layout = "split"`).**

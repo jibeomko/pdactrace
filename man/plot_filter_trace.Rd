@@ -23,7 +23,7 @@ A \code{ggplot2} object (or \code{patchwork} composite if
 \description{
 For each gene, draws the 7-step phase60 filter trail (filled =
 pass, open = fail, grey = not evaluated) with two extra layers
-that the v0.99.6 baseline lacked:
+that the original filter-trace view lacked:
 }
 \details{
 \itemize{

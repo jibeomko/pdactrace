@@ -75,7 +75,7 @@ fit_user_evidence_model <- function(features,
          call. = FALSE)
   }
   if (!identical(method, "elastic_net")) {
-    stop("Only `method = 'elastic_net'` is supported in v0.99.6.",
+    stop("Only `method = 'elastic_net'` is currently supported.",
          call. = FALSE)
   }
   if (is.null(labels)) {
