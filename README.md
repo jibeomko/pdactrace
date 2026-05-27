@@ -609,9 +609,8 @@ If you use `pdactrace`, please cite the software via its Zenodo DOI:
 }
 ```
 
-The accompanying *Briefings in Bioinformatics* manuscript
-reference will be added once the preprint or journal DOI is
-available.
+The accompanying manuscript reference will be added once the
+preprint or journal DOI is available.
 
 # License
 
