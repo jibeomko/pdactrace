@@ -32,7 +32,7 @@ biocViews: Software, BiomedicalInformatics, Classification,
 Encoding: UTF-8
 LazyData: false
 Depends:
-    R (>= 4.5.0)
+    R (>= 4.6.0)
 Imports:
     data.table,
     ggplot2,
