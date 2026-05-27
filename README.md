@@ -1,7 +1,7 @@
 # pdactrace
 
-> Stage-aware PDAC multi-omics atlas and transparent evidence-audit
-> framework for tissue-to-serum biomarker prioritization.
+> Stage-aware PDAC multi-omics atlas and deterministic claim-audit
+> framework for tissue-to-blood biomarker evidence.
 
 [![R-CMD-check](https://github.com/jibeomko/pdactrace/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/jibeomko/pdactrace/actions/workflows/R-CMD-check.yaml)
 [![Version](https://img.shields.io/github/v/release/jibeomko/pdactrace?include_prereleases&sort=semver&label=version&color=blue)](https://github.com/jibeomko/pdactrace/releases)
@@ -11,19 +11,25 @@
 
 <p align="center">
   <img src="man/figures/pdactrace_overview.jpg" width="900"
-       alt="pdactrace workflow: staged omics evidence (RNA, protein, scRNA, serum, user cohort) → 12-template trajectory matching → Early-onset atlas surface → multi-layer evidence integration → 3-axis + 2-gate audit scoring → user outputs (query_gene, explain_score, compare_candidates, trace_filters, project_user_cohort). Transparent prioritization, not a supervised diagnostic classifier.">
+       alt="pdactrace workflow: staged omics evidence (RNA, protein, scRNA, serum, user cohort) → 12-template trajectory matching → Early-onset atlas surface → multi-layer evidence integration → 3-axis + 2-gate reference score, TRACE-D, claim tiers, and robustness audits → user outputs (query_gene, explain_score, classify_claim_tier, trace_filters, project_user_cohort). Transparent claim auditing, not a supervised diagnostic classifier.">
 </p>
 
-`pdactrace` is a **transparent, deterministic multi-omics framework**
-for prioritising tissue-to-serum biomarker candidates. It integrates
-per-stage trajectory matching across bulk RNA-seq, tissue
-proteomics, single-cell origin, and serum proteomics under a
-**12-template competitive trajectory catalog**, a **3-axis + 2-gate
-audit score** (closed-form, deterministic), an **Evidence Math
-layer** that exposes the per-axis math values rather than folding
-them into a black box, and a **tissue-to-serum translation
-discipline** (Class A/B/C) that distinguishes direction-preserved,
-direction-inverted, and decoupled candidates.
+`pdactrace` is a **stage-aware PDAC multi-omics atlas and
+deterministic biomarker claim-audit framework**. It separates a
+stage-aware tissue signal from the stronger claim that a molecule is
+blood-observable, directionally concordant, and disease-context
+specific. The package integrates bulk RNA-seq, tissue proteomics,
+single-cell origin, serum proteomics, and pancreatitis context under
+a **12-template competitive trajectory catalog**, a **3-axis +
+2-gate audit score**, an **Evidence Math layer**, **TRACE-D**
+(tissue-to-serum directional evidence concordance), explicit
+**claim tiers**, and weight-robustness / Pareto audit utilities.
+
+The package deliberately treats "PDAC tissue marker", "exportable
+protein", "serum-observed signal", and "serum-concordant biomarker
+claim" as different levels of evidence. A high tissue score is not
+reported as a validated blood biomarker unless the serum and
+confounding evidence support that stronger claim.
 
 It does **not** train a supervised biomarker classifier and ships
 no pretrained predictor — validated non-circular early-detection
@@ -45,7 +51,13 @@ PDAC-specific.
 
 ```r
 # install.packages("remotes")
+
+# Development version from GitHub once the repository is public
 remotes::install_github("jibeomko/pdactrace")
+
+# From a local checkout
+remotes::install_local(".")
+
 library(pdactrace)
 atlas_provenance()
 ```
@@ -64,13 +76,22 @@ viz_gene("LTBP1")
 # 2. Plain-English audit-score decomposition
 explain_score("LTBP1")
 
-# 3. Per-axis math (delta_rho, ‖β‖₂, RNA-protein cosine, Stouffer Z, ...)
-explain_gene("LTBP1", view = "math")
+# 3. Claim-tier audit: tissue signal vs stronger blood-biomarker claim
+classify_claim_tier(genes = c("LGALS3BP", "LTBP1", "ALB", "GAPDH"))
+summarize_translation_gap()
 
-# 4. Side-by-side panel comparison
-compare_candidates(c("LGALS3BP", "LTBP1", "SERPINA1", "ALB", "GAPDH"))
+# 4. TRACE-D strict algorithm and compatibility fallback
+strict_trace <- compute_trace_d(legacy_translation = "strict")
+strict_trace[gene_symbol %in% c("C9", "IGFBP2")]
 
-# 5. Project your own stage-aware cohort through the framework
+fallback_trace <- compute_trace_d(legacy_translation = "fallback")
+fallback_trace[gene_symbol %in% c("LGALS3BP", "LTBP1")]
+
+# 5. Weight sensitivity and weight-free Pareto support
+run_weight_robustness(genes = c("LGALS3BP", "LTBP1"), n_draws = 200)
+compute_pareto_class(genes = c("LGALS3BP", "LTBP1"))
+
+# 6. Project your own stage-aware cohort through the framework
 res <- project_user_cohort(rna = my_counts, coldata = my_cd,
                             stage_col = "stage", cohort_col = "cohort")
 ```
@@ -82,11 +103,25 @@ res <- project_user_cohort(rna = my_counts, coldata = my_cd,
 - **12-template competitive trajectory catalog** — Early × 4 +
   Mid × 4 + Late × 2 + Monotonic × 2; only Early × 4 are surfaced
   in `rna_pattern`, the other 8 act as negative-evidence pool.
-- **3-axis + 2-gate audit score** — `evidence_strength` +
+- **3-axis + 2-gate reference score** — `evidence_strength` +
   `biological_coherence` + `translational_relevance`, multiplied
   by `leakage_gate × heterogeneity_gate`. Closed-form
   decomposition via `explain_score()`; Monte Carlo rank stability
   via `propagate_uncertainty()`.
+- **Claim-tier audit** — `classify_claim_tier()` separates
+  `serum_concordant`, `serum_observed`, `exportable_plausible`,
+  `translation_unknown`, `confounded`, `excluded`, and
+  `insufficient_tissue_evidence` rather than forcing every gene
+  into a single candidate/non-candidate label.
+- **TRACE-D translation algorithm** — `compute_trace_d()` assigns
+  A/B/C tissue-to-serum direction classes in strict mode using
+  measured serum log2FC. The optional `legacy_translation =
+  "fallback"` mode preserves historical `translation_class`
+  annotations for backward-compatible reporting.
+- **Weight robustness and Pareto support** —
+  `run_weight_robustness()` samples plausible 3-axis weight
+  vectors, while `compute_pareto_class()` and
+  `compute_pareto_layers()` provide a weight-free support check.
 - **Evidence Math layer** — `evidence_math()` and `compare_genes()`
   expose per-axis values (delta_rho, ‖β‖₂, RNA-protein cosine,
   Stouffer Z, tau specificity, 7-step filter pass count) without
@@ -95,9 +130,6 @@ res <- project_user_cohort(rna = my_counts, coldata = my_cd,
   `make_evidence_features()`, `score_anchor_similarity()`,
   `fit_user_evidence_model()` (elastic net). Runs only on
   user-supplied labels; no pretrained classifier shipped.
-- **Tissue-to-serum translation discipline** — Class A
-  (same-direction tissue↔serum), Class B (inverted), Class C
-  (decoupled), surfaced as `translation_class`.
 
 **PDAC demonstration cohort** (bundled with the package):
 
@@ -107,15 +139,17 @@ res <- project_user_cohort(rna = my_counts, coldata = my_cd,
 - Per-gene lookup, panel comparison, filter tracing, single-call
   visual canvas (`viz_gene()`), and a user-cohort wrapper
   (`project_user_cohort()`).
-- Four canonical case studies illustrate the four audit classes:
-  LGALS3BP (`high_confidence`), LTBP1 (`supported_uncertain`,
-  Class B inverse), ALB (`penalized`, plasma-high gate), GAPDH
-  (`excluded`, housekeeping gate). No single gene is treated as
-  a flagship.
+- Four canonical case studies illustrate both score classes and
+  claim tiers: LGALS3BP (`serum_concordant`), LTBP1
+  (`serum_observed`, Class B inverse), ALB (`confounded`,
+  plasma-high gate), and GAPDH (`excluded`, housekeeping gate).
+  No single gene is treated as a flagship.
 
-**Core finding:** *a tissue biomarker is not always a serum-up
-biomarker.* Tissue signals can preserve, invert, or decouple when
-projected into serum.
+**Core finding:** *a stage-aware tissue biomarker claim and a
+blood-biomarker claim are not equivalent.* Tissue signals can
+preserve, invert, or decouple when projected into serum, and some
+serum-observed signals are confounded by plasma abundance or shared
+inflammation.
 
 # Step-by-step walkthrough
 
@@ -141,7 +175,7 @@ open the panels become six pages. Pass `layout = "compact"` for
 the single-page 2×3 patchwork composite (legacy embedding mode).
 See `vignette("lookup_basics")`.
 
-## Scenario 2 — Understand *why* a gene got its score
+## Scenario 2 — Understand *why* a gene got its score and claim tier
 
 The audit score is a frozen, deterministic weighted sum:
 
@@ -153,22 +187,29 @@ audit_score    = positive_score * leakage_gate * heterogeneity_gate
 ```
 
 ```r
-explain_score("LTBP1")       # plain-English decomposition
+explain_score("LTBP1")       # plain-English score decomposition
 evidence_math("LTBP1")       # per-axis math values
 explain_gene("LTBP1", view = "math")     # math-only print
+classify_claim_tier(genes = c("LGALS3BP", "LTBP1", "ALB", "GAPDH"))
+strict_trace <- compute_trace_d(legacy_translation = "strict")
+strict_trace[gene_symbol %in% c("C9", "IGFBP2")]
+run_weight_robustness(genes = c("LGALS3BP", "LTBP1"), n_draws = 200)
+compute_pareto_class(genes = c("LGALS3BP", "LTBP1"))
 compare_genes(c("LGALS3BP", "LTBP1"), wide = TRUE)
 plot_filter_trace("LTBP1")   # 7-step tissue-to-serum filter
 ```
 
-`explain_score()` reports the audit class with the contributing
-axes and gates. `evidence_math()` is the pure-data accessor for
-the per-axis math (no formatting). See
+`explain_score()` reports the reference score with the contributing
+axes and gates. `classify_claim_tier()` then asks the stricter
+question: what level of blood-biomarker claim is actually supported?
+`run_weight_robustness()` and `compute_pareto_class()` show whether a
+candidate depends on one arbitrary weight vector. See
 `vignette("audit_case_studies")`.
 
 ### Optional: interpretable ML prioritization
 
 For callers who want a continuous ML-flavoured prioritisation
-signal, v0.99.6 ships an opt-in interpretable layer. Three design
+signal, pdactrace ships an opt-in interpretable layer. Three design
 constraints: no deep learning, no pretrained classifier, per-axis
 interpretability preserved.
 
@@ -267,10 +308,10 @@ audit <- compute_audit_score(evidence = ev)
 `SummarizedExperiment`. See `vignette("user_cohort_extension")`
 for the TNM/AJCC mapping table and worked examples.
 
-# Audit scoring rule
+# Audit scoring, weights, and claim support
 
-The frozen v0.3.0 audit rule combines three weighted evidence
-axes and two reliability gates:
+The deterministic audit score is a reference ordering over three
+evidence axes and two reliability gates:
 
 ```text
 positive_score = 0.40 * evidence_strength
@@ -279,9 +320,14 @@ positive_score = 0.40 * evidence_strength
 audit_score    = positive_score * leakage_gate * heterogeneity_gate
 ```
 
-Deterministic given (gene, atlas). Monte Carlo summaries via
-`propagate_uncertainty()` report rank stability. External anchors
-are used for **post-freeze evaluation only**, never for training.
+Deterministic given (gene, atlas). This scalar score is useful for
+ranking and decomposition, but it is not treated as the final
+blood-biomarker claim. Claim strength is reported separately with
+`classify_claim_tier()`, strict tissue-to-serum direction evidence is
+reported with `compute_trace_d(legacy_translation = "strict")`, and
+weight dependence is audited with `run_weight_robustness()` plus
+Pareto support. External anchors are used for **post-freeze
+evaluation only**, never for training.
 
 | Audit label | Typical meaning |
 |---|---|
@@ -298,8 +344,28 @@ anchor_enrichment(top_n = 100, tier = "secondary")
 #> 7 hits in top 100, 39.3× enrichment, hypergeometric p = 2.18e-10
 ```
 
-## Why these specific cutoffs?
+## How weights and cutoffs are handled
 
+pdactrace does not claim that `0.40 / 0.35 / 0.25` is the unique
+biologically optimal weight vector. The frozen score is an
+interpretable reference score; manuscript-facing conclusions should
+be checked against weight-space stability, Pareto support, TRACE-D,
+and claim tiers.
+
+- **Reference weights (`0.40 / 0.35 / 0.25`).** These keep the
+  three axes on a closed `[0, 1]` scale and encode the default
+  assumption that layer support is the limiting bottleneck in PDAC
+  biomarker evidence. They are a declared operating point, not a
+  learned or optimized truth.
+- **Weight-space robustness.** `run_weight_robustness()` samples
+  plausible 3-axis weights on the simplex and reports how often a
+  gene remains in top-N sets. A candidate that only survives under
+  the default vector should be described as weight-sensitive.
+- **Weight-free Pareto support.** `compute_pareto_layers()` and
+  `compute_pareto_class()` ask whether a gene is non-dominated
+  across the three evidence axes after gate filtering. This is the
+  reviewer-facing answer to the question "is this ranking just a
+  consequence of scalar weights?"
 - **Trajectory cutoff (`rho_cutoff = 0.85`).** Four-point
   z-scored profiles crowd toward 1, so 0.85 still requires the
   gene's shape to closely follow one specific template.
@@ -307,25 +373,21 @@ anchor_enrichment(top_n = 100, tier = "secondary")
   stringency. The `methodology_validation` vignette sweeps
   `rho_cutoff ∈ {0.80, 0.85, 0.90}` and confirms top-100 anchor
   enrichment is robust.
-- **Three-axis weights (`0.40 / 0.35 / 0.25`).** Reflects the
-  practical bottleneck: layer presence is the limiting factor in
-  PDAC biomarker discovery (many genes have RNA but no serum
-  data). Weights sum to 1.0 so `positive_score ∈ [0, 1]`.
-  Sensitivity sweep is in the validation vignette (Section B).
 - **Leakage gate.** housekeeping flag → `0.00` (housekeeping is
   invariant by definition; trajectory signal is artefactual);
   plasma_high_abundance flag → `0.50` (top-decile plasma proteins
   inflate in any inflammation, not PDAC-specific); neither →
   `1.00`.
 - **Heterogeneity gate.** Higgins-Thompson I² adapted to the
-  v0.3.0 audit experiment: `< 70%` → `1.00`; `70–90%` → `0.70`;
+  audit experiment: `< 70%` → `1.00`; `70–90%` → `0.70`;
   `≥ 90%` → `0.30`. Caps the Stouffer significance inflation
   that arises from partially overlapping cohorts (e.g.
   TCGA-PAAD and CPTAC-PDAC share donors).
-- **Audit class boundaries.** `audit_score ≥ 0.5` →
+- **Score class boundaries.** `audit_score ≥ 0.5` →
   `high_confidence`; `≥ 0.3` → `supported_uncertain`; below 0.3
   and not gate-zeroed → `low`. Gate-zeroed genes are `excluded`
-  (leakage = 0) or `penalized` (leakage = 0.5).
+  (leakage = 0) or `penalized` (leakage = 0.5). These score
+  classes are separate from blood-biomarker claim tiers.
 - **Effect-size threshold (`0.585 = log2(1.5)`).** 1.5-fold
   change is the default "meaningfully detectable" effect size in
   bulk RNA-seq + proteomics literature; used by the
@@ -409,8 +471,10 @@ plot_gene_template("LTBP1",    layer = "rna")
 
 `pdactrace_reference` is a `data.table`: 10,113 genes × 113
 columns (RNA trajectory, tissue protein, scRNA cell-origin, serum
-translation, pancreatitis context, audit scores, uncertainty
-summaries, provenance).
+translation annotations, pancreatitis context, audit scores,
+uncertainty summaries, provenance). TRACE-D, claim-tier, and
+Pareto outputs are computed on demand; data-raw helper scripts can
+attach those derived columns when a frozen derived atlas is needed.
 
 | Object | Role |
 |---|---|
@@ -427,12 +491,13 @@ summaries, provenance).
 
 For every function, `?function_name` opens the full Rd page with
 arguments, return shape, and a runnable example. Grouped summary
-of the 59 exports:
+of the main user-facing exports:
 
 | Role | Functions |
 |---|---|
 | **Lookup** | `query_gene`, `query_gene_detailed`, `query_panel`, `list_candidates`, `summarize_gene_evidence`, `case_study`, `format_provenance`, `list_atlas_metadata`, `atlas_provenance`, `list_data_sources` |
 | **Audit score** | `compute_audit_score`, `explain_score`, `propagate_uncertainty`, `evaluate_anchor_enrichment` (alias `anchor_enrichment`), `evidence_math`, `explain_gene`, `compare_genes`, `compare_candidates`, `build_evidence_graph`, `extract_graph_features` |
+| **Claim audit + robustness** | `classify_claim_tier`, `summarize_translation_gap`, `compute_trace_d`, `run_weight_robustness`, `compute_pareto_class`, `compute_pareto_layers`, `evaluate_pareto_stability` |
 | **Optional ML layer** | `make_evidence_features`, `score_anchor_similarity`, `fit_user_evidence_model`, `predict_user_evidence_model`, `explain_user_evidence_model`, `model_card` |
 | **Trajectory + user cohort** | `fit_stage_de`, `fit_stage_de_protein`, `classify_trajectory`, `classify_protein_trajectory` (alias `classify_prot_trajectory`), `score_trajectory`, `align_patient_profile` (alias `align_patient`), `assemble_user_evidence`, `project_user_cohort`, `project_user_serum_cohort`, `early_pattern_names` (alias `early_patterns`), `mid_pattern_names_excluded` (alias `mid_patterns`) |
 | **Filter audit** | `trace_filters`, `plot_filter_trace`, `plot_filter_diagnostics` |
@@ -461,6 +526,14 @@ size.
 - **Held-out RNA-only baseline does not recover anchor
   enrichment** — multi-layer evidence is required (see
   Projection stress test above).
+- **Tissue evidence is not blood validation.** Claim tiers keep
+  tissue dysregulation, exportability, serum observability,
+  direction concordance, and confounding risk separate.
+- **Strict TRACE-D is the official algorithm.** The
+  `legacy_translation = "fallback"` mode exists for compatibility
+  with the historical atlas `translation_class` column and should
+  be described as an annotation fallback, not as additional serum
+  evidence.
 - **No supervised classifier shipped.** All ML is opt-in and
   user-trained on user-supplied labels; the package distributes
   no pretrained predictor.
@@ -473,6 +546,7 @@ vignette("audit_case_studies",       package = "pdactrace")
 vignette("audit_framework",          package = "pdactrace")
 vignette("user_cohort_extension",    package = "pdactrace")
 vignette("methodology_validation",   package = "pdactrace")
+vignette("cross_cancer_demonstration", package = "pdactrace")
 vignette("reproducibility",          package = "pdactrace")
 ```
 
@@ -495,7 +569,7 @@ Four reproducibility layers (full walkthrough in
   `project_user_cohort()` runs entirely on local inputs.
 - **Layer 3 — processed-input atlas rebuild.** Rebuild
   `data/pdactrace_reference.rda` from
-  `data-raw/build_reference.R`. As of v0.99.6 the seven
+  `data-raw/build_reference.R`. In the current release, the seven
   processed inputs (`multi_cohort_consistency.csv` plus six
   phase tables) are bundled in `inst/extdata/*.csv.xz`, so the
   rebuild runs without the manuscript-monorepo.
@@ -516,17 +590,17 @@ and will allow lazy on-demand access via
 
 If you use `pdactrace`, please cite the software via its Zenodo DOI:
 
-> Ko, J. (2026). *pdactrace: Queryable Stage-Aware PDAC Tissue-to-Serum
-> Biomarker Reference Atlas* (v0.99.4) [Software]. Zenodo.
+> Ko, J. (2026). *pdactrace: Stage-Aware PDAC Atlas and Tissue-to-Blood
+> Biomarker Claim-Audit Framework* (v0.99.18) [Software]. Zenodo.
 > [10.5281/zenodo.20076698](https://doi.org/10.5281/zenodo.20076698)
 
 ```bibtex
 @software{pdactrace2026,
   author       = {Ko, Jibeom},
-  title        = {{pdactrace: Queryable Stage-Aware PDAC
-                   Tissue-to-Serum Biomarker Reference Atlas}},
+  title        = {{pdactrace: Stage-Aware PDAC Atlas and
+                   Tissue-to-Blood Biomarker Claim-Audit Framework}},
   year         = 2026,
-  version      = {v0.99.4},
+  version      = {v0.99.18},
   publisher    = {Zenodo},
   doi          = {10.5281/zenodo.20076698},
   url          = {https://doi.org/10.5281/zenodo.20076698}

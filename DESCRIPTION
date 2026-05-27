@@ -1,6 +1,6 @@
 Package: pdactrace
 Type: Package
-Title: Transparent Multi-Omics Tissue-to-Serum Biomarker Translation Framework with PDAC Reference Atlas
+Title: Stage-Aware PDAC Atlas and Tissue-to-Blood Biomarker Claim-Audit Framework
 Version: 0.99.18
 Authors@R: c(
     person(given = "Jibeom", family = "Ko",
@@ -8,21 +8,21 @@ Authors@R: c(
            role = c("aut", "cre"),
            comment = c(ORCID = "0009-0002-8630-1973")))
 Description: pdactrace implements a transparent, deterministic
-    multi-omics framework for prioritising tissue-to-serum biomarker
-    candidates by integrating per-stage trajectory matching across
-    bulk RNA-seq, tissue proteomics, single-cell origin, and serum
-    proteomics, with explicit anchor-enrichment evaluation against
-    a curated external reference set. The framework comprises a
-    12-template competitive trajectory catalog, a 3-axis + 2-gate
-    audit score, an Evidence Math layer, an optional interpretable
-    elastic-net prioritisation layer, and a tissue-to-serum
-    translation discipline (Class A / B / C) that distinguishes
-    direction-preserved, direction-inverted, and decoupled
-    candidates. The package ships a queryable PDAC reference atlas
-    as the demonstration cohort but is methodology-first: no
-    supervised classifier is trained or shipped, because validated
-    non-circular early-detection ground truth is unavailable in
-    PDAC and several adjacent cancers.
+    claim-audit framework for stage-aware PDAC tissue-to-blood
+    biomarker evidence. It integrates per-stage trajectory matching
+    across bulk RNA-seq, tissue proteomics, single-cell origin, serum
+    proteomics, and pancreatitis context, with explicit
+    anchor-enrichment evaluation against a curated external reference
+    set. The framework comprises a 12-template competitive trajectory
+    catalog, a 3-axis + 2-gate reference score, an Evidence Math
+    layer, TRACE-D tissue-to-serum directional evidence concordance,
+    claim-tier classification, weight-robustness and Pareto support
+    audits, and an optional interpretable elastic-net prioritisation
+    layer trained only on user-supplied labels. The package ships a
+    queryable PDAC reference atlas as the demonstration cohort but is
+    methodology-first: no supervised classifier is trained or shipped,
+    because validated non-circular early-detection ground truth is
+    unavailable in PDAC and several adjacent cancers.
 License: MIT + file LICENSE
 URL: https://github.com/jibeomko/pdactrace
 BugReports: https://github.com/jibeomko/pdactrace/issues
