@@ -68,7 +68,7 @@
 #'   panels$filter    # 7-step filter trail
 #'   panels$hexagon   # 6-axis audit hexagon
 #' }
-#' \dontrun{
+#' \donttest{
 #'   # Or write each panel to a separate PDF in one call:
 #'   viz_gene("LTBP1", layout = "split", output_dir = tempdir())
 #' }

@@ -26,7 +26,16 @@ feature are returned with \code{predicted_prob = NA}.
 Predict from a \code{pdactrace_user_model}
 }
 \examples{
-\dontrun{
+if (requireNamespace("glmnet", quietly = TRUE)) {
+  set.seed(1)
+  feats <- data.frame(gene_symbol = paste0("G", seq_len(30)),
+                      x1 = rnorm(30), x2 = rnorm(30))
+  y <- rep(c(0L, 1L), each = 15)
+  fit <- fit_user_evidence_model(feats, y, nfolds = 3L)
+  head(predict_user_evidence_model(fit, feats))
+}
+
+\donttest{
   feats <- make_evidence_features(scale = "z",
                                     drop_na_rows = TRUE)
   y <- as.integer(feats$gene_symbol \%in\%

@@ -198,6 +198,8 @@ summarize_translation_gap <- function(atlas = NULL,
 #' @param seed Random seed.
 #' @return A data.table with rank intervals and top-N stability columns.
 #' @examples
+#' run_weight_robustness(genes = "LGALS3BP", n_draws = 10)
+#'
 #' \donttest{
 #' run_weight_robustness(genes = c("LGALS3BP", "LTBP1"), n_draws = 50)
 #' }

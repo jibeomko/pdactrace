@@ -38,7 +38,7 @@
 #'   `top_neg`, `seed`, `alpha`, `lambda_min`.
 #' @examples
 #' model_card("anchor_similarity")
-#' \dontrun{
+#' \donttest{
 #'   if (requireNamespace("glmnet", quietly = TRUE)) {
 #'     feats <- make_evidence_features(scale = "z",
 #'                                       drop_na_rows = TRUE)

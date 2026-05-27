@@ -48,7 +48,9 @@ have a \verb{phase33_*} and \verb{phase34_*} file at predictable paths, or
 callers can pass the cached paths to \code{read_phase()} directly).
 }
 \examples{
-\dontrun{
+args(download_phase_csvs)
+
+\donttest{
   # Pull both upstream CSVs once; subsequent calls hit the cache:
   paths <- download_phase_csvs("both")
   # ... and feed them to the build chain:

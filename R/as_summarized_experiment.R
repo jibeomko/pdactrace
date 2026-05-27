@@ -31,7 +31,11 @@
 #'     pattern calls, meta-analysis summaries, etc.).
 #'   * `metadata` — `list(atlas_version, build_date, n_cohorts, ...)`.
 #' @examples
-#' \dontrun{
+#' se <- as_summarized_experiment()
+#' dim(se)
+#' SummarizedExperiment::assayNames(se)
+#'
+#' \donttest{
 #'   if (requireNamespace("SummarizedExperiment", quietly = TRUE)) {
 #'     se <- as_summarized_experiment()
 #'     se

@@ -28,7 +28,9 @@
 #' @return Invisibly returns the absolute path to the rendered HTML
 #'   file.
 #' @examples
-#' \dontrun{
+#' args(report_gene)
+#'
+#' \donttest{
 #'   if (requireNamespace("rmarkdown", quietly = TRUE) &&
 #'       requireNamespace("knitr",     quietly = TRUE)) {
 #'     # Single-gene report:

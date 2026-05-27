@@ -46,7 +46,15 @@
 #'   `gene_symbol, beta_N, beta_E, beta_M, beta_L, lrt_padj`,
 #'   `lrt_significant` (logical, padj < cutoff), and lfcSE_*.
 #' @examples
-#' \dontrun{
+#' data(toy_counts)
+#' data(toy_coldata)
+#' if (requireNamespace("DESeq2", quietly = TRUE)) {
+#'   fit <- fit_stage_de(toy_counts, toy_coldata$stage,
+#'                       toy_coldata$cohort)
+#'   head(fit)
+#' }
+#'
+#' \donttest{
 #'   # Matrix interface (original signature):
 #'   fit <- fit_stage_de(my_counts, my_stage, my_cohort)
 #'

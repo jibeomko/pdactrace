@@ -37,7 +37,14 @@ visible \code{prot_pattern} calls to Early x 4; non-Early best-matches are
 recorded internally but not surfaced.
 }
 \examples{
-\dontrun{
+prot_fit <- data.table::data.table(
+  gene_symbol = c("P1", "P2"),
+  beta_N = 0, beta_E = c(2, -2), beta_M = c(0.5, -0.5),
+  beta_L = 0, lrt_padj = c(0.01, 0.02),
+  lrt_significant = TRUE)
+classify_protein_trajectory(prot_fit, sig_only = FALSE)
+
+\donttest{
   prot_fit <- fit_stage_de_protein(my_intensity, my_stage, my_cohort)
   prot_pat <- classify_protein_trajectory(prot_fit)
 }

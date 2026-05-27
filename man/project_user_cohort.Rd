@@ -85,7 +85,16 @@ count matrix / data.frame plus \code{coldata}, or a
 whose \code{colData()} carries the stage / cohort columns.
 }
 \examples{
-\dontrun{
+data(toy_counts)
+data(toy_coldata)
+if (requireNamespace("DESeq2", quietly = TRUE)) {
+  res <- project_user_cohort(
+    rna = toy_counts, coldata = toy_coldata,
+    stage_col = "stage", cohort_col = "cohort")
+  res$summary
+}
+
+\donttest{
   if (requireNamespace("DESeq2", quietly = TRUE)) {
     res <- project_user_cohort(
       rna        = toy_counts,

@@ -12,7 +12,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r lookup-basics-01, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -33,14 +33,14 @@ library(pdactrace)
 
 # 1. Single-gene query — `query_gene()`
 
-```{r}
+```{r lookup-basics-02}
 q <- query_gene("LTBP1")
 print(q)
 ```
 
 Each layer is accessible as a named slot:
 
-```{r}
+```{r lookup-basics-03}
 q$rna
 q$serum
 q$filter_status
@@ -48,7 +48,7 @@ q$filter_status
 
 # 2. Multi-gene comparison — `query_panel()`
 
-```{r}
+```{r lookup-basics-04}
 qp <- query_panel(c("LTBP1", "SERPINA1", "CDH13", "SPARC", "CP", "FGB"))
 qp[, .(gene_symbol, rna_pattern, translation_class,
         flt_signal_peptide, flt_final, panel_member)]
@@ -57,7 +57,7 @@ qp[, .(gene_symbol, rna_pattern, translation_class,
 Genes not in the LRT-significant atlas universe are reported and
 skipped:
 
-```{r}
+```{r lookup-basics-05}
 qp_miss <- query_panel(c("LTBP1", "FOOBAR_NOT_A_GENE"))
 ```
 
@@ -66,7 +66,7 @@ qp_miss <- query_panel(c("LTBP1", "FOOBAR_NOT_A_GENE"))
 The new v0.1.0 signature accepts biology-level filters. Pass `NULL`
 (default) for any parameter to leave it unconstrained.
 
-```{r}
+```{r lookup-basics-06}
 # Class B (inverse stromal) candidates
 list_candidates(translation_class = "inverse")[
   , .(gene_symbol, rna_pattern, translation_class, panel_member)]
@@ -86,7 +86,7 @@ route flags (`phase77_strict`, `panel_member`, `resectable_marker`).
 Most genes pass *one* of the two narrowing funnels but not both —
 this is the audit message of pdactrace.
 
-```{r}
+```{r lookup-basics-07}
 trace_filters(c("SERPINA1", "LTBP1", "SPARC", "CDH13"))[
   , .(gene_symbol, n_phase60_pass, class_route)]
 ```
@@ -97,13 +97,13 @@ routes are valid — the tool shows them honestly.
 
 # 5. Plain-text summary — `summarize_gene_evidence()`
 
-```{r}
+```{r lookup-basics-08}
 cat(summarize_gene_evidence("LTBP1"))
 ```
 
 # Atlas metadata
 
-```{r}
+```{r lookup-basics-09}
 str(list_atlas_metadata(), max.level = 1)
 ```
 
@@ -115,6 +115,6 @@ including visualizations (`plot_gene_evidence`, `plot_filter_trace`,
 
 # Session
 
-```{r}
+```{r lookup-basics-10}
 sessionInfo()
 ```

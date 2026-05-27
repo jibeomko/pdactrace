@@ -42,7 +42,14 @@ for honest competition: a gene must beat 11 alternatives before it is
 surfaced as Early.
 }
 \examples{
-\dontrun{
+fit <- data.table::data.table(
+  gene_symbol = c("G1", "G2"),
+  beta_N = 0, beta_E = c(2, -2), beta_M = c(0.5, -0.5),
+  beta_L = 0, lrt_padj = c(0.01, 0.02),
+  lrt_significant = TRUE)
+classify_trajectory(fit, sig_only = FALSE)
+
+\donttest{
   fit <- fit_stage_de(my_counts, my_stage, my_cohort)
   pat <- classify_trajectory(fit, rho_cutoff = 0.85)
   table(pat$rna_pattern)

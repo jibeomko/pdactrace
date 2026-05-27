@@ -12,7 +12,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r audit-case-studies-01, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -39,6 +39,7 @@ gates resolve a specific evidence pattern into a transparent label.
 ```{r setup}
 library(pdactrace)
 library(data.table)
+data("pdactrace_reference", package = "pdactrace")
 ```
 
 # Side-by-side audit summary
@@ -184,3 +185,9 @@ your own candidate, the same decomposition is available via
 `compute_audit_score(c("YOUR_GENE"))` and `query_gene_detailed(...)` —
 see vignette `user_cohort_extension` for applying this discipline
 to your own multi-omics cohort.
+
+# Session information
+
+```{r session-info}
+sessionInfo()
+```

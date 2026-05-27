@@ -39,7 +39,16 @@
 #'   [fit_stage_de()]: `gene_symbol, beta_N, beta_E, beta_M, beta_L,
 #'   lfcSE_E, lfcSE_M, lfcSE_L, lrt_padj, lrt_significant`.
 #' @examples
-#' \dontrun{
+#' data(toy_protein)
+#' data(toy_coldata)
+#' if (requireNamespace("limma", quietly = TRUE)) {
+#'   prot_fit <- fit_stage_de_protein(toy_protein,
+#'                                    toy_coldata$stage,
+#'                                    toy_coldata$cohort)
+#'   head(prot_fit)
+#' }
+#'
+#' \donttest{
 #'   # Matrix interface:
 #'   prot_fit <- fit_stage_de_protein(my_intensity, my_stage, my_cohort)
 #'

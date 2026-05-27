@@ -591,7 +591,7 @@ and will allow lazy on-demand access via
 If you use `pdactrace`, please cite the software via its Zenodo DOI:
 
 > Ko, J. (2026). *pdactrace: Stage-Aware PDAC Atlas and Tissue-to-Blood
-> Biomarker Claim-Audit Framework* (v0.99.19) [Software]. Zenodo.
+> Biomarker Claim-Audit Framework* (v0.99.20) [Software]. Zenodo.
 > [10.5281/zenodo.20076698](https://doi.org/10.5281/zenodo.20076698)
 
 ```bibtex
@@ -600,7 +600,7 @@ If you use `pdactrace`, please cite the software via its Zenodo DOI:
   title        = {{pdactrace: Stage-Aware PDAC Atlas and
                    Tissue-to-Blood Biomarker Claim-Audit Framework}},
   year         = 2026,
-  version      = {v0.99.19},
+  version      = {v0.99.20},
   publisher    = {Zenodo},
   doi          = {10.5281/zenodo.20076698},
   url          = {https://doi.org/10.5281/zenodo.20076698}

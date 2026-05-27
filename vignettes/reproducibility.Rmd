@@ -170,3 +170,9 @@ list_data_sources()
 
 Every gene's `provenance` field is renderable as a plain-English
 evidence summary via [`format_provenance()`].
+
+# Session information
+
+```{r session-info}
+sessionInfo()
+```

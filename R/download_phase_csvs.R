@@ -28,7 +28,9 @@
 #' @return Invisibly, a named character vector mapping the requested
 #'   `target` value(s) to the absolute cached file path(s).
 #' @examples
-#' \dontrun{
+#' args(download_phase_csvs)
+#'
+#' \donttest{
 #'   # Pull both upstream CSVs once; subsequent calls hit the cache:
 #'   paths <- download_phase_csvs("both")
 #'   # ... and feed them to the build chain:

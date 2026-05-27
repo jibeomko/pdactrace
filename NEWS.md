@@ -1,3 +1,23 @@
+# pdactrace 0.99.20
+
+**Bioconductor pre-submission polish.** This release keeps the
+claim-audit API unchanged and addresses BiocCheck new-package feedback
+before opening the Bioconductor Contributions issue.
+
+## Changed
+
+- Added short runnable examples to exported Rd pages that previously
+  only contained long `\donttest{}` examples, clearing the BiocCheck
+  runnable-example ERROR.
+- Replaced remaining `\dontrun{}` examples with `\donttest{}`.
+- Set `LazyData: false` and added missing vignette chunk labels plus
+  `sessionInfo()` chunks where BiocCheck requested them.
+
+## Tests
+
+- `R CMD check --no-manual` and `BiocCheck(new-package=TRUE)` were run
+  on the source tarball as the final submission gate.
+
 # pdactrace 0.99.19
 
 **BiB-facing claim-audit release.** This release reframes pdactrace

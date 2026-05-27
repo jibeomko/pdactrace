@@ -36,6 +36,8 @@ often each gene remains inside top-N sets. This is a sensitivity
 analysis, not a new trained model.
 }
 \examples{
+run_weight_robustness(genes = "LGALS3BP", n_draws = 10)
+
 \donttest{
 run_weight_robustness(genes = c("LGALS3BP", "LTBP1"), n_draws = 50)
 }

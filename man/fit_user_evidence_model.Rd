@@ -78,7 +78,15 @@ not reweighted by default (use the \code{weights} arg if needed).
 }
 
 \examples{
-\dontrun{
+if (requireNamespace("glmnet", quietly = TRUE)) {
+  set.seed(1)
+  feats <- data.frame(gene_symbol = paste0("G", seq_len(30)),
+                      x1 = rnorm(30), x2 = rnorm(30))
+  y <- rep(c(0L, 1L), each = 15)
+  fit_user_evidence_model(feats, y, nfolds = 3L)
+}
+
+\donttest{
   if (requireNamespace("glmnet", quietly = TRUE)) {
     feats <- make_evidence_features(scale = "z",
                                       drop_na_rows = TRUE)

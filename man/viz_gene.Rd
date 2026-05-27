@@ -26,7 +26,7 @@ the title from the bundled atlas headline.}
 \item{layout}{One of \code{"split"} (default; returns a
 \code{pdactrace_viz_panels} list of six full-size ggplots whose
 \code{print()} method renders each panel as its own page in the
-active plot device -- in RStudio you flip through the six
+active plot device — in RStudio you flip through the six
 panels with the plot-pane arrows) or \code{"compact"} (the
 single-page 2x3 patchwork composite preserved for backward
 compatibility and embedding contexts).}
@@ -42,12 +42,8 @@ attached as \code{attr(., "files")}.}
 \verb{6 x 4.5} (single-column, NCS-grade).}
 }
 \value{
-By default (\code{layout = "split"}), a \code{pdactrace_viz_panels}
-named list of six ggplot objects (\code{rna}, \code{protein}, \code{cell},
-\code{serum}, \code{filter}, \code{hexagon}) whose \code{print()} method renders
-each panel sequentially. With \code{layout = "compact"}, a
-\code{patchwork} object printable to any active graphics device or
-saveable via \code{ggsave()} / \code{\link[=pdactrace_save]{pdactrace_save()}}.
+A \code{patchwork} object printable to any active graphics
+device or saveable via \code{ggsave()} / \code{\link[=pdactrace_save]{pdactrace_save()}}.
 }
 \description{
 Returns a 2x3 \code{patchwork} composite that puts \strong{one panel per
@@ -96,23 +92,25 @@ standalone; the previous RNA per-cohort sign-vote view is at
 \code{\link[=plot_per_cohort]{plot_per_cohort()}}.
 }
 \examples{
-# Default (split): six full-size panels printed sequentially.
-panels <- viz_gene("LGALS3BP")
-panels$rna       # bulk RNA per-stage forest
-panels$protein   # tissue protein per-stage trajectory
-panels$cell      # scRNA cell-of-origin distribution
-panels$serum     # serum direction strip
-panels$filter    # 7-step filter trail
-panels$hexagon   # 6-axis audit hexagon
+viz_gene("LGALS3BP")
 \donttest{
-  # Single-page 2x3 patchwork composite (back-compat embedding).
-  viz_gene("LTBP1", layout = "compact")
-  viz_gene("LTBP1", layout = "compact", ncol = 2)   # 3x2 grid
-  viz_gene("LTBP1", layout = "compact", ncol = 1)   # vertical strip
+  # Alternative layouts (skipped in R CMD check examples for time;
+  # all run normally in interactive use).
+  viz_gene("LTBP1", ncol = 2)            # 3x2 grid
+  viz_gene("LTBP1", ncol = 1)            # vertical strip
+
+  # Split mode: get each panel as its own full-size figure
+  panels <- viz_gene("LTBP1", layout = "split")
+  panels$rna       # bulk RNA per-stage forest
+  panels$protein   # tissue protein per-stage trajectory
+  panels$cell      # scRNA cell-of-origin distribution
+  panels$serum     # serum direction strip
+  panels$filter    # 7-step filter trail
+  panels$hexagon   # 6-axis audit hexagon
 }
-\dontrun{
-  # Write each split panel to a separate cairo-PDF in one call:
-  viz_gene("LTBP1", output_dir = tempdir())
+\donttest{
+  # Or write each panel to a separate PDF in one call:
+  viz_gene("LTBP1", layout = "split", output_dir = tempdir())
 }
 }
 \seealso{

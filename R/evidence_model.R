@@ -48,7 +48,15 @@
 #'   `top_neg`, `alpha`, `seed`, `method`, `feature_set_version`,
 #'   `card`.
 #' @examples
-#' \dontrun{
+#' if (requireNamespace("glmnet", quietly = TRUE)) {
+#'   set.seed(1)
+#'   feats <- data.frame(gene_symbol = paste0("G", seq_len(30)),
+#'                       x1 = rnorm(30), x2 = rnorm(30))
+#'   y <- rep(c(0L, 1L), each = 15)
+#'   fit_user_evidence_model(feats, y, nfolds = 3L)
+#' }
+#'
+#' \donttest{
 #'   if (requireNamespace("glmnet", quietly = TRUE)) {
 #'     feats <- make_evidence_features(scale = "z",
 #'                                       drop_na_rows = TRUE)
@@ -191,7 +199,16 @@ fit_user_evidence_model <- function(features,
 #'   (P(label=1) under the fitted model). Rows with any `NA`
 #'   feature are returned with `predicted_prob = NA`.
 #' @examples
-#' \dontrun{
+#' if (requireNamespace("glmnet", quietly = TRUE)) {
+#'   set.seed(1)
+#'   feats <- data.frame(gene_symbol = paste0("G", seq_len(30)),
+#'                       x1 = rnorm(30), x2 = rnorm(30))
+#'   y <- rep(c(0L, 1L), each = 15)
+#'   fit <- fit_user_evidence_model(feats, y, nfolds = 3L)
+#'   head(predict_user_evidence_model(fit, feats))
+#' }
+#'
+#' \donttest{
 #'   feats <- make_evidence_features(scale = "z",
 #'                                     drop_na_rows = TRUE)
 #'   y <- as.integer(feats$gene_symbol %in%
@@ -252,7 +269,16 @@ predict_user_evidence_model <- function(model,
 #'   `cv_auc_mean`, `cv_auc_sd`, `lambda_min`, `n_features`,
 #'   `n_train`, `n_positives`.
 #' @examples
-#' \dontrun{
+#' if (requireNamespace("glmnet", quietly = TRUE)) {
+#'   set.seed(1)
+#'   feats <- data.frame(gene_symbol = paste0("G", seq_len(30)),
+#'                       x1 = rnorm(30), x2 = rnorm(30))
+#'   y <- rep(c(0L, 1L), each = 15)
+#'   fit <- fit_user_evidence_model(feats, y, nfolds = 3L)
+#'   explain_user_evidence_model(fit, top_n = 2, verbose = FALSE)
+#' }
+#'
+#' \donttest{
 #'   feats <- make_evidence_features(scale = "z",
 #'                                     drop_na_rows = TRUE)
 #'   y <- as.integer(feats$gene_symbol %in%

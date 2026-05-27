@@ -12,7 +12,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r audit-framework-01, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -35,7 +35,7 @@ the rule combines pre-specified weights with deterministic gating
 and Monte Carlo uncertainty propagation, exposing cohort
 heterogeneity, layer agreement, and artifact risk.
 
-```{r, message = FALSE, warning = FALSE}
+```{r audit-framework-02, message = FALSE, warning = FALSE}
 library(pdactrace)
 library(data.table)
 ```
@@ -61,7 +61,7 @@ reserved for post-freeze enrichment evaluation only.
 
 # 2. The 6-function API at a glance
 
-```{r}
+```{r audit-framework-03}
 # 1. Build a per-gene evidence graph (nodes = layers / multipliers / readouts)
 g <- build_evidence_graph("LTBP1")
 g$nodes
@@ -94,7 +94,7 @@ heterogeneity gate (0.70 in the 70-90 band), and assigns it to the
 all raise the `evidence_strength` axis, but the heterogeneity gate
 prevents a high-confidence call.
 
-```{r}
+```{r audit-framework-04}
 ltbp1_score <- compute_audit_score("LTBP1")
 ltbp1_score
 ltbp1_unc <- propagate_uncertainty("LTBP1", n_mc = 200, seed = 42)
@@ -112,7 +112,7 @@ GAPDH carries the strict housekeeping flag and therefore receives a
 zero leakage multiplier. The score is exactly 0 in every Monte Carlo
 iteration, and the gene is classified as `excluded`.
 
-```{r}
+```{r audit-framework-05}
 compute_audit_score("GAPDH")
 propagate_uncertainty("GAPDH", n_mc = 200, seed = 42)
 ```
@@ -127,7 +127,7 @@ External literature anchors are organised into three provenance tiers
 (`primary`, `secondary`, `exploratory`). Enrichment is computed with
 the audit_score frozen — anchors never participate in scoring.
 
-```{r}
+```{r audit-framework-06}
 evaluate_anchor_enrichment(top_n = c(50, 100, 200, 500),
                            tier = c("primary", "secondary"))
 ```
@@ -138,7 +138,7 @@ community-prioritized hypotheses without ever having seen them.
 
 # 6. Reading the `case_study()` output
 
-```{r}
+```{r audit-framework-07}
 case_study(c("LTBP1", "GAPDH", "THBS2", "ALB", "AMBP",
              "SERPINA1", "ANPEP"))
 ```
@@ -188,6 +188,6 @@ These are deliberate design choices recorded in the supplement and the
 
 # Session info
 
-```{r}
+```{r audit-framework-08}
 sessionInfo()
 ```

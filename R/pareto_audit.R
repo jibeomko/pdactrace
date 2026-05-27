@@ -138,6 +138,8 @@ compute_pareto_layers <- function(atlas = NULL,
 #'   `pareto_top10_pct_stability`. Genes outside the gate-passing pool
 #'   in every draw receive `NA` median/CI but a stability of `0`.
 #' @examples
+#' head(evaluate_pareto_stability(n_draws = 10L, top_n = 50L))
+#'
 #' \donttest{
 #'   evaluate_pareto_stability(n_draws = 50L)
 #' }

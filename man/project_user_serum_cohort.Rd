@@ -126,7 +126,16 @@ rank distribution). Fewer samples emit a \code{warning}.
 }
 
 \examples{
-\dontrun{
+set.seed(1)
+intensity <- matrix(rnorm(20 * 12, mean = 5), nrow = 20,
+                    dimnames = list(paste0("G", seq_len(20)),
+                                    paste0("S", seq_len(12))))
+coldata <- data.frame(group = rep(c("PDAC", "HC"), each = 6))
+serum <- project_user_serum_cohort(
+  intensity, coldata, test = "t_test", link_to_atlas = FALSE)
+head(serum)
+
+\donttest{
   # Synthetic example: 50 genes x 24 samples (8 PDAC, 8 HC,
   # 8 Pancreatitis) with PDAC-up + Pan-flat signal.
   set.seed(1)

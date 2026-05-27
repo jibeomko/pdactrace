@@ -1,7 +1,7 @@
 Package: pdactrace
 Type: Package
 Title: Stage-Aware PDAC Atlas and Tissue-to-Blood Biomarker Claim-Audit Framework
-Version: 0.99.19
+Version: 0.99.20
 Authors@R: c(
     person(given = "Jibeom", family = "Ko",
            email = "rhwlqja1779@gmail.com",
@@ -26,12 +26,11 @@ Description: pdactrace implements a transparent, deterministic
 License: MIT + file LICENSE
 URL: https://github.com/jibeomko/pdactrace
 BugReports: https://github.com/jibeomko/pdactrace/issues
-biocViews: Software, BiomedicalInformatics, Transcriptomics,
-    Proteomics, GeneExpression, DifferentialExpression,
+biocViews: Software, BiomedicalInformatics, Classification,
+    Transcriptomics, Proteomics, GeneExpression, DifferentialExpression,
     SingleCell, Visualization, Annotation
 Encoding: UTF-8
-LazyData: true
-LazyDataCompression: xz
+LazyData: false
 Depends:
     R (>= 4.5.0)
 Imports:

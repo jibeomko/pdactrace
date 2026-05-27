@@ -48,7 +48,9 @@ The render is deterministic given (gene_symbol, atlas) because the
 audit rule is frozen.
 }
 \examples{
-\dontrun{
+args(report_gene)
+
+\donttest{
   if (requireNamespace("rmarkdown", quietly = TRUE) &&
       requireNamespace("knitr",     quietly = TRUE)) {
     # Single-gene report:

@@ -27,7 +27,14 @@
 #'   * `rna_pattern_rho` - numeric: Pearson rho with best template
 #'   * `rna_pattern_rho_runner_up` - second-best rho (gap detection)
 #' @examples
-#' \dontrun{
+#' fit <- data.table::data.table(
+#'   gene_symbol = c("G1", "G2"),
+#'   beta_N = 0, beta_E = c(2, -2), beta_M = c(0.5, -0.5),
+#'   beta_L = 0, lrt_padj = c(0.01, 0.02),
+#'   lrt_significant = TRUE)
+#' classify_trajectory(fit, sig_only = FALSE)
+#'
+#' \donttest{
 #'   fit <- fit_stage_de(my_counts, my_stage, my_cohort)
 #'   pat <- classify_trajectory(fit, rho_cutoff = 0.85)
 #'   table(pat$rna_pattern)
@@ -97,6 +104,13 @@ classify_trajectory <- function(fit, rho_cutoff = 0.85, sig_only = TRUE) {
 #'   `rho_Mid_Plateau_Down`, `rho_Mid_Peak`, `rho_Mid_Trough`,
 #'   `rho_Late_Burst_Up`, `rho_Late_Loss_Down`, `rho_Monotonic_Up`,
 #'   `rho_Monotonic_Down`.
+#' @examples
+#' fit <- data.table::data.table(
+#'   gene_symbol = "G1", beta_N = 0, beta_E = 2,
+#'   beta_M = 0.5, beta_L = 0, lrt_padj = 0.01,
+#'   lrt_significant = TRUE)
+#' pat <- classify_trajectory(fit, sig_only = FALSE)
+#' score_trajectory(pat, "G1")
 #' @export
 score_trajectory <- function(pat, gene) {
   e <- new.env()

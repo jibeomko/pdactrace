@@ -55,6 +55,8 @@ This function is the MC analogue of \code{\link[=compute_pareto_layers]{compute_
 does not modify the frozen audit score in any draw.
 }
 \examples{
+head(evaluate_pareto_stability(n_draws = 10L, top_n = 50L))
+
 \donttest{
   evaluate_pareto_stability(n_draws = 50L)
 }

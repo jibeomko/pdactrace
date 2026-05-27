@@ -26,3 +26,11 @@ how clearly a gene maps to a single pattern vs ambiguous/borderline,
 and for diagnosing whether a non-Early best-match excluded the gene
 from the Early × 4 atlas surface.
 }
+\examples{
+fit <- data.table::data.table(
+  gene_symbol = "G1", beta_N = 0, beta_E = 2,
+  beta_M = 0.5, beta_L = 0, lrt_padj = 0.01,
+  lrt_significant = TRUE)
+pat <- classify_trajectory(fit, sig_only = FALSE)
+score_trajectory(pat, "G1")
+}

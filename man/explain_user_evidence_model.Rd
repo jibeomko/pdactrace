@@ -28,7 +28,16 @@ user-facing rationale for the supervised score: which evidence
 axes pushed the user's positive set up.
 }
 \examples{
-\dontrun{
+if (requireNamespace("glmnet", quietly = TRUE)) {
+  set.seed(1)
+  feats <- data.frame(gene_symbol = paste0("G", seq_len(30)),
+                      x1 = rnorm(30), x2 = rnorm(30))
+  y <- rep(c(0L, 1L), each = 15)
+  fit <- fit_user_evidence_model(feats, y, nfolds = 3L)
+  explain_user_evidence_model(fit, top_n = 2, verbose = FALSE)
+}
+
+\donttest{
   feats <- make_evidence_features(scale = "z",
                                     drop_na_rows = TRUE)
   y <- as.integer(feats$gene_symbol \%in\%

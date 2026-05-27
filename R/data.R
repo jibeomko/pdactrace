@@ -51,10 +51,14 @@
 #'   `toy_coldata$sample`.
 #' @keywords datasets
 #' @examples
-#' fit <- fit_stage_de(toy_counts,
+#' data("toy_counts", package = "pdactrace")
+#' data("toy_coldata", package = "pdactrace")
+#' if (requireNamespace("DESeq2", quietly = TRUE)) {
+#'   fit <- fit_stage_de(toy_counts,
 #'                       stage  = toy_coldata$stage,
 #'                       cohort = toy_coldata$cohort)
-#' head(fit)
+#'   head(fit)
+#' }
 "toy_counts"
 
 #' Synthetic stage / cohort metadata for runnable examples
