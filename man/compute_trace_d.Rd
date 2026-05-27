@@ -8,7 +8,8 @@ compute_trace_d(
   atlas = NULL,
   tau_tissue = 0.5,
   tau_serum = 0.1,
-  weights = c(tissue = 0.5, serum = 0.3, specificity = 0.2)
+  weights = c(tissue = 0.5, serum = 0.3, specificity = 0.2),
+  legacy_translation = c("strict", "fallback")
 )
 }
 \arguments{
@@ -26,6 +27,13 @@ serum signal to count. Default \code{0.1}.}
 \item{weights}{Named numeric vector of length 3 summing to 1
 (tissue, serum, specificity components of \code{tracd_confidence}).
 Defaults to \code{c(tissue = 0.50, serum = 0.30, specificity = 0.20)}.}
+
+\item{legacy_translation}{One of \code{"strict"} or \code{"fallback"}. In
+\code{"strict"} mode, TRACE-D uses only measured serum log2FC and the
+thresholds above. In \code{"fallback"} mode, rows with no strict TRACE-D
+call can inherit the legacy atlas \code{translation_class} A/B/C as a
+compatibility annotation; confidence then receives tissue-only
+credit and the decision path records \code{legacy_translation}.}
 }
 \value{
 A data.table with one row per gene in \code{atlas} and the

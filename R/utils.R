@@ -72,5 +72,6 @@ utils::globalVariables(c(
   "heterogeneity_gate", "in_pareto_pool", "leakage_gate",
   "serum_concordant", "serum_signal", "translation_status",
   "weight_rank_hi95", "weight_rank_lo95", "weight_rank_median",
-  "weight_score_mean", "tissue_supported"
+  "weight_score_mean", "tissue_supported", "n",
+  "pareto_class", "serum_observed"
 ))

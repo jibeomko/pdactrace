@@ -81,6 +81,30 @@ test_that("compute_trace_d threshold parameters are honoured", {
   expect_equal(permissive$tracd_class, c("A", "A"))
 })
 
+
+test_that("compute_trace_d keeps strict and legacy fallback modes separate", {
+  toy <- data.table::data.table(
+    gene_symbol = c("legacy_A", "legacy_B", "strict_only"),
+    rna_pattern = c("Early_Burst_Up", "Early_Burst_Up", "Early_Burst_Up"),
+    prot_pattern = c("Early_Burst_Up", "Early_Burst_Up", "Early_Burst_Up"),
+    max_abs_beta_meta = c(0.2, 0.2, 1.0),
+    serum_log2fc_PDAC_vs_HC = c(NA_real_, NA_real_, 0.8),
+    serum_log2fc_Pan_vs_HC = c(NA_real_, NA_real_, 0.0),
+    serum_detected = c(TRUE, TRUE, TRUE),
+    translation_class = c("A", "B", NA_character_)
+  )
+  strict <- compute_trace_d(atlas = toy)
+  expect_equal(strict$tracd_class, c(NA_character_, NA_character_, "A"))
+
+  compat <- compute_trace_d(atlas = toy, legacy_translation = "fallback")
+  expect_equal(compat$tracd_class, c("A", "B", "A"))
+  expect_match(compat$tracd_decision_path[1], "legacy_translation")
+  expect_match(compat$tracd_decision_path[2], "legacy_translation")
+  expect_false(grepl("legacy_translation", compat$tracd_decision_path[3]))
+  expect_true(all(is.na(compat$tracd_confidence[1:2]) |
+                    compat$tracd_confidence[1:2] <= 0.5))
+})
+
 test_that("compute_trace_d rejects invalid arguments", {
   expect_error(compute_trace_d(tau_tissue = -1),
                "non-negative")

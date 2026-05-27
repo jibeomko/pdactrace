@@ -32,6 +32,12 @@
 #' @param weights Named numeric vector of length 3 summing to 1
 #'   (tissue, serum, specificity components of `tracd_confidence`).
 #'   Defaults to `c(tissue = 0.50, serum = 0.30, specificity = 0.20)`.
+#' @param legacy_translation One of `"strict"` or `"fallback"`. In
+#'   `"strict"` mode, TRACE-D uses only measured serum log2FC and the
+#'   thresholds above. In `"fallback"` mode, rows with no strict TRACE-D
+#'   call can inherit the legacy atlas `translation_class` A/B/C as a
+#'   compatibility annotation; confidence then receives tissue-only
+#'   credit and the decision path records `legacy_translation`.
 #' @return A data.table with one row per gene in `atlas` and the
 #'   columns `tracd_tissue_dir`, `tracd_serum_dir`, `tracd_class`,
 #'   `tracd_confidence`, `tracd_pancreatitis_overlap_score`,
@@ -45,7 +51,9 @@ compute_trace_d <- function(atlas = NULL,
                             tau_tissue = 0.5,
                             tau_serum = 0.1,
                             weights = c(tissue = 0.50, serum = 0.30,
-                                         specificity = 0.20)) {
+                                         specificity = 0.20),
+                            legacy_translation = c("strict", "fallback")) {
+  legacy_translation <- match.arg(legacy_translation)
   if (length(tau_tissue) != 1L || !is.finite(tau_tissue) ||
         tau_tissue < 0) {
     stop("`tau_tissue` must be a single non-negative numeric.")
@@ -113,6 +121,23 @@ compute_trace_d <- function(atlas = NULL,
   tracd_class[cls_A] <- "A"
   tracd_class[cls_B] <- "B"
 
+  legacy_class <- if ("translation_class" %in% names(dt)) {
+    as.character(dt$translation_class)
+  } else {
+    rep(NA_character_, n)
+  }
+  legacy_ok <- legacy_translation == "fallback" &
+    is.na(tracd_class) & legacy_class %in% c("A", "B", "C") &
+    !is.na(tissue_dir)
+  if (any(legacy_ok)) {
+    tracd_class[legacy_ok] <- legacy_class[legacy_ok]
+    legacy_a <- legacy_ok & legacy_class == "A"
+    serum_dir[legacy_a] <- tissue_dir[legacy_a]
+    legacy_b <- legacy_ok & legacy_class == "B"
+    serum_dir[legacy_b & tissue_dir == "UP"] <- "DOWN"
+    serum_dir[legacy_b & tissue_dir == "DOWN"] <- "UP"
+  }
+
   # ─── Pancreatitis specificity (annotation only) ─────────────
   serum_pan <- ifelse(is.na(dt$serum_log2fc_Pan_vs_HC), 0,
                       dt$serum_log2fc_Pan_vs_HC)
@@ -145,7 +170,10 @@ compute_trace_d <- function(atlas = NULL,
     weights[["serum"]]       * serum_score[cls_A | cls_B] +
     weights[["specificity"]] * specificity_score[cls_A | cls_B]
   confidence[cls_C] <- weights[["tissue"]] * tissue_score[cls_C]
-  confidence[!tissue_signal] <- NA_real_
+  fallback_conf <- legacy_ok & is.na(confidence)
+  confidence[fallback_conf] <- weights[["tissue"]] *
+    tissue_score[fallback_conf]
+  confidence[!tissue_signal & !legacy_ok] <- NA_real_
 
   # ─── Audit-trail decision_path string ────────────────────────
   path_tissue <- ifelse(is.na(tissue_dir), "tissue_NA",
@@ -157,8 +185,9 @@ compute_trace_d <- function(atlas = NULL,
   path_class <- ifelse(is.na(tracd_class), "->NA",
                        paste0("->", tracd_class))
   path_pan <- paste0(",pan_", specificity)
+  path_legacy <- ifelse(legacy_ok, ",legacy_translation", "")
   decision_path <- paste0(path_tissue, "+", path_serum, path_class,
-                          path_pan)
+                          path_pan, path_legacy)
 
   data.table::data.table(
     gene_symbol = dt$gene_symbol,

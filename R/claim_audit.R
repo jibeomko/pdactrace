@@ -12,7 +12,10 @@
 #' @param tau_tissue Minimum absolute tissue effect used by
 #'   [compute_trace_d()].
 #' @param tau_serum Minimum absolute serum log2 fold-change used by
-#'   [compute_trace_d()] and the serum-signal flag.
+#'   [compute_trace_d()] and the serum-signal flag. Claim-tier
+#'   classification calls TRACE-D in `legacy_translation = "fallback"`
+#'   mode so the bundled atlas' historical `translation_class` remains
+#'   visible when serum log2FC is unavailable.
 #' @return A data.table with one row per gene and claim audit columns.
 #' @examples
 #' classify_claim_tier(genes = c("LGALS3BP", "LTBP1", "ALB", "GAPDH"))
@@ -36,7 +39,8 @@ classify_claim_tier <- function(atlas = NULL,
   }
 
   trace <- compute_trace_d(ref, tau_tissue = tau_tissue,
-                           tau_serum = tau_serum)
+                           tau_serum = tau_serum,
+                           legacy_translation = "fallback")
   score <- compute_audit_score(NULL, evidence = ref)
   score <- score[, .(gene_symbol,
                      audit_score_det = audit_score,
