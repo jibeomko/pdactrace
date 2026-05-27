@@ -100,12 +100,16 @@
 #' Used by `data-raw/build_reference.R` to allocate columns and by
 #' `tests/testthat/test-schema.R` to verify completeness.
 #'
+#' @param include_derived Logical. If TRUE, also include derived
+#'   algorithm-output columns that can be attached by data-raw
+#'   scripts but are not part of the bundled reference atlas by
+#'   default.
 #' @return data.table with columns: name, type, layer, t25_status.
 #' @examples
 #' head(schema_spec())
 #' @export
-schema_spec <- function() {
-  data.table::data.table(
+schema_spec <- function(include_derived = FALSE) {
+  spec <- data.table::data.table(
     name = c(
       "gene_symbol", "ensembl_id", "entrez_id",
       # rna (26): per-stage beta + per-stage LRT-padj/Wald-padj/lfcSE +
@@ -178,6 +182,22 @@ schema_spec <- function() {
       "audit_uncertainty_width",
       "audit_rank_median", "audit_rank_lo95", "audit_rank_hi95",
       "audit_confidence_class",
+      # pareto (9 - v0.99.19 Algorithm 2: U-PARE weight-free Pareto
+      #              layer; complementary to audit_score, does not
+      #              modify the locked 3+2 formula)
+      "pareto_layer", "pareto_rank", "crowding_distance",
+      "pareto_excluded_by_gate",
+      "pareto_layer_median", "pareto_stability_top1",
+      "pareto_layer_lo95", "pareto_layer_hi95",
+      "pareto_top10_pct_stability",
+      # tracd (8 - v0.99.19 Algorithm 1: TRACE-D tissue-to-serum
+      #            directional translation classifier; coexists with
+      #            the legacy translation_class column for back-compat)
+      "tracd_tissue_dir", "tracd_serum_dir",
+      "tracd_class", "tracd_confidence",
+      "tracd_pancreatitis_overlap_score",
+      "tracd_pancreatitis_specificity",
+      "tracd_tissue_weight", "tracd_decision_path",
       # t3_ready (3)
       "serum_direction_label", "direction_model_trainable",
       "direction_model_card_ref"),
@@ -227,6 +247,12 @@ schema_spec <- function() {
       "logical", "logical", "logical",
       "numeric", "numeric", "numeric", "numeric",
       "numeric", "numeric", "numeric", "character",
+      # pareto (9 - v0.99.19 U-PARE)
+      "integer", "integer", "numeric", "logical",
+      "integer", "numeric", "integer", "integer", "numeric",
+      # tracd (8 - v0.99.19 TRACE-D)
+      "character", "character", "character", "numeric",
+      "numeric", "character", "integer", "character",
       # t3_ready (3)
       "character", "logical", "character"),
     layer = c(
@@ -242,6 +268,8 @@ schema_spec <- function() {
       rep("meta_analysis", 17),
       rep("tier", 2),
       rep("audit", 27),
+      rep("pareto", 9),
+      rep("tracd", 8),
       rep("t3_ready", 3)),
     t25_status = c(
       rep("populated", 3),
@@ -256,8 +284,14 @@ schema_spec <- function() {
       rep("populated", 17),
       rep("populated", 2),
       rep("populated", 27),
+      rep("populated", 9),
+      rep("populated", 8),
       rep("na_placeholder", 3))
   )
+  if (!isTRUE(include_derived)) {
+    spec <- spec[!layer %in% c("pareto", "tracd")]
+  }
+  spec
 }
 
 #' Early-onset pattern names (the 4 atlas-surfaced patterns)

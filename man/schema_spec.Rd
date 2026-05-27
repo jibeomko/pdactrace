@@ -4,7 +4,13 @@
 \alias{schema_spec}
 \title{Schema column specification}
 \usage{
-schema_spec()
+schema_spec(include_derived = FALSE)
+}
+\arguments{
+\item{include_derived}{Logical. If TRUE, also include derived
+algorithm-output columns that can be attached by data-raw
+scripts but are not part of the bundled reference atlas by
+default.}
 }
 \value{
 data.table with columns: name, type, layer, t25_status.

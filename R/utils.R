@@ -51,5 +51,26 @@ utils::globalVariables(c(
   "stage", "status", "step", "tissue_dir", "tissue_effect",
   "tissue_signed", "translation_class", "trend", "trend_factor",
   "uncertainty_width", "underlying_metric", "v0.2_tier", "value",
-  "variable", "x_pos"
+  "variable", "x_pos",
+  # pareto_audit.R (v0.99.19) — weight-free Pareto layer
+  "audit_evidence_strength", "audit_biological_coherence",
+  "audit_translational_relevance", "audit_leakage_gate",
+  "audit_heterogeneity_gate", "pareto_layer", "pareto_rank",
+  "crowding_distance", "pareto_excluded_by_gate",
+  "pareto_layer_median", "pareto_stability_top1",
+  "pareto_layer_lo95", "pareto_layer_hi95",
+  "pareto_top10_pct_stability",
+  # trace_d.R (v0.99.19) — TRACE-D directional translation classifier
+  "tracd_tissue_dir", "tracd_serum_dir", "tracd_class",
+  "tracd_confidence", "tracd_pancreatitis_overlap_score",
+  "tracd_pancreatitis_specificity", "tracd_tissue_weight",
+  "tracd_decision_path",
+  "max_abs_beta_meta", "serum_log2fc_Pan_vs_HC",
+  # claim_audit.R - tissue-to-blood claim tiers and weight robustness
+  "audit_class_det", "audit_score_det", "claim_strength",
+  "claim_tier", "confounder_risk", "exportable_plausible",
+  "heterogeneity_gate", "in_pareto_pool", "leakage_gate",
+  "serum_concordant", "serum_signal", "translation_status",
+  "weight_rank_hi95", "weight_rank_lo95", "weight_rank_median",
+  "weight_score_mean", "tissue_supported"
 ))

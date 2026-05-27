@@ -248,7 +248,10 @@ evaluate_anchor_enrichment <- function(top_n = c(50, 100, 200, 500, 1000),
                                        tier = c("primary", "secondary",
                                                 "exploratory", "all"),
                                        score_col = c("audit_score",
-                                                     "audit_score_median"),
+                                                     "audit_score_median",
+                                                     "pareto_rank",
+                                                     "pareto_stability_top1",
+                                                     "tracd_confidence"),
                                        evidence = NULL,
                                        anchors = NULL) {
   tier <- match.arg(tier, several.ok = TRUE)
@@ -258,15 +261,49 @@ evaluate_anchor_enrichment <- function(top_n = c(50, 100, 200, 500, 1000),
   ref <- .get_reference(evidence)
   unc <- .audit_uncertainty_table(ref)
   score_v3 <- compute_audit_score(NULL, evidence = evidence)
-  score_dt <- if (score_col == "audit_score_median" && !is.null(unc)) {
-    merge(score_v3[, .(gene_symbol)],
-          unc[, .(gene_symbol, audit_score_median)],
-          by = "gene_symbol", all.x = TRUE)
+  if (score_col == "audit_score_median" && !is.null(unc)) {
+    score_dt <- merge(score_v3[, .(gene_symbol)],
+                       unc[, .(gene_symbol, audit_score_median)],
+                       by = "gene_symbol", all.x = TRUE)
+  } else if (score_col == "pareto_rank") {
+    if (!"pareto_rank" %in% names(ref)) {
+      stop("Atlas does not carry pareto_rank. ",
+           "Rebuild via data-raw/attach_pareto_columns.R or supply ",
+           "an atlas containing pareto_rank.")
+    }
+    score_dt <- merge(score_v3[, .(gene_symbol)],
+                       data.table::as.data.table(ref)[
+                         , .(gene_symbol, pareto_rank)],
+                       by = "gene_symbol", all.x = TRUE)
+  } else if (score_col == "pareto_stability_top1") {
+    if (!"pareto_stability_top1" %in% names(ref)) {
+      stop("Atlas does not carry pareto_stability_top1. ",
+           "Rebuild via data-raw/attach_pareto_columns.R.")
+    }
+    score_dt <- merge(score_v3[, .(gene_symbol)],
+                       data.table::as.data.table(ref)[
+                         , .(gene_symbol, pareto_stability_top1)],
+                       by = "gene_symbol", all.x = TRUE)
+  } else if (score_col == "tracd_confidence") {
+    if (!"tracd_confidence" %in% names(ref)) {
+      stop("Atlas does not carry tracd_confidence. ",
+           "Rebuild via data-raw/attach_trace_d_columns.R or supply ",
+           "an atlas containing tracd_confidence.")
+    }
+    score_dt <- merge(score_v3[, .(gene_symbol)],
+                       data.table::as.data.table(ref)[
+                         , .(gene_symbol, tracd_confidence)],
+                       by = "gene_symbol", all.x = TRUE)
   } else {
-    score_v3[, .(gene_symbol, audit_score)]
+    score_dt <- score_v3[, .(gene_symbol, audit_score)]
   }
   data.table::setnames(score_dt, names(score_dt)[2L], "score")
-  data.table::setorder(score_dt, -score, na.last = TRUE)
+  if (score_col == "pareto_rank") {
+    # Lower pareto_rank is better; NA (excluded) ranks last.
+    data.table::setorder(score_dt, score, na.last = TRUE)
+  } else {
+    data.table::setorder(score_dt, -score, na.last = TRUE)
+  }
 
   anchor_dt <- if (is.null(anchors)) {
     .audit_anchor_table()

@@ -8,7 +8,8 @@
 evaluate_anchor_enrichment(
   top_n = c(50, 100, 200, 500, 1000),
   tier = c("primary", "secondary", "exploratory", "all"),
-  score_col = c("audit_score", "audit_score_median"),
+  score_col = c("audit_score", "audit_score_median", "pareto_rank",
+    "pareto_stability_top1", "tracd_confidence"),
   evidence = NULL,
   anchors = NULL
 )
