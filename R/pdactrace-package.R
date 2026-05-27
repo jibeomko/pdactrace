@@ -15,9 +15,12 @@
 #' API + per-stage Wald padj** (v0.4.0).
 #'
 #' @section 12-template framework with Early × 4 surface:
-#' Each gene's z-scored 4-point trajectory is matched against 12
-#' pre-declared templates. Only the 4 Early-onset best-matches are
-#' surfaced in `pdactrace_reference$rna_pattern`:
+#' Each gene's z-scored 4-point N/E/M/L trajectory is matched against
+#' 12 pre-declared templates by Pearson-rho argmax. A template call is
+#' retained only when the best-match rho passes `rho_cutoff`
+#' (`0.85` by default in [classify_trajectory()]). Only the 4
+#' Early-onset best-matches are surfaced in
+#' `pdactrace_reference$rna_pattern`:
 #' * `Early_Burst_Up` - Normal low -> Early up -> sustained
 #' * `Early_Loss_Down` - Normal high -> Early down -> sustained
 #' * `Early_Peak` - Early peak -> Mid/Late decline

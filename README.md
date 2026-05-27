@@ -100,9 +100,11 @@ res <- project_user_cohort(rna = my_counts, coldata = my_cd,
 
 **Methodology:**
 
-- **12-template competitive trajectory catalog** — Early × 4 +
-  Mid × 4 + Late × 2 + Monotonic × 2; only Early × 4 are surfaced
-  in `rna_pattern`, the other 8 act as negative-evidence pool.
+- **12-template competitive trajectory catalog** — each gene's
+  z-scored N/E/M/L stage-effect profile is matched to 12
+  pre-specified templates by Pearson-rho argmax. Only Early × 4
+  winners are surfaced in `rna_pattern`; Mid/Late/Monotonic winners
+  act as negative-evidence alternatives.
 - **3-axis + 2-gate reference score** — `evidence_strength` +
   `biological_coherence` + `translational_relevance`, multiplied
   by `leakage_gate × heterogeneity_gate`. Closed-form
